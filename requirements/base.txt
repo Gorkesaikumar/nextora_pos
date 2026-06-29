@@ -1,0 +1,56 @@
+# ---------------------------------------------------------------------------
+# Base dependencies — installed in EVERY environment (dev, staging, prod).
+# Pinned for reproducible, scan-able builds (Twelve-Factor: dependencies).
+# ---------------------------------------------------------------------------
+
+# Core framework
+Django==5.0.6
+djangorestframework==3.15.1
+
+# Configuration (12-factor: strict env parsing, fail-fast on missing vars)
+django-environ==0.11.2
+
+# Database
+psycopg[binary]==3.1.19          # modern PostgreSQL driver (psycopg3)
+
+# Cache / broker / locks
+redis==5.0.4
+hiredis==2.3.2                   # C parser for faster Redis I/O
+django-redis==5.4.0
+
+# Real-time (WebSockets) — KDS live updates. daphne provides the ASGI server
+# (also enables `runserver` to speak ASGI/WebSocket in dev); channels-redis is
+# the cross-process channel layer so every web worker can fan out to all screens.
+channels[daphne]==4.1.0
+channels-redis==4.2.0
+
+# Async task queue
+celery==5.4.0
+django-celery-beat==2.6.0        # DB-backed periodic schedule (editable at runtime)
+django-celery-results==2.5.1     # task result backend in DB (auditable)
+
+# API support
+django-cors-headers==4.3.1
+drf-spectacular==0.27.2          # OpenAPI 3 schema generation (API-first)
+
+# Auth (JWT for API clients)
+djangorestframework-simplejwt==5.3.1
+
+# Password hashing — Argon2 is first in PASSWORD_HASHERS, so this is required
+# at runtime wherever a password is hashed/verified (not just in Docker).
+argon2-cffi==23.1.0
+
+# Production WSGI server
+gunicorn==22.0.0
+
+# Static file serving fallback (Nginx is primary; whitenoise is safety net)
+whitenoise==6.6.0
+
+# Image handling (catalog product/category images)
+Pillow==10.3.0
+
+# Observability
+sentry-sdk==2.5.1
+
+# Utilities
+user-agents==2.2.0

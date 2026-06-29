@@ -1,0 +1,14 @@
+# ---------------------------------------------------------------------------
+# Production dependencies — base plus prod-only operational tooling.
+# ---------------------------------------------------------------------------
+-r base.txt
+
+# Postgres connection pooling is handled by PgBouncer (infra), but we keep
+# health/metrics endpoints lightweight here.
+
+# Prometheus metrics exposition
+django-prometheus==2.3.1
+
+# Payment gateway (optional until billing goes live with real keys; the adapter
+# guards this import, so the "fake" gateway works without it).
+razorpay==1.4.2

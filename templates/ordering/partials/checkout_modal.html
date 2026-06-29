@@ -1,0 +1,88 @@
+<!-- Overlay -->
+<div id="checkout-overlay" class="fixed inset-0 bg-neutral-900/50 backdrop-blur-sm z-50 flex items-center justify-center animate-fade-in p-4 lg:p-0">
+  
+  <!-- Modal Content -->
+  <div class="bg-neutral-0 dark:bg-neutral-dark-100 w-full max-w-lg rounded-2xl shadow-xl overflow-hidden animate-slide-up flex flex-col max-h-full">
+    
+    <!-- Header -->
+    <div class="px-6 py-4 border-b border-neutral-200 dark:border-neutral-dark-200 flex items-center justify-between">
+      <h2 class="text-heading-2 text-neutral-900 dark:text-neutral-dark-900">Checkout</h2>
+      <button class="text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-dark-700 transition-colors" 
+              onclick="document.getElementById('pos-modal-container').innerHTML = '';">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="p-6 overflow-y-auto">
+      <div class="flex items-center justify-between mb-8 pb-6 border-b border-neutral-200 dark:border-neutral-dark-200">
+        <span class="text-body-strong text-neutral-600 dark:text-neutral-dark-600">Total Due</span>
+        <span class="text-[32px] leading-tight font-bold text-neutral-900 dark:text-neutral-dark-900 font-mono">₹{{ active_order.total }}</span>
+      </div>
+
+      <form id="checkout-form"
+            hx-post="{% url 'ordering:pos_process_payment' %}"
+            hx-target="#pos-modal-container"
+            hx-swap="innerHTML"
+            class="space-y-6"
+            x-data="{ processing: false }"
+            @htmx:before-request="processing = true"
+            @htmx:after-request="processing = false"
+            novalidate>
+        {% csrf_token %}
+        
+        <!-- Payment Methods -->
+        <div>
+          <label class="block text-caption-strong text-neutral-700 dark:text-neutral-dark-700 mb-3">Payment Method</label>
+          <div class="grid grid-cols-3 gap-3">
+            <label class="cursor-pointer relative">
+              <input type="radio" name="method" value="CASH" class="peer sr-only" checked>
+              <div class="px-4 py-3 rounded-card border-2 border-neutral-200 dark:border-neutral-dark-200 text-center text-body-strong text-neutral-700 dark:text-neutral-dark-700 peer-checked:border-brand-default peer-checked:bg-brand-50 peer-checked:text-brand-700 transition-colors">
+                Cash
+              </div>
+            </label>
+            <label class="cursor-pointer relative">
+              <input type="radio" name="method" value="CARD" class="peer sr-only">
+              <div class="px-4 py-3 rounded-card border-2 border-neutral-200 dark:border-neutral-dark-200 text-center text-body-strong text-neutral-700 dark:text-neutral-dark-700 peer-checked:border-brand-default peer-checked:bg-brand-50 peer-checked:text-brand-700 transition-colors">
+                Card
+              </div>
+            </label>
+            <label class="cursor-pointer relative">
+              <input type="radio" name="method" value="UPI" class="peer sr-only">
+              <div class="px-4 py-3 rounded-card border-2 border-neutral-200 dark:border-neutral-dark-200 text-center text-body-strong text-neutral-700 dark:text-neutral-dark-700 peer-checked:border-brand-default peer-checked:bg-brand-50 peer-checked:text-brand-700 transition-colors">
+                UPI
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Tendered Amount (Only relevant for cash usually, but keeping it generic for demo) -->
+        <div>
+          <label class="block text-caption-strong text-neutral-700 dark:text-neutral-dark-700 mb-2">Tendered Amount</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <span class="text-neutral-500 font-mono">₹</span>
+            </div>
+            <input type="number" name="tendered" step="0.01"
+                   class="form-input pl-8 h-12 w-full text-heading-2 font-mono" 
+                   value="{{ active_order.total }}">
+          </div>
+        </div>
+        
+        <div class="pt-2">
+            <button type="submit" class="btn-primary w-full h-14 text-heading-3 shadow-md flex items-center justify-center gap-2"
+                    :disabled="processing"
+                    :class="processing ? 'opacity-50 cursor-not-allowed' : ''">
+              <svg x-show="processing" x-cloak class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span x-text="processing ? 'Processing...' : 'Complete Payment'">Complete Payment</span>
+            </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

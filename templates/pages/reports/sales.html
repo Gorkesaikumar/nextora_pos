@@ -1,0 +1,83 @@
+{% extends "layouts/reports.html" %}
+{# Sample Reports page — Sales tab with KPI strip + chart + table. #}
+
+
+{% block title %}Sales report · Nextora{% endblock %}
+{% block page_title %}Sales{% endblock %}
+
+{% block primary_action %}
+  <button type="button" class="btn-secondary">Save view</button>
+{% endblock %}
+
+{% block reports_body %}
+  <section class="dashboard__kpis" aria-label="Headline figures">
+    <article class="metric">
+      <span class="metric__label">Net sales</span>
+      <span class="metric__value">₹18.4L</span>
+      <span class="metric__delta metric__delta--up">▲ 14%</span>
+    </article>
+    <article class="metric">
+      <span class="metric__label">Orders</span>
+      <span class="metric__value">2,184</span>
+      <span class="metric__delta metric__delta--up">▲ 9%</span>
+    </article>
+    <article class="metric">
+      <span class="metric__label">Avg ticket</span>
+      <span class="metric__value">₹843</span>
+      <span class="metric__delta metric__delta--up">▲ 5%</span>
+    </article>
+    <article class="metric">
+      <span class="metric__label">Discounts</span>
+      <span class="metric__value">₹42,300</span>
+      <span class="metric__delta metric__delta--up">▲ 22%</span>
+    </article>
+    <article class="metric">
+      <span class="metric__label">Refunds</span>
+      <span class="metric__value">₹18,900</span>
+      <span class="metric__delta metric__delta--down">▼ 6%</span>
+    </article>
+    <article class="metric">
+      <span class="metric__label">Voids</span>
+      <span class="metric__value">12</span>
+      <span class="metric__delta metric__delta--flat">— flat</span>
+    </article>
+  </section>
+
+  <section class="reports-grid" style="margin-top:var(--forge-space-4)">
+    <article class="dashboard__chart">
+      <header class="dashboard__chart-header">
+        <h2 class="dashboard__chart-title">Daily revenue</h2>
+        <button type="button" class="btn-ghost" aria-pressed="false">View as table</button>
+      </header>
+      <div class="dashboard__chart-placeholder" role="img" aria-label="Line chart of daily revenue over the selected period.">
+        Daily revenue chart
+      </div>
+    </article>
+  </section>
+
+  <section class="table-wrap" style="margin-top:var(--forge-space-4)">
+    <div class="table-toolbar">
+      <h2 class="text-h2 text-primary" style="margin:0">By day</h2>
+      <span class="table-toolbar__spacer"></span>
+      <span class="search__count">30 days</span>
+    </div>
+    <table class="table" aria-label="Sales by day">
+      <thead>
+        <tr>
+          <th scope="col">Day</th>
+          <th scope="col" class="num">Orders</th>
+          <th scope="col" class="num">Net sales</th>
+          <th scope="col" class="num">Discounts</th>
+          <th scope="col" class="num">Tax</th>
+          <th scope="col" class="num">Refunds</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Wed 26 Jun</td><td class="num">73</td><td class="num">₹62,400</td><td class="num">₹1,200</td><td class="num">₹5,580</td><td class="num">₹0</td></tr>
+        <tr><td>Tue 25 Jun</td><td class="num">81</td><td class="num">₹68,150</td><td class="num">₹2,050</td><td class="num">₹6,130</td><td class="num">₹420</td></tr>
+        <tr><td>Mon 24 Jun</td><td class="num">59</td><td class="num">₹49,800</td><td class="num">₹900</td><td class="num">₹4,480</td><td class="num">₹0</td></tr>
+        <tr><td>Sun 23 Jun</td><td class="num">112</td><td class="num">₹94,200</td><td class="num">₹3,600</td><td class="num">₹8,470</td><td class="num">₹1,840</td></tr>
+      </tbody>
+    </table>
+  </section>
+{% endblock %}

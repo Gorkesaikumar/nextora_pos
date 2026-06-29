@@ -1,0 +1,40 @@
+/* Timeline — chronological events; absolute time on hover. */
+
+.timeline { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; }
+.timeline__item {
+  position: relative;
+  padding: var(--forge-space-3) var(--forge-space-4) var(--forge-space-3) var(--forge-space-8);
+  border-left: 2px solid var(--forge-color-border-subtle);
+  margin-left: var(--forge-space-3);
+}
+.timeline__item::before {
+  content: "";
+  position: absolute;
+  left: -7px; top: var(--forge-space-4);
+  width: 12px; height: 12px;
+  background-color: var(--forge-color-surface-raised);
+  border: 2px solid var(--forge-color-border-strong);
+  border-radius: 50%;
+}
+.timeline__item--success::before { border-color: var(--forge-color-success-default); }
+.timeline__item--warning::before { border-color: var(--forge-color-warning-default); }
+.timeline__item--danger::before  { border-color: var(--forge-color-danger-default); }
+.timeline__item[aria-current="step"]::before {
+  background-color: var(--forge-color-brand-default);
+  border-color: var(--forge-color-brand-default);
+}
+
+.timeline__time {
+  display: block;
+  font-size: 0.6875rem;
+  color: var(--forge-color-text-tertiary);
+  margin-bottom: 2px;
+}
+.timeline__title {
+  font-size: 0.8125rem; font-weight: 600;
+  color: var(--forge-color-text-primary);
+}
+.timeline__detail {
+  font-size: 0.8125rem;
+  color: var(--forge-color-text-secondary);
+}

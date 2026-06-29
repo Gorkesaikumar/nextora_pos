@@ -1,0 +1,89 @@
+{% extends "layouts/dashboard.html" %}
+
+{% block page_title %}Stock Transfers{% endblock %}
+{% block page_subtitle %}<p class="text-caption text-neutral-500 mt-1">Manage inventory movement between branches or from central kitchen.</p>{% endblock %}
+
+{% block primary_action %}
+<button type="button" class="btn-primary">
+  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+  New Transfer
+</button>
+{% endblock %}
+
+{% block filter_strip %}
+<div class="flex flex-col sm:flex-row gap-4 mb-6">
+  <!-- Status Filter -->
+  <div class="flex gap-2">
+    <button class="px-4 py-2 rounded-full bg-neutral-900 text-white dark:bg-neutral-dark-900 dark:text-neutral-dark-0 text-body-strong transition-colors">All</button>
+    <button class="px-4 py-2 rounded-full bg-neutral-0 text-neutral-700 hover:bg-neutral-100 dark:bg-neutral-dark-100 dark:text-neutral-dark-700 dark:hover:bg-neutral-dark-200 border border-neutral-200 dark:border-neutral-dark-200 text-body-strong transition-colors">Pending</button>
+    <button class="px-4 py-2 rounded-full bg-neutral-0 text-neutral-700 hover:bg-neutral-100 dark:bg-neutral-dark-100 dark:text-neutral-dark-700 dark:hover:bg-neutral-dark-200 border border-neutral-200 dark:border-neutral-dark-200 text-body-strong transition-colors">Completed</button>
+  </div>
+</div>
+{% endblock %}
+
+{% block workspace %}
+<div class="card overflow-hidden">
+  <div class="overflow-x-auto">
+    <table class="w-full text-left border-collapse">
+      <thead>
+        <tr class="bg-neutral-50 dark:bg-neutral-dark-50 border-b border-neutral-150 dark:border-neutral-dark-150 text-heading-3 text-neutral-700 dark:text-neutral-dark-700">
+          <th class="px-5 py-3 font-semibold">Transfer ID</th>
+          <th class="px-5 py-3 font-semibold">From &rarr; To</th>
+          <th class="px-5 py-3 font-semibold">Date</th>
+          <th class="px-5 py-3 font-semibold">Status</th>
+          <th class="px-5 py-3 font-semibold text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-neutral-150 dark:divide-neutral-dark-150">
+        
+        <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-dark-50 transition-colors">
+          <td class="px-5 py-4">
+            <div class="text-body-strong text-neutral-900 dark:text-neutral-dark-900 font-mono">TRF-1042</div>
+            <div class="text-caption text-neutral-500 mt-0.5">3 Items</div>
+          </td>
+          <td class="px-5 py-4">
+            <div class="flex items-center gap-2 text-body text-neutral-800 dark:text-neutral-dark-800">
+              <span class="font-medium">Central Kitchen</span>
+              <svg class="w-4 h-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+              <span class="font-medium">Downtown Outlet</span>
+            </div>
+          </td>
+          <td class="px-5 py-4 text-body text-neutral-700 dark:text-neutral-dark-700">
+            Today, 10:30 AM
+          </td>
+          <td class="px-5 py-4">
+            <span class="inline-flex items-center px-2 py-0.5 rounded-sharp text-caption-strong bg-semantic-warning-subtle text-semantic-warning-dark dark:bg-semantic-warning-subtle-dark dark:text-semantic-warning">In Transit</span>
+          </td>
+          <td class="px-5 py-4 text-right">
+            <button class="btn border border-neutral-200 bg-neutral-0 text-neutral-800 hover:bg-neutral-50 dark:border-neutral-dark-200 dark:bg-neutral-dark-100 dark:text-neutral-dark-800 dark:hover:bg-neutral-dark-150 px-3 py-1 text-caption-strong">Receive</button>
+          </td>
+        </tr>
+
+        <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-dark-50 transition-colors">
+          <td class="px-5 py-4">
+            <div class="text-body-strong text-neutral-900 dark:text-neutral-dark-900 font-mono">TRF-1041</div>
+            <div class="text-caption text-neutral-500 mt-0.5">12 Items</div>
+          </td>
+          <td class="px-5 py-4">
+            <div class="flex items-center gap-2 text-body text-neutral-800 dark:text-neutral-dark-800">
+              <span class="font-medium">Warehouse A</span>
+              <svg class="w-4 h-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+              <span class="font-medium">Uptown Outlet</span>
+            </div>
+          </td>
+          <td class="px-5 py-4 text-body text-neutral-700 dark:text-neutral-dark-700">
+            Yesterday, 04:15 PM
+          </td>
+          <td class="px-5 py-4">
+            <span class="inline-flex items-center px-2 py-0.5 rounded-sharp text-caption-strong bg-semantic-success-subtle text-semantic-success-dark dark:bg-semantic-success-subtle-dark dark:text-semantic-success">Completed</span>
+          </td>
+          <td class="px-5 py-4 text-right">
+            <button class="text-brand-default hover:text-brand-hover dark:text-brand-on-dark text-body-strong">View Details</button>
+          </td>
+        </tr>
+
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

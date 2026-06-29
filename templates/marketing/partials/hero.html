@@ -1,0 +1,51 @@
+{% load static %}
+<section class="relative overflow-hidden bg-slate-50 pt-16 md:pt-24 pb-32">
+  <!-- Background glow effects -->
+  <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] opacity-30 pointer-events-none" style="background: radial-gradient(circle, rgba(59,130,246,0.3) 0%, rgba(255,255,255,0) 70%);"></div>
+  
+  <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+    
+    <!-- Badges -->
+    <div class="flex items-center justify-center gap-2 mb-8 animate-fade-in-up">
+      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-50 border border-brand-100 text-brand-700 text-xs font-semibold">
+        <i data-lucide="cloud" class="w-3.5 h-3.5"></i> Cloud Based
+      </span>
+      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs font-semibold">
+        <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Secure & GST Ready
+      </span>
+    </div>
+
+    <!-- Headline -->
+    <h1 class="text-5xl md:text-7xl font-extrabold text-slate-900 tracking-tight mb-6 animate-fade-in-up" style="animation-delay: 0.1s">
+      The Operating System for<br class="hidden md:block" />
+      <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-indigo-600">Ambitious Restaurants</span>
+    </h1>
+    
+    <!-- Subheadline -->
+    <p class="max-w-2xl mx-auto text-lg md:text-xl text-slate-600 mb-10 animate-fade-in-up" style="animation-delay: 0.2s">
+      Manage billing, inventory, kitchen displays, and reports from anywhere. 
+      Built for speed, reliability, and growth.
+    </p>
+
+    <!-- CTAs -->
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16 animate-fade-in-up" style="animation-delay: 0.3s">
+      <a href="{% url 'marketing:register' %}" class="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3.5 text-base font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-xl shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5 focus:ring-4 focus:ring-slate-200">
+        Start Free Trial
+      </a>
+      <a href="#demo" class="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3.5 text-base font-semibold text-slate-700 bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 rounded-xl shadow-sm transition-all focus:ring-4 focus:ring-slate-100">
+        Book a Demo
+      </a>
+    </div>
+
+    <!-- Floating Dashboard Screenshot -->
+    <div class="relative max-w-5xl mx-auto animate-fade-in-up" style="animation-delay: 0.4s">
+      <div class="absolute inset-0 bg-gradient-to-t from-slate-50 to-transparent z-10 h-32 bottom-0 top-auto"></div>
+      <div class="rounded-2xl border border-slate-200/60 bg-white shadow-2xl p-2 md:p-4 ring-1 ring-slate-900/5 backdrop-blur-sm">
+        <div class="rounded-xl overflow-hidden border border-slate-100 bg-slate-50 relative group">
+          <img src="{% static 'img/nextora.png' %}" alt="Nextora Dashboard Interface" class="w-full h-auto object-cover transition-transform duration-700 ease-out group-hover:scale-[1.02]">
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>

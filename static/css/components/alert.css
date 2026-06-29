@@ -1,0 +1,24 @@
+/* Alert — persistent inline banner. */
+
+.alert {
+  display: flex; align-items: flex-start; gap: var(--forge-space-3);
+  padding: var(--forge-space-3) var(--forge-space-4);
+  border-radius: var(--forge-radius-card);
+  border: 1px solid var(--forge-color-border-subtle);
+  background-color: var(--forge-color-surface-raised);
+}
+.alert__icon { flex-shrink: 0; width: 20px; height: 20px; margin-top: 2px; }
+.alert__body { flex: 1; min-width: 0; }
+.alert__title { font-size: 0.8125rem; font-weight: 600; color: var(--forge-color-text-primary); }
+.alert__msg   { font-size: 0.8125rem; color: var(--forge-color-text-secondary); margin-top: 2px; }
+.alert__actions { margin-top: var(--forge-space-2); display: flex; gap: var(--forge-space-2); }
+.alert__close { color: var(--forge-color-text-tertiary); }
+
+.alert--success { background-color: var(--forge-color-success-subtle); border-color: var(--forge-color-success-border); }
+.alert--success .alert__icon { color: var(--forge-color-success-default); }
+.alert--warning { background-color: var(--forge-color-warning-subtle); border-color: var(--forge-color-warning-border); }
+.alert--warning .alert__icon { color: var(--forge-color-warning-default); }
+.alert--danger  { background-color: var(--forge-color-danger-subtle);  border-color: var(--forge-color-danger-border); }
+.alert--danger  .alert__icon { color: var(--forge-color-danger-default); }
+.alert--info    { background-color: var(--forge-color-info-subtle);    border-color: var(--forge-color-info-border); }
+.alert--info    .alert__icon { color: var(--forge-color-info-default); }

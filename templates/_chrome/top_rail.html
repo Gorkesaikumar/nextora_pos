@@ -1,0 +1,89 @@
+{% comment %} Top Rail — 44px persistent header.
+   Slots: breadcrumb/context, quick search, status pills, notifications, theme,
+   user menu. Layouts that don't want global search omit it (e.g. POS). {% endcomment %}
+<header class="zone-top-rail top-rail bg-white border-b border-[var(--forge-color-border-subtle)] px-6 flex items-center justify-between" role="banner">
+  <div class="top-rail__breadcrumb-slot flex items-center gap-2 text-sm font-medium">
+    {% block top_rail_breadcrumb %}
+      {% if tenant %}<span class="text-neutral-800">{{ tenant.name }}</span>{% endif %}
+      {% if branch %}<span class="text-neutral-400">/</span><span class="text-neutral-500">{{ branch.name }}</span>{% endif %}
+    {% endblock %}
+  </div>
+
+  <div class="flex-1 flex justify-center max-w-xl px-4">
+    {% block top_rail_quick_search %}
+      <label class="search flex items-center w-full max-w-lg bg-neutral-50 border border-neutral-200 rounded-lg px-3 py-2 text-sm text-neutral-600 focus-within:border-[var(--forge-color-brand-default)] focus-within:ring-1 focus-within:ring-[var(--forge-color-brand-default)] transition-all">
+        <i data-lucide="search" class="w-4 h-4 text-neutral-400 mr-2"></i>
+        <input type="search" class="w-full bg-transparent border-none outline-none focus:ring-0 text-sm placeholder-neutral-400" placeholder="Search orders, customers, items...">
+        <span class="text-xs text-neutral-400 font-mono ml-2 border border-neutral-200 bg-white rounded px-1.5 py-0.5">Ctrl + K</span>
+      </label>
+    {% endblock %}
+  </div>
+
+  <div class="flex items-center gap-4">
+    <div class="flex items-center gap-2 text-xs font-medium text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100">
+      <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+      Synced
+    </div>
+
+    <button type="button" class="text-neutral-400 hover:text-neutral-700 relative" aria-label="Notifications">
+      <i data-lucide="bell" class="w-5 h-5"></i>
+      {% if unread_notifications_count %}
+        <span class="absolute -top-1 -right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-red-500 text-[9px] text-white font-bold ring-2 ring-white">{{ unread_notifications_count }}</span>
+      {% else %}
+        <!-- Mock notification for UI matching -->
+        <span class="absolute -top-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-red-500 text-[10px] text-white font-bold ring-2 ring-white">5</span>
+      {% endif %}
+    </button>
+
+    <button type="button" class="text-neutral-400 hover:text-neutral-700" aria-label="Toggle theme">
+      <i data-lucide="moon" class="w-5 h-5"></i>
+    </button>
+
+    <div class="relative" x-data="{ open: false }" @keydown.escape.window="open = false" @click.outside="open = false">
+      <button type="button"
+              @click="open = !open"
+              class="flex items-center justify-center w-8 h-8 rounded-full bg-[var(--forge-color-brand-default)] text-[var(--forge-color-brand-on-brand)] font-bold text-xs ring-2 ring-white shadow-sm hover:bg-[var(--forge-color-brand-hover)] transition-colors"
+              aria-label="Account menu"
+              aria-haspopup="menu"
+              :aria-expanded="open">
+        {{ user_initials|default:'NX' }}
+      </button>
+
+      <div x-show="open"
+           x-transition:enter="transition ease-out duration-150"
+           x-transition:enter-start="opacity-0 scale-95 -translate-y-1"
+           x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+           x-transition:leave="transition ease-in duration-100"
+           x-transition:leave-start="opacity-100 scale-100"
+           x-transition:leave-end="opacity-0 scale-95"
+           class="absolute right-0 top-full mt-2 w-60 origin-top-right rounded-xl bg-white border border-[var(--forge-color-border-default)] shadow-overlay py-1.5 z-50"
+           role="menu"
+           x-cloak>
+        <div class="px-3 py-2.5 border-b border-[var(--forge-color-border-subtle)]">
+          <div class="text-sm font-semibold text-[var(--forge-color-text-primary)] truncate">{{ request.user.full_name|default:request.user.email|default:'Nextora User' }}</div>
+          {% if request.user.email %}
+            <div class="text-xs text-[var(--forge-color-text-tertiary)] truncate">{{ request.user.email }}</div>
+          {% endif %}
+        </div>
+        <a href="#" class="flex items-center gap-2 px-3 py-2 text-sm text-[var(--forge-color-text-secondary)] hover:bg-[var(--forge-color-surface-base)] hover:text-[var(--forge-color-text-primary)] transition-colors" role="menuitem">
+          <i data-lucide="user" class="w-4 h-4 text-[var(--forge-color-icon-secondary)]"></i>
+          Profile
+        </a>
+        <a href="#" class="flex items-center gap-2 px-3 py-2 text-sm text-[var(--forge-color-text-secondary)] hover:bg-[var(--forge-color-surface-base)] hover:text-[var(--forge-color-text-primary)] transition-colors" role="menuitem">
+          <i data-lucide="settings" class="w-4 h-4 text-[var(--forge-color-icon-secondary)]"></i>
+          Settings
+        </a>
+        <div class="my-1 border-t border-[var(--forge-color-border-subtle)]"></div>
+        <form method="post" action="{% url 'identity:logout' %}" class="block">
+          {% csrf_token %}
+          <button type="submit"
+                  class="w-full flex items-center gap-2 px-3 py-2 text-sm text-[var(--forge-color-danger-text)] hover:bg-[var(--forge-color-danger-subtle)] transition-colors text-left"
+                  role="menuitem">
+            <i data-lucide="log-out" class="w-4 h-4"></i>
+            Log out
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</header>

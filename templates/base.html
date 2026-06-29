@@ -1,0 +1,221 @@
+{% load static %}<!doctype html>
+<html lang="{{ LANGUAGE_CODE|default:'en' }}" data-theme="{{ theme|default:'light' }}" dir="{{ LANGUAGE_BIDI|yesno:'rtl,ltr' }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#F2F2F2">
+
+  <title>{% block title %}Nextora POS{% endblock %}</title>
+
+  {# Inter Variable per Forge §VI. #}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap">
+
+  <!-- Alpine.js with Persist Plugin -->
+  <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/persist@3.x.x/dist/cdn.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <!-- HTMX -->
+  <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- Tailwind CSS CDN (Development) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind = {
+      config: {
+        darkMode: ['class', '[data-theme="dark"]'],
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                default: '#4F6EF7',
+                hover: '#3D5CE5',
+                pressed: '#2E4DD4',
+                subtle: '#EEF1FE',
+                'on-brand': '#FFFFFF',
+                'focus-ring': '#4F6EF7',
+                'on-dark': '#7B96FF',
+              },
+              semantic: {
+                success: '#16A34A',
+                'success-subtle': '#DCFCE7',
+                'success-dark': '#4ADE80',
+                'success-subtle-dark': '#14532D',
+                warning: '#D97706',
+                'warning-subtle': '#FEF3C7',
+                'warning-dark': '#FCD34D',
+                'warning-subtle-dark': '#451A03',
+                danger: '#DC2626',
+                'danger-subtle': '#FEE2E2',
+                'danger-dark': '#F87171',
+                'danger-subtle-dark': '#450A0A',
+                info: '#0284C7',
+                'info-subtle': '#E0F2FE',
+                'info-dark': '#38BDF8',
+                'info-subtle-dark': '#0C4A6E',
+              },
+              neutral: {
+                0: '#FFFFFF',
+                50: '#F8F8F8',
+                100: '#F2F2F2',
+                150: '#EBEBEB',
+                200: '#E0E0E0',
+                300: '#CBCBCB',
+                400: '#A8A8A8',
+                500: '#848484',
+                600: '#5C5C5C',
+                700: '#3D3D3D',
+                800: '#252525',
+                900: '#141414',
+                'dark-0': '#1A1A1C',
+                'dark-50': '#212124',
+                'dark-100': '#2A2A2E',
+                'dark-150': '#313136',
+                'dark-200': '#3C3C42',
+                'dark-300': '#4F4F57',
+                'dark-400': '#6B6B75',
+                'dark-500': '#8C8C98',
+                'dark-600': '#ABABBA',
+                'dark-700': '#C8C8D8',
+                'dark-800': '#E0E0EE',
+                'dark-900': '#F0F0F8',
+              }
+            },
+            borderRadius: {
+              'sharp': '4px',
+              'card': '8px',
+              'pill': '9999px',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  
+  <link rel="stylesheet" href="{% static 'css/main.css' %}?v=2">
+  <style>[x-cloak] { display: none !important; }</style>
+
+  <meta name="csrf-token" content="{{ csrf_token }}">
+  <script>
+    document.addEventListener('htmx:configRequest', (event) => {
+      const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+      if (csrfToken) {
+        event.detail.headers['X-CSRFToken'] = csrfToken;
+      }
+    });
+  </script>
+
+  <!-- Prevent Sidebar FOUC -->
+  <script>
+    try {
+      if (localStorage.getItem('_x_sidebarOpen') === 'true') {
+        document.documentElement.classList.add('sidebar-expanded');
+      }
+    } catch (e) {}
+
+    // Security: Force a reload if the page is restored from the back/forward cache (bfcache).
+    // This ensures that hitting 'Back' after logging out won't show stale authenticated content.
+    window.addEventListener('pageshow', function(event) {
+      if (event.persisted) {
+        window.location.reload();
+      }
+    });
+  </script>
+  {% block head_extra %}{% endblock %}
+</head>
+<body x-data="{ sidebarOpen: $persist(false) }" x-init="$watch('sidebarOpen', val => document.documentElement.classList.toggle('sidebar-expanded', val))">
+  <a href="#main" class="skip-link">Skip to main content</a>
+  {% block body %}{% endblock %}
+
+  {# Toast region — shared across all chromed layouts. #}
+  <div id="toast-region" class="toast-region {% block toast_region_class %}{% endblock %}" role="status" aria-live="polite" aria-atomic="false">
+    {% block toasts %}{% endblock %}
+  </div>
+
+  {# Global Modal Region for HTMX #}
+  <div id="modal-region" class="fixed inset-0 z-50 flex items-center justify-center pointer-events-none empty:hidden bg-neutral-900/50 backdrop-blur-sm"></div>
+
+  {# Global Alpine Dialogs #}
+  {% include "components/dialogs.html" %}
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function(event) {
+        lucide.createIcons();
+    });
+    document.body.addEventListener('htmx:afterSwap', function(evt) {
+        lucide.createIcons();
+    });
+    
+    // Modal Dismiss Logic
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('[data-modal-dismiss]') || e.target.id === 'modal-region') {
+            const modalRegion = document.getElementById('modal-region');
+            if (modalRegion) modalRegion.innerHTML = '';
+        }
+    });
+    
+    // Listen for custom HTMX events from server to close modal
+    document.body.addEventListener('tableListChanged', function(evt) {
+        const modalRegion = document.getElementById('modal-region');
+        if (modalRegion) modalRegion.innerHTML = '';
+        // Note: the main list is usually refreshed via hx-trigger on the form response
+        // but we can also trigger a reload here if needed.
+    });
+
+    // --- Global Tenant Real-Time WebSocket ---
+    (function () {
+      const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+      const wsUrl = proto + '://' + location.host + '/ws/events/';
+      let ws = null, retries = 0, retryTimer = null, closedByUs = false;
+
+      function connect() {
+        try { ws = new WebSocket(wsUrl); } catch (e) { scheduleReconnect(); return; }
+
+        ws.onopen = function () { retries = 0; };
+
+        ws.onmessage = function (evt) {
+          let data = {};
+          try { data = JSON.parse(evt.data); } catch (e) { return; }
+          if (data.event) {
+            // Dispatch a global DOM event that HTMX or Alpine can listen to.
+            // Example: "tenant:order_changed"
+            window.dispatchEvent(new CustomEvent('tenant:' + data.event, { detail: data }));
+          }
+        };
+
+        ws.onclose = function () {
+          if (closedByUs) return;
+          scheduleReconnect();
+        };
+
+        ws.onerror = function () { try { ws.close(); } catch (e) {} };
+      }
+
+      function scheduleReconnect() {
+        clearTimeout(retryTimer);
+        const delay = Math.min(1000 * Math.pow(2, retries++), 15000); // capped backoff
+        retryTimer = setTimeout(connect, delay);
+      }
+
+      document.addEventListener('visibilitychange', function () {
+        if (!document.hidden && (!ws || ws.readyState === WebSocket.CLOSED)) {
+          clearTimeout(retryTimer);
+          connect();
+        }
+      });
+
+      window.addEventListener('beforeunload', function () {
+        closedByUs = true;
+        if (ws) { try { ws.close(); } catch (e) {} }
+      });
+
+      // We only want the socket on authenticated tenant pages. If we get a 4401 or 4403, 
+      // the connection will just drop, which is fine.
+      connect();
+    })();
+  </script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

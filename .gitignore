@@ -1,0 +1,81 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Virtual Environment
+venv/
+env/
+.venv/
+
+# Environment Files
+.env
+.env.*
+!.env.example
+
+# Django
+db.sqlite3
+media/
+staticfiles/
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Pytest
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Mypy
+.mypy_cache/
+
+# Ruff
+.ruff_cache/
+
+# Node
+node_modules/
+
+# Docker
+docker-compose.override.yml
+
+# Redis
+dump.rdb
+
+# PostgreSQL Backups
+*.sql
+*.dump
+*.bak
+backups/
+
+# Celery
+celerybeat-schedule
+
+# Coverage
+coverage.xml
+
+# Secrets
+*.pem
+*.key
+*.crt
+*.p12
+id_rsa
+id_ed25519
+
+# Cache
+.cache/
+
+# Nextora Specific
+scratch/
+debug_*.log
+contexts_tree.txt

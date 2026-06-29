@@ -1,0 +1,51 @@
+/* Dashboard — Standard density. KPI strip + charts + activity. */
+
+.dashboard__greeting {
+  display: flex; align-items: center; gap: var(--forge-space-3);
+  margin-bottom: var(--forge-space-4);
+}
+.dashboard__greeting-text { display: flex; flex-direction: column; }
+.dashboard__greeting-hello { font-size: 0.6875rem; color: var(--forge-color-text-tertiary); }
+.dashboard__greeting-name  { font-size: 1.375rem; font-weight: 600; letter-spacing: -0.02em; color: var(--forge-color-text-primary); }
+
+/* KPI strip — 1/2/4/6-up responsive grid. */
+.dashboard__kpis {
+  display: grid;
+  gap: var(--forge-space-3);
+  grid-template-columns: 1fr;
+  margin-bottom: var(--forge-space-6);
+}
+@media (min-width: 640px)  { .dashboard__kpis { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1024px) { .dashboard__kpis { grid-template-columns: repeat(4, 1fr); } }
+@media (min-width: 1440px) { .dashboard__kpis { grid-template-columns: repeat(6, 1fr); } }
+
+/* Chart rows. */
+.dashboard__row {
+  display: grid;
+  gap: var(--forge-space-4);
+  margin-bottom: var(--forge-space-6);
+}
+.dashboard__row--single { grid-template-columns: 1fr; }
+.dashboard__row--two    { grid-template-columns: 1fr; }
+@media (min-width: 1024px) { .dashboard__row--two { grid-template-columns: 1fr 1fr; } }
+
+.dashboard__chart {
+  background-color: var(--forge-color-surface-raised);
+  border: 1px solid var(--forge-color-border-subtle);
+  border-radius: var(--forge-radius-card);
+  padding: var(--forge-space-4);
+  min-height: 280px;
+}
+.dashboard__chart-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: var(--forge-space-3);
+}
+.dashboard__chart-title { font-size: 1.125rem; font-weight: 600; letter-spacing: -0.015em; margin: 0; }
+.dashboard__chart-placeholder {
+  display: flex; align-items: center; justify-content: center;
+  height: 220px;
+  color: var(--forge-color-text-tertiary);
+  font-size: 0.8125rem;
+  border: 1px dashed var(--forge-color-border-subtle);
+  border-radius: var(--forge-radius-sharp);
+}

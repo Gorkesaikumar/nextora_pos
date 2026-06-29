@@ -1,0 +1,111 @@
+/* POS — Compact density. Quick Key Grid + order context panel. */
+
+.pos-workspace { display: flex; flex-direction: column; }
+
+/* Workspace header strip — order type chips + table + customer + search. */
+.pos-strip {
+  display: flex; align-items: center; gap: var(--forge-space-2);
+  padding: var(--forge-space-2) var(--forge-space-3);
+  background-color: var(--forge-color-surface-base);
+  border-bottom: 1px solid var(--forge-color-border-subtle);
+}
+.pos-strip__chip {
+  height: 32px;
+  padding: 0 var(--forge-space-3);
+  border-radius: var(--forge-radius-pill);
+  font-size: 0.6875rem; font-weight: 600;
+  border: 1px solid var(--forge-color-border-default);
+  background-color: var(--forge-color-surface-raised);
+  display: inline-flex; align-items: center;
+}
+.pos-strip__chip[aria-pressed="true"] {
+  background-color: var(--forge-color-brand-subtle);
+  color: var(--forge-color-brand-default);
+  border-color: transparent;
+}
+.pos-strip__spacer { flex: 1; }
+
+/* Category strip above grid. */
+.pos-categories {
+  display: flex; gap: var(--forge-space-1);
+  padding: var(--forge-space-2) var(--forge-space-3);
+  overflow-x: auto;
+}
+.pos-categories::-webkit-scrollbar { height: 4px; }
+
+/* Quick Key grid — 4 to 8 cols responsive. */
+.pos-grid {
+  display: grid;
+  gap: var(--forge-space-2);
+  padding: var(--forge-space-2) var(--forge-space-3) var(--forge-space-6);
+  grid-template-columns: repeat(2, 1fr);
+}
+@media (min-width: 480px)  { .pos-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 768px)  { .pos-grid { grid-template-columns: repeat(4, 1fr); } }
+@media (min-width: 1280px) { .pos-grid { grid-template-columns: repeat(6, 1fr); } }
+@media (min-width: 1600px) { .pos-grid { grid-template-columns: repeat(8, 1fr); } }
+
+.pos-key {
+  background-color: var(--forge-color-surface-raised);
+  border: 1px solid var(--forge-color-border-subtle);
+  border-radius: var(--forge-radius-card);
+  padding: var(--forge-space-2);
+  display: flex; flex-direction: column; gap: var(--forge-space-1);
+  cursor: pointer;
+  min-height: 84px;
+  transition: background-color var(--forge-duration-fast, 80ms) ease-out, transform var(--forge-duration-fast, 80ms) ease-out;
+}
+.pos-key:hover { background-color: var(--forge-color-surface-row-hover); }
+.pos-key:active { transform: scale(0.97); }
+.pos-key__name {
+  font-size: 0.8125rem; font-weight: 600;
+  color: var(--forge-color-text-primary);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.pos-key__price {
+  font-size: 0.6875rem;
+  color: var(--forge-color-text-secondary);
+  font-variant-numeric: tabular-nums;
+  margin-top: auto;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pos-key { transition: none; }
+  .pos-key:active { transform: none; }
+}
+
+/* Order line list (in Context Panel). */
+.pos-order { display: flex; flex-direction: column; gap: var(--forge-space-2); }
+.pos-line {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--forge-space-1) var(--forge-space-2);
+  padding: var(--forge-space-2) 0;
+  border-bottom: 1px solid var(--forge-color-border-subtle);
+}
+.pos-line__name { font-size: 0.8125rem; font-weight: 600; color: var(--forge-color-text-primary); }
+.pos-line__price { font-size: 0.8125rem; font-variant-numeric: tabular-nums; color: var(--forge-color-text-primary); text-align: right; }
+.pos-line__mods { font-size: 0.6875rem; color: var(--forge-color-text-secondary); grid-column: 1 / -1; }
+.pos-line__qty {
+  display: inline-flex; align-items: center; gap: var(--forge-space-1);
+  border: 1px solid var(--forge-color-border-default);
+  border-radius: var(--forge-radius-pill);
+  background-color: var(--forge-color-surface-raised);
+  padding: 2px;
+}
+.pos-line__qty button {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  color: var(--forge-color-text-primary);
+}
+.pos-line__qty button:hover { background-color: var(--forge-color-surface-row-hover); }
+.pos-line__qty span {
+  min-width: 20px; text-align: center;
+  font-size: 0.6875rem; font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Pay button — large, pill, full width, docked. */
+.pos-pay {
+  height: 48px;
+  font-size: 1rem;
+}

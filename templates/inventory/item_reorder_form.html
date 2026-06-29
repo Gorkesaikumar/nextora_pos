@@ -1,0 +1,59 @@
+{% extends "layouts/dashboard.html" %}
+
+{% block page_title %}Edit Stock Levels{% endblock %}
+{% block page_subtitle %}<p class="text-caption text-neutral-500 mt-1">{{ item.product_name }} <span class="text-neutral-400 font-mono">· {{ item.product_sku }}</span></p>{% endblock %}
+{% block toasts %}{% include "inventory/_toasts.html" %}{% endblock %}
+
+{% block primary_action %}
+<a href="{% url 'inventory:item_list' %}" class="inline-flex items-center text-sm font-semibold text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white transition-colors">
+  <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+  Back to Inventory
+</a>
+{% endblock %}
+
+{% block workspace %}
+<div class="max-w-3xl space-y-6">
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+    <div class="bg-white dark:bg-neutral-dark-100 rounded-xl border border-neutral-200 dark:border-neutral-dark-200 p-4 shadow-sm">
+      <div class="text-xs font-semibold text-neutral-500 uppercase tracking-wide">On Hand</div>
+      <div class="text-xl font-bold text-neutral-900 dark:text-white tabular-nums mt-1">{{ item.quantity_on_hand|floatformat:"-3" }}</div>
+    </div>
+    <div class="bg-white dark:bg-neutral-dark-100 rounded-xl border border-neutral-200 dark:border-neutral-dark-200 p-4 shadow-sm">
+      <div class="text-xs font-semibold text-neutral-500 uppercase tracking-wide">Reserved</div>
+      <div class="text-xl font-bold text-neutral-900 dark:text-white tabular-nums mt-1">{{ item.quantity_reserved|floatformat:"-3" }}</div>
+    </div>
+    <div class="bg-white dark:bg-neutral-dark-100 rounded-xl border border-neutral-200 dark:border-neutral-dark-200 p-4 shadow-sm">
+      <div class="text-xs font-semibold text-neutral-500 uppercase tracking-wide">On Order</div>
+      <div class="text-xl font-bold text-neutral-900 dark:text-white tabular-nums mt-1">{{ item.quantity_on_order|floatformat:"-3" }}</div>
+    </div>
+    <div class="bg-white dark:bg-neutral-dark-100 rounded-xl border border-neutral-200 dark:border-neutral-dark-200 p-4 shadow-sm">
+      <div class="text-xs font-semibold text-neutral-500 uppercase tracking-wide">Avg Cost</div>
+      <div class="text-xl font-bold text-neutral-900 dark:text-white tabular-nums mt-1">{{ item.average_cost|floatformat:2 }}</div>
+    </div>
+  </div>
+
+  <form method="POST" class="space-y-6 pb-6">
+    {% csrf_token %}
+    <div class="bg-white dark:bg-neutral-dark-100 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-dark-200 overflow-hidden">
+      <div class="px-6 py-4 border-b border-neutral-200 dark:border-neutral-dark-300 bg-neutral-50 dark:bg-neutral-dark-200">
+        <h3 class="text-base font-bold text-neutral-900 dark:text-white">Reorder Levels</h3>
+        <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">To change on-hand quantity, use a Stock Adjustment so the ledger stays accurate.</p>
+      </div>
+      <div class="p-6 space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {% include "inventory/_field.html" with field=form.minimum_stock label="Minimum Stock" %}
+          {% include "inventory/_field.html" with field=form.reorder_point label="Reorder Point" %}
+          {% include "inventory/_field.html" with field=form.reorder_quantity label="Reorder Qty" %}
+        </div>
+        <label class="flex items-center gap-2 cursor-pointer text-sm font-medium text-neutral-800 dark:text-neutral-200 pt-2">
+          {{ form.is_active }} Active (counts toward availability &amp; alerts)
+        </label>
+      </div>
+    </div>
+    <div class="flex items-center justify-end gap-3">
+      <a href="{% url 'inventory:item_list' %}" class="px-5 py-2.5 text-sm font-semibold text-neutral-700 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white transition-colors">Cancel</a>
+      <button type="submit" class="btn-primary">Save Levels</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

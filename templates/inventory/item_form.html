@@ -1,0 +1,61 @@
+{% extends "layouts/dashboard.html" %}
+
+{% block page_title %}Add Stock Item{% endblock %}
+{% block page_subtitle %}<p class="text-caption text-neutral-500 mt-1">Create a stock record linking a catalog product to a warehouse.</p>{% endblock %}
+{% block toasts %}{% include "inventory/_toasts.html" %}{% endblock %}
+
+{% block primary_action %}
+<a href="{% url 'inventory:item_list' %}" class="inline-flex items-center text-sm font-semibold text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white transition-colors">
+  <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+  Back to Inventory
+</a>
+{% endblock %}
+
+{% block workspace %}
+<form method="POST" class="max-w-3xl space-y-6 pb-6">
+  {% csrf_token %}
+  {% if form.non_field_errors %}
+  <div class="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded-xl text-sm">{{ form.non_field_errors.0 }}</div>
+  {% endif %}
+
+  <div class="bg-white dark:bg-neutral-dark-100 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-dark-200 overflow-hidden">
+    <div class="px-6 py-4 border-b border-neutral-200 dark:border-neutral-dark-300 bg-neutral-50 dark:bg-neutral-dark-200">
+      <h3 class="text-base font-bold text-neutral-900 dark:text-white">Product &amp; Location</h3>
+    </div>
+    <div class="p-6 space-y-4">
+      {% if not form.product.field.queryset.exists %}
+      <div class="rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400 px-4 py-3 text-sm">
+        Every inventory-tracked product already has a stock record (or none exist yet). Create a product in the catalog first.
+      </div>
+      {% endif %}
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {% include "inventory/_field.html" with field=form.product label="Product" required=True %}
+        {% include "inventory/_field.html" with field=form.warehouse label="Warehouse" %}
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white dark:bg-neutral-dark-100 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-dark-200 overflow-hidden">
+    <div class="px-6 py-4 border-b border-neutral-200 dark:border-neutral-dark-300 bg-neutral-50 dark:bg-neutral-dark-200">
+      <h3 class="text-base font-bold text-neutral-900 dark:text-white">Opening Balance &amp; Reorder Levels</h3>
+      <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">Opening stock is posted to the ledger. Levels drive low-stock alerts.</p>
+    </div>
+    <div class="p-6 space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {% include "inventory/_field.html" with field=form.opening_quantity label="Opening Quantity" %}
+        {% include "inventory/_field.html" with field=form.average_cost label="Unit Cost" %}
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {% include "inventory/_field.html" with field=form.minimum_stock label="Minimum Stock" %}
+        {% include "inventory/_field.html" with field=form.reorder_point label="Reorder Point" %}
+        {% include "inventory/_field.html" with field=form.reorder_quantity label="Reorder Qty" %}
+      </div>
+    </div>
+  </div>
+
+  <div class="flex items-center justify-end gap-3">
+    <a href="{% url 'inventory:item_list' %}" class="px-5 py-2.5 text-sm font-semibold text-neutral-700 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white transition-colors">Cancel</a>
+    <button type="submit" class="btn-primary">Create Stock Item</button>
+  </div>
+</form>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends "super_admin/layouts/platform.html" %}
+
+{% block platform_title %}Platform Analytics{% endblock %}
+{% block header_title %}Platform Analytics{% endblock %}
+{% block header_subtitle %}Advanced metrics, funnels, and retention data across the entire ecosystem{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-xl shadow-sm border border-neutral-200 overflow-hidden min-h-[400px] flex items-center justify-center">
+  <div class="text-center p-8">
+    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-brand-50 mb-4 border border-brand-100">
+      <svg class="w-8 h-8 text-brand-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+    </div>
+    <h3 class="text-lg font-semibold text-neutral-900 mb-2">Analytics Engine Initializing</h3>
+    <p class="text-sm text-neutral-500 max-w-md mx-auto">We are currently deploying the next-generation analytics warehouse. Full cross-tenant funnel tracking, MRR churn reports, and retention curves will be available here soon.</p>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,193 @@
+<section id="features" class="py-24 bg-slate-50">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center max-w-3xl mx-auto mb-16">
+      <h2 class="text-base font-semibold text-brand-600 tracking-wide uppercase">Why Choose Nextora POS</h2>
+      <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+        Everything you need to run your restaurant
+      </p>
+      <p class="mt-4 max-w-2xl text-xl text-slate-500 mx-auto">
+        A complete suite of tools designed to handle the rush hour, manage inventory, and grow your business.
+      </p>
+    </div>
+
+    <div x-data="{ activeFeature: 'billing' }" class="lg:grid lg:grid-cols-12 lg:gap-8 items-start">
+      <!-- Feature Navigation -->
+      <div class="lg:col-span-4 space-y-2 relative z-10 bg-white/50 backdrop-blur rounded-2xl p-4 border border-slate-200/60 shadow-sm">
+        
+        <button @click="activeFeature = 'billing'" :class="{'bg-white shadow-sm border-slate-200': activeFeature === 'billing', 'border-transparent hover:bg-slate-50': activeFeature !== 'billing'}" class="w-full flex items-start p-4 border rounded-xl transition-all text-left group">
+          <div :class="{'bg-brand-50 text-brand-600': activeFeature === 'billing', 'bg-slate-100 text-slate-500 group-hover:text-slate-700': activeFeature !== 'billing'}" class="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-lg">
+            <i data-lucide="receipt" class="w-5 h-5"></i>
+          </div>
+          <div class="ml-4">
+            <h3 class="text-base font-bold" :class="{'text-slate-900': activeFeature === 'billing', 'text-slate-700': activeFeature !== 'billing'}">Fast Billing</h3>
+            <p class="mt-1 text-sm text-slate-500">Lightning fast checkout, split bills, and multiple payment methods.</p>
+          </div>
+        </button>
+
+        <button @click="activeFeature = 'inventory'" :class="{'bg-white shadow-sm border-slate-200': activeFeature === 'inventory', 'border-transparent hover:bg-slate-50': activeFeature !== 'inventory'}" class="w-full flex items-start p-4 border rounded-xl transition-all text-left group">
+          <div :class="{'bg-emerald-50 text-emerald-600': activeFeature === 'inventory', 'bg-slate-100 text-slate-500 group-hover:text-slate-700': activeFeature !== 'inventory'}" class="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-lg">
+            <i data-lucide="package" class="w-5 h-5"></i>
+          </div>
+          <div class="ml-4">
+            <h3 class="text-base font-bold" :class="{'text-slate-900': activeFeature === 'inventory', 'text-slate-700': activeFeature !== 'inventory'}">Inventory Control</h3>
+            <p class="mt-1 text-sm text-slate-500">Real-time stock tracking, recipe management, and low stock alerts.</p>
+          </div>
+        </button>
+
+        <button @click="activeFeature = 'kitchen'" :class="{'bg-white shadow-sm border-slate-200': activeFeature === 'kitchen', 'border-transparent hover:bg-slate-50': activeFeature !== 'kitchen'}" class="w-full flex items-start p-4 border rounded-xl transition-all text-left group">
+          <div :class="{'bg-orange-50 text-orange-600': activeFeature === 'kitchen', 'bg-slate-100 text-slate-500 group-hover:text-slate-700': activeFeature !== 'kitchen'}" class="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-lg">
+            <i data-lucide="chef-hat" class="w-5 h-5"></i>
+          </div>
+          <div class="ml-4">
+            <h3 class="text-base font-bold" :class="{'text-slate-900': activeFeature === 'kitchen', 'text-slate-700': activeFeature !== 'kitchen'}">Kitchen Display</h3>
+            <p class="mt-1 text-sm text-slate-500">Digital KOTs to speed up prep times and reduce errors.</p>
+          </div>
+        </button>
+
+        <button @click="activeFeature = 'reports'" :class="{'bg-white shadow-sm border-slate-200': activeFeature === 'reports', 'border-transparent hover:bg-slate-50': activeFeature !== 'reports'}" class="w-full flex items-start p-4 border rounded-xl transition-all text-left group">
+          <div :class="{'bg-purple-50 text-purple-600': activeFeature === 'reports', 'bg-slate-100 text-slate-500 group-hover:text-slate-700': activeFeature !== 'reports'}" class="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-lg">
+            <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
+          </div>
+          <div class="ml-4">
+            <h3 class="text-base font-bold" :class="{'text-slate-900': activeFeature === 'reports', 'text-slate-700': activeFeature !== 'reports'}">Analytics & Reports</h3>
+            <p class="mt-1 text-sm text-slate-500">Understand your margins, top items, and daily sales trends.</p>
+          </div>
+        </button>
+
+      </div>
+
+      <!-- Feature Visuals -->
+      <div class="mt-10 lg:mt-0 lg:col-span-8 relative">
+        <!-- Billing Visual -->
+        <div x-show="activeFeature === 'billing'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0" class="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden aspect-[4/3] flex flex-col">
+          <div class="bg-slate-50 border-b border-slate-200 px-4 py-3 flex items-center gap-2">
+            <div class="w-3 h-3 rounded-full bg-red-400"></div>
+            <div class="w-3 h-3 rounded-full bg-amber-400"></div>
+            <div class="w-3 h-3 rounded-full bg-emerald-400"></div>
+            <div class="ml-4 text-xs font-medium text-slate-400">POS Terminal</div>
+          </div>
+          <div class="p-8 flex-1 bg-slate-100 flex items-center justify-center">
+             <div class="w-full max-w-md bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                <div class="flex justify-between items-center mb-6">
+                  <div class="font-bold text-slate-800">Current Order</div>
+                  <div class="text-sm font-medium text-brand-600">Table 4</div>
+                </div>
+                <div class="space-y-4">
+                  <div class="flex justify-between text-sm">
+                    <span class="text-slate-600">2x Cappuccino</span>
+                    <span class="font-medium text-slate-800">₹300</span>
+                  </div>
+                  <div class="flex justify-between text-sm">
+                    <span class="text-slate-600">1x Avocado Toast</span>
+                    <span class="font-medium text-slate-800">₹250</span>
+                  </div>
+                </div>
+                <div class="mt-6 pt-4 border-t border-slate-100 flex justify-between font-bold">
+                  <span>Total</span>
+                  <span>₹550</span>
+                </div>
+                <button class="mt-6 w-full bg-brand-600 text-white rounded-lg py-2.5 font-medium shadow-sm">Checkout</button>
+             </div>
+          </div>
+        </div>
+
+        <!-- Inventory Visual -->
+        <div x-show="activeFeature === 'inventory'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0" x-cloak class="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden aspect-[4/3] flex flex-col">
+           <div class="bg-slate-50 border-b border-slate-200 px-4 py-3 flex items-center gap-2">
+            <div class="w-3 h-3 rounded-full bg-red-400"></div>
+            <div class="w-3 h-3 rounded-full bg-amber-400"></div>
+            <div class="w-3 h-3 rounded-full bg-emerald-400"></div>
+            <div class="ml-4 text-xs font-medium text-slate-400">Inventory Dashboard</div>
+          </div>
+          <div class="p-8 flex-1 bg-slate-100 flex items-center justify-center">
+            <div class="w-full bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+               <table class="w-full text-left text-sm">
+                 <thead class="bg-slate-50 border-b border-slate-100">
+                   <tr>
+                     <th class="px-4 py-3 font-medium text-slate-500">Item</th>
+                     <th class="px-4 py-3 font-medium text-slate-500">Stock</th>
+                     <th class="px-4 py-3 font-medium text-slate-500">Status</th>
+                   </tr>
+                 </thead>
+                 <tbody class="divide-y divide-slate-50">
+                   <tr>
+                     <td class="px-4 py-3 font-medium text-slate-800">Coffee Beans</td>
+                     <td class="px-4 py-3 text-slate-600">4.5 kg</td>
+                     <td class="px-4 py-3"><span class="px-2 py-1 rounded bg-emerald-50 text-emerald-600 text-xs font-bold">In Stock</span></td>
+                   </tr>
+                   <tr>
+                     <td class="px-4 py-3 font-medium text-slate-800">Whole Milk</td>
+                     <td class="px-4 py-3 text-slate-600">2 L</td>
+                     <td class="px-4 py-3"><span class="px-2 py-1 rounded bg-red-50 text-red-600 text-xs font-bold">Low Stock</span></td>
+                   </tr>
+                   <tr>
+                     <td class="px-4 py-3 font-medium text-slate-800">Sugar</td>
+                     <td class="px-4 py-3 text-slate-600">12 kg</td>
+                     <td class="px-4 py-3"><span class="px-2 py-1 rounded bg-emerald-50 text-emerald-600 text-xs font-bold">In Stock</span></td>
+                   </tr>
+                 </tbody>
+               </table>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Kitchen Visual -->
+        <div x-show="activeFeature === 'kitchen'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0" x-cloak class="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden aspect-[4/3] flex flex-col">
+          <div class="bg-slate-50 border-b border-slate-200 px-4 py-3 flex items-center gap-2">
+            <div class="w-3 h-3 rounded-full bg-red-400"></div>
+            <div class="w-3 h-3 rounded-full bg-amber-400"></div>
+            <div class="w-3 h-3 rounded-full bg-emerald-400"></div>
+            <div class="ml-4 text-xs font-medium text-slate-400">KDS System</div>
+          </div>
+          <div class="p-8 flex-1 bg-slate-900 flex gap-4 overflow-hidden">
+             <!-- KOT Card -->
+             <div class="w-64 bg-slate-800 rounded-xl border border-slate-700 flex flex-col flex-shrink-0">
+               <div class="p-3 border-b border-slate-700 flex justify-between items-center text-white">
+                 <span class="font-bold">#1042</span>
+                 <span class="text-xs bg-amber-500/20 text-amber-400 px-2 py-1 rounded">04:20</span>
+               </div>
+               <div class="p-4 flex-1 space-y-3">
+                 <div class="flex items-start gap-2 text-slate-200 text-sm">
+                   <div class="w-5 h-5 rounded border border-slate-600 mt-0.5 flex-shrink-0"></div>
+                   <span>2x Margherita Pizza</span>
+                 </div>
+                 <div class="flex items-start gap-2 text-slate-200 text-sm">
+                   <div class="w-5 h-5 rounded border border-slate-600 mt-0.5 flex-shrink-0"></div>
+                   <span>1x Garlic Bread<br><span class="text-xs text-slate-400">Extra cheese</span></span>
+                 </div>
+               </div>
+               <div class="p-3 border-t border-slate-700">
+                 <button class="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-lg text-sm transition-colors">Mark Done</button>
+               </div>
+             </div>
+          </div>
+        </div>
+
+        <!-- Reports Visual -->
+        <div x-show="activeFeature === 'reports'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0" x-cloak class="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden aspect-[4/3] flex flex-col">
+          <div class="bg-slate-50 border-b border-slate-200 px-4 py-3 flex items-center gap-2">
+            <div class="w-3 h-3 rounded-full bg-red-400"></div>
+            <div class="w-3 h-3 rounded-full bg-amber-400"></div>
+            <div class="w-3 h-3 rounded-full bg-emerald-400"></div>
+            <div class="ml-4 text-xs font-medium text-slate-400">Analytics</div>
+          </div>
+          <div class="p-8 flex-1 bg-slate-50 flex flex-col gap-4 justify-center">
+             <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                <h4 class="text-sm font-bold text-slate-800 mb-4">Revenue Trend (Last 7 Days)</h4>
+                <div class="flex items-end gap-2 h-32 pt-4">
+                  <div class="w-full bg-brand-100 rounded-t-sm" style="height: 40%"></div>
+                  <div class="w-full bg-brand-200 rounded-t-sm" style="height: 60%"></div>
+                  <div class="w-full bg-brand-300 rounded-t-sm" style="height: 45%"></div>
+                  <div class="w-full bg-brand-400 rounded-t-sm" style="height: 80%"></div>
+                  <div class="w-full bg-brand-500 rounded-t-sm" style="height: 65%"></div>
+                  <div class="w-full bg-brand-600 rounded-t-sm" style="height: 90%"></div>
+                  <div class="w-full bg-brand-700 rounded-t-sm" style="height: 100%"></div>
+                </div>
+             </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>

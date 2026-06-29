@@ -1,0 +1,46 @@
+{% extends "layouts/auth.html" %}
+{# Sample Sign-in page. #}
+
+
+{% block title %}Sign in · Nextora{% endblock %}
+{% block auth_title %}Sign in to Nextora{% endblock %}
+{% block auth_subtitle %}<p class="auth-card__subtitle">Use your work email to continue.</p>{% endblock %}
+
+{% block auth_body %}
+  <form method="post" action="#" novalidate>
+    {% csrf_token %}
+
+    {% if form_error %}
+      <div class="alert alert--danger" role="alert">
+        <svg class="alert__icon" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M10 2L1 18h18L10 2Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M10 8v4M10 15h.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <div class="alert__body">
+          <div class="alert__title">Invalid credentials</div>
+          <div class="alert__msg">{{ form_error }}</div>
+        </div>
+      </div>
+    {% endif %}
+
+    <div class="field">
+      <label class="field__label" for="email">Email</label>
+      <input id="email" name="email" type="email" class="input" autocomplete="username" required>
+    </div>
+
+    <div class="field" style="margin-top:var(--forge-space-3)">
+      <label class="field__label" for="password">Password</label>
+      <input id="password" name="password" type="password" class="input" autocomplete="current-password" required>
+      <span class="field__hint"><a href="#">Forgot password?</a></span>
+    </div>
+
+    <label class="choice" style="margin-top:var(--forge-space-3)">
+      <input type="checkbox" name="remember"> Keep me signed in on this device
+    </label>
+
+    <button type="submit" class="btn-primary" style="margin-top:var(--forge-space-4)">
+      Sign in
+    </button>
+
+    <div class="text-caption text-tertiary" style="text-align:center;margin-top:var(--forge-space-3)">
+      <a href="#">Use single sign-on</a>
+    </div>
+  </form>
+{% endblock %}

@@ -1,0 +1,222 @@
+{% extends "reporting/base_report.html" %}
+
+{% block report_key %}items{% endblock %}
+{% block report_title %}Product & Item Intelligence{% endblock %}
+{% block report_description %}Audit item velocity, margin contribution, category trends, and stock valuation.{% endblock %}
+
+{% block col_init %}
+visibleCols = {
+  name: true,
+  sku: true,
+  category: true,
+  qty_sold: true,
+  revenue: true,
+  cost: true,
+  profit: true,
+  stock: true,
+  avg_price: true
+};
+{% endblock %}
+
+{% block report_filters %}
+  <div class="flex-1 min-w-[150px]">
+    <label class="block text-xs font-semibold text-neutral-500 mb-1">Preset Range</label>
+    <select name="preset" class="input input-sm w-full" onchange="this.form.submit()">
+      <option value="today" {% if preset == 'today' %}selected{% endif %}>Today</option>
+      <option value="yesterday" {% if preset == 'yesterday' %}selected{% endif %}>Yesterday</option>
+      <option value="last_7_days" {% if preset == 'last_7_days' %}selected{% endif %}>Last 7 Days</option>
+      <option value="last_30_days" {% if preset == 'last_30_days' %}selected{% endif %}>Last 30 Days</option>
+      <option value="this_month" {% if preset == 'this_month' %}selected{% endif %}>This Month</option>
+      <option value="last_month" {% if preset == 'last_month' %}selected{% endif %}>Last Month</option>
+      <option value="custom" {% if preset == 'custom' %}selected{% endif %}>Custom Range</option>
+    </select>
+  </div>
+
+  <template x-if="'{{ preset }}' === 'custom'">
+    <div class="flex gap-2 flex-1 min-w-[280px]">
+      <div class="flex-1">
+        <label class="block text-xs font-semibold text-neutral-500 mb-1">Start Date</label>
+        <input type="date" name="start_date" value="{{ start_date }}" class="input input-sm w-full">
+      </div>
+      <div class="flex-1">
+        <label class="block text-xs font-semibold text-neutral-500 mb-1">End Date</label>
+        <input type="date" name="end_date" value="{{ end_date }}" class="input input-sm w-full">
+      </div>
+    </div>
+  </template>
+
+  <div class="flex-1 min-w-[150px]">
+    <label class="block text-xs font-semibold text-neutral-500 mb-1">Category</label>
+    <select name="category" class="input input-sm w-full">
+      <option value="">All Categories</option>
+      {% for cat in categories %}
+        <option value="{{ cat.id }}" {% if selected_category == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="flex-1 min-w-[200px]">
+    <label class="block text-xs font-semibold text-neutral-500 mb-1">Item Name</label>
+    <input type="text" name="item_name" value="{{ item_name }}" placeholder="Search product name..." class="input input-sm w-full">
+  </div>
+{% endblock %}
+
+{% block report_kpis %}
+  <div class="bg-white dark:bg-neutral-800 p-5 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center gap-4">
+    <div class="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-lg flex items-center justify-center shrink-0">
+      <i data-lucide="package" class="w-6 h-6"></i>
+    </div>
+    <div>
+      <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Total Quantity Sold</span>
+      <h3 class="text-xl font-bold text-neutral-900 dark:text-white mt-0.5">{{ total_items_sold|floatformat:0 }}</h3>
+    </div>
+  </div>
+
+  <div class="bg-white dark:bg-neutral-800 p-5 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center gap-4">
+    <div class="w-12 h-12 bg-green-50 dark:bg-green-900/20 text-green-600 rounded-lg flex items-center justify-center shrink-0">
+      <i data-lucide="indian-rupee" class="w-6 h-6"></i>
+    </div>
+    <div>
+      <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Product Revenues</span>
+      <h3 class="text-xl font-bold text-neutral-900 dark:text-white mt-0.5">₹{{ total_item_revenue|floatformat:2 }}</h3>
+    </div>
+  </div>
+
+  <div class="bg-white dark:bg-neutral-800 p-5 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center gap-4">
+    <div class="w-12 h-12 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 rounded-lg flex items-center justify-center shrink-0">
+      <i data-lucide="pie-chart" class="w-6 h-6"></i>
+    </div>
+    <div>
+      <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Gross Profit Margin</span>
+      <h3 class="text-xl font-bold text-neutral-900 dark:text-white mt-0.5">₹{{ total_item_profit|floatformat:2 }}</h3>
+    </div>
+  </div>
+
+  <div class="bg-white dark:bg-neutral-800 p-5 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center gap-4">
+    <div class="w-12 h-12 bg-purple-50 dark:bg-purple-900/20 text-purple-600 rounded-lg flex items-center justify-center shrink-0">
+      <i data-lucide="trophy" class="w-6 h-6"></i>
+    </div>
+    <div class="min-w-0 flex-1">
+      <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Best Seller</span>
+      <h3 class="text-sm font-bold text-neutral-900 dark:text-white mt-0.5 truncate" title="{{ top_qty_labels.0 }}">{{ top_qty_labels.0|default:"N/A" }}</h3>
+    </div>
+  </div>
+{% endblock %}
+
+{% block report_charts %}
+  <div class="card p-5 bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700">
+    <h3 class="text-sm font-bold text-neutral-800 dark:text-white mb-4">Top 10 Selling Products (Volume)</h3>
+    <div class="h-64"><canvas id="qtyChart"></canvas></div>
+  </div>
+
+  <div class="card p-5 bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700">
+    <h3 class="text-sm font-bold text-neutral-800 dark:text-white mb-4">Top 10 Profitable Products (INR)</h3>
+    <div class="h-64"><canvas id="profitChart"></canvas></div>
+  </div>
+
+  <div class="card p-5 bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 lg:col-span-2">
+    <h3 class="text-sm font-bold text-neutral-800 dark:text-white mb-4">Category Slices Breakdown</h3>
+    <div class="h-64 flex items-center justify-center"><canvas id="catChart"></canvas></div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      new Chart(document.getElementById('qtyChart'), {
+        type: 'bar',
+        data: {
+          labels: {{ top_qty_labels|safe }},
+          datasets: [{
+            label: 'Qty Sold',
+            data: {{ top_qty_data|safe }},
+            backgroundColor: '#3b82f6'
+          }]
+        },
+        options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false }
+      });
+
+      new Chart(document.getElementById('profitChart'), {
+        type: 'bar',
+        data: {
+          labels: {{ top_profit_labels|safe }},
+          datasets: [{
+            label: 'Profit (₹)',
+            data: {{ top_profit_data|safe }},
+            backgroundColor: '#10b981'
+          }]
+        },
+        options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false }
+      });
+
+      new Chart(document.getElementById('catChart'), {
+        type: 'doughnut',
+        data: {
+          labels: {{ cat_labels|safe }},
+          datasets: [{
+            data: {{ cat_data|safe }},
+            backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899']
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+    });
+  </script>
+{% endblock %}
+
+{% block table_header %}
+  <tr>
+    <th x-show="visibleCols.name" class="px-4 py-3">Item Name</th>
+    <th x-show="visibleCols.sku" class="px-4 py-3">SKU</th>
+    <th x-show="visibleCols.category" class="px-4 py-3">Category</th>
+    <th x-show="visibleCols.qty_sold" class="px-4 py-3 text-right">Qty Sold</th>
+    <th x-show="visibleCols.revenue" class="px-4 py-3 text-right">Revenue</th>
+    <th x-show="visibleCols.cost" class="px-4 py-3 text-right">Stock Cost</th>
+    <th x-show="visibleCols.profit" class="px-4 py-3 text-right">Gross Profit</th>
+    <th x-show="visibleCols.stock" class="px-4 py-3 text-right">Stock On Hand</th>
+    <th x-show="visibleCols.avg_price" class="px-4 py-3 text-right">Avg Price</th>
+  </tr>
+{% endblock %}
+
+{% block table_body %}
+  {% for r in page_obj %}
+    <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-700/50">
+      <td x-show="visibleCols.name" class="px-4 py-3 font-semibold text-neutral-900 dark:text-white">{{ r.name }}</td>
+      <td x-show="visibleCols.sku" class="px-4 py-3 font-mono text-xs">{{ r.sku }}</td>
+      <td x-show="visibleCols.category" class="px-4 py-3 text-xs">{{ r.category }}</td>
+      <td x-show="visibleCols.qty_sold" class="px-4 py-3 text-right">{{ r.qty_sold|floatformat:0 }}</td>
+      <td x-show="visibleCols.revenue" class="px-4 py-3 text-right text-green-600 font-medium">₹{{ r.revenue|floatformat:2 }}</td>
+      <td x-show="visibleCols.cost" class="px-4 py-3 text-right">₹{{ r.cost|floatformat:2 }}</td>
+      <td x-show="visibleCols.profit" class="px-4 py-3 text-right font-bold {% if r.profit > 0 %}text-emerald-600{% else %}text-red-500{% endif %}">
+        ₹{{ r.profit|floatformat:2 }}
+      </td>
+      <td x-show="visibleCols.stock" class="px-4 py-3 text-right text-xs">{{ r.stock|floatformat:0 }}</td>
+      <td x-show="visibleCols.avg_price" class="px-4 py-3 text-right">₹{{ r.avg_price|floatformat:2 }}</td>
+    </tr>
+  {% empty %}
+    <tr>
+      <td colspan="9" class="px-4 py-8 text-center text-neutral-500">
+        <div class="flex flex-col items-center gap-2">
+          <i data-lucide="package-search" class="w-8 h-8 text-neutral-300"></i>
+          <span>No item metrics found for matching inputs.</span>
+        </div>
+      </td>
+    </tr>
+  {% endfor %}
+{% endblock %}
+
+{% block table_pagination %}
+  {% if page_obj.has_other_pages %}
+    <div class="px-5 py-3 border-t border-neutral-100 dark:border-neutral-700/50 flex justify-between items-center bg-neutral-50/50">
+      <span class="text-xs text-neutral-500">
+        Showing page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+      </span>
+      <div class="flex gap-1">
+        {% if page_obj.has_previous %}
+          <a href="?page={{ page_obj.previous_page_number }}&{{ request.GET.urlencode }}" class="btn-secondary">Previous</a>
+        {% endif %}
+        {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}&{{ request.GET.urlencode }}" class="btn-secondary">Next</a>
+        {% endif %}
+      </div>
+    </div>
+  {% endif %}
+{% endblock %}

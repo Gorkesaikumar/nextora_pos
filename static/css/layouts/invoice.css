@@ -1,0 +1,107 @@
+/* Invoice — A4 tax invoice + thermal receipt. */
+
+/* A4 tax invoice — extends the print page model. */
+.invoice {
+  /* Inherits .print-page. */
+}
+.invoice__heading {
+  text-align: center;
+  font-size: 14pt; font-weight: 700; letter-spacing: 0.06em;
+  margin-bottom: 6mm;
+}
+.invoice__copy-mark {
+  position: absolute;
+  top: 16mm; right: 16mm;
+  font-size: 9pt; color: #848484;
+  border: 1px solid #CBCBCB;
+  padding: 2mm 4mm;
+  border-radius: 4px;
+}
+.invoice__meta {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 6mm;
+  margin-bottom: 6mm;
+  font-size: 10pt;
+}
+.invoice__meta .label { color: #5C5C5C; font-size: 8pt; text-transform: uppercase; letter-spacing: 0.06em; }
+.invoice__parties {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 6mm;
+  margin-bottom: 8mm;
+}
+.invoice__party {
+  border: 1px solid #CBCBCB; padding: 4mm 5mm;
+  border-radius: 4px;
+}
+.invoice__party-title {
+  font-size: 8pt; text-transform: uppercase; letter-spacing: 0.06em;
+  color: #5C5C5C; margin-bottom: 2mm;
+}
+.invoice__totals {
+  margin-left: auto; width: 80mm;
+  display: grid; grid-template-columns: 1fr auto; row-gap: 1mm;
+  font-size: 10pt;
+  font-variant-numeric: tabular-nums;
+}
+.invoice__totals .value { text-align: right; }
+.invoice__totals .grand-label,
+.invoice__totals .grand-value {
+  font-size: 12pt; font-weight: 700;
+  border-top: 1px solid #CBCBCB; padding-top: 2mm; margin-top: 2mm;
+}
+.invoice__amount-in-words {
+  margin-top: 4mm;
+  font-style: italic;
+  font-size: 10pt;
+  color: #3D3D3D;
+}
+.invoice__signature {
+  margin-top: 16mm;
+  display: flex; justify-content: flex-end;
+  text-align: center;
+}
+.invoice__signature-block {
+  width: 60mm;
+  border-top: 1px solid #848484;
+  padding-top: 2mm;
+  font-size: 9pt; color: #5C5C5C;
+}
+
+/* Thermal receipt — monospace-first, fixed character columns.
+ * Designed for screen preview; driver renders the bytes. */
+.thermal {
+  width: 80mm;                 /* 80mm roll; 58mm variant below */
+  margin: 16px auto;
+  background-color: #FFFFFF;
+  color: #141414;
+  padding: 4mm;
+  font-family: ui-monospace, "Cascadia Code", "Fira Code", monospace;
+  font-size: 11pt;
+  line-height: 1.32;
+  box-shadow: var(--forge-shadow-overlay);
+}
+.thermal--58 { width: 58mm; font-size: 10pt; }
+
+.thermal__center { text-align: center; }
+.thermal__strong { font-weight: 700; }
+.thermal__hr {
+  border: 0; border-top: 1px dashed #5C5C5C;
+  margin: 2mm 0;
+}
+.thermal__row {
+  display: flex; justify-content: space-between; gap: 2mm;
+}
+.thermal__row .right { text-align: right; }
+.thermal__total {
+  font-size: 14pt; font-weight: 700;
+}
+.thermal__qr {
+  width: 28mm; height: 28mm; margin: 3mm auto 0;
+  background-color: #E0E0E0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 8pt; color: #848484;
+}
+
+@media print {
+  .thermal { box-shadow: none; margin: 0; }
+  @page { margin: 0; size: 80mm auto; }
+}

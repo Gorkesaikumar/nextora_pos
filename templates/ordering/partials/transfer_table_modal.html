@@ -1,0 +1,30 @@
+<div class="modal-dialog max-w-sm w-full bg-neutral-0 dark:bg-neutral-dark-100 rounded-xl shadow-lg border border-neutral-200 dark:border-neutral-dark-200 flex flex-col pointer-events-auto" role="document">
+  <form action="{% url 'ordering:pos_transfer_table' source_table.id target_table.id|default:'00000000-0000-0000-0000-000000000000' %}" method="post" id="transfer-form">
+    {% csrf_token %}
+    <div class="px-6 py-4 border-b border-neutral-150 dark:border-neutral-dark-150 flex justify-between items-center">
+      <h3 class="text-heading-3 text-neutral-900 dark:text-neutral-dark-900">Transfer Table</h3>
+      <button type="button" class="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-dark-400 transition-colors" data-modal-dismiss>
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
+    </div>
+    
+    <div class="p-6 overflow-y-auto space-y-4">
+      <p class="text-body text-neutral-600 mb-4">Moving order from <strong>Table {{ source_table.number }}</strong>. Select a vacant table below:</p>
+      
+      <div>
+        <label class="block text-caption-strong text-neutral-700 dark:text-neutral-dark-700 mb-1">Target Table</label>
+        <select name="target_table_id" class="form-select w-full" onchange="document.getElementById('transfer-form').action = '{% url 'ordering:pos_transfer_table' source_table.id '00000000-0000-0000-0000-000000000000' %}'.replace('00000000-0000-0000-0000-000000000000', this.value);">
+          <option value="">-- Select Vacant Table --</option>
+          {% for table in vacant_tables %}
+          <option value="{{ table.id }}">Table {{ table.number }} ({{ table.capacity }} pax) - {{ table.floor.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    
+    <div class="px-6 py-4 border-t border-neutral-150 dark:border-neutral-dark-150 bg-neutral-50 dark:bg-neutral-dark-50 flex justify-end gap-3 rounded-b-xl">
+      <button type="button" class="btn-secondary" data-modal-dismiss>Cancel</button>
+      <button type="submit" class="btn-primary">Transfer Order</button>
+    </div>
+  </form>
+</div>

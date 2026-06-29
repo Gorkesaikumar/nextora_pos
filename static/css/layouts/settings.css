@@ -1,0 +1,58 @@
+/* Settings — two-pane master/detail. */
+
+.settings-shell {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: 100%;
+  background-color: var(--forge-color-surface-base);
+}
+.settings-nav {
+  position: sticky; top: 0;
+  align-self: start;
+  padding: var(--forge-space-4) var(--forge-space-3);
+  border-right: 1px solid var(--forge-color-border-subtle);
+  max-height: calc(100vh - var(--forge-zone-top-rail-height, 44px));
+  overflow-y: auto;
+}
+.settings-nav__title {
+  font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--forge-color-text-tertiary);
+  font-weight: 600;
+  padding: 0 var(--forge-space-2) var(--forge-space-2);
+}
+.settings-nav__item {
+  display: flex; align-items: center; gap: var(--forge-space-2);
+  padding: var(--forge-space-2) var(--forge-space-3);
+  border-radius: var(--forge-radius-sharp);
+  color: var(--forge-color-text-secondary);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+.settings-nav__item:hover { color: var(--forge-color-text-primary); background-color: var(--forge-color-surface-row-hover); }
+.settings-nav__item[aria-current="page"] {
+  background-color: var(--forge-color-surface-row-selected);
+  color: var(--forge-color-brand-default);
+}
+
+.settings-pane { padding: var(--forge-space-5) var(--forge-space-6); display: flex; flex-direction: column; gap: var(--forge-space-4); }
+.settings-pane__header { display: flex; align-items: flex-start; gap: var(--forge-space-3); }
+.settings-pane__title { font-size: 1.375rem; font-weight: 600; letter-spacing: -0.02em; margin: 0; }
+.settings-pane__desc  { font-size: 0.8125rem; color: var(--forge-color-text-secondary); margin-top: 2px; }
+.settings-pane__primary { margin-left: auto; }
+
+/* Collapses below lg to horizontal tabs above. */
+@media (max-width: 1023px) {
+  .settings-shell {
+    grid-template-columns: 1fr;
+  }
+  .settings-nav {
+    position: static;
+    border-right: 0;
+    border-bottom: 1px solid var(--forge-color-border-subtle);
+    max-height: none;
+    padding: var(--forge-space-2) var(--forge-space-3);
+    display: flex; gap: var(--forge-space-1); overflow-x: auto;
+  }
+  .settings-nav__title { display: none; }
+  .settings-nav__item { white-space: nowrap; }
+}

@@ -1,0 +1,81 @@
+/* Context Panel — persistent right-side secondary context (POS order summary). */
+
+.context-panel {
+  display: flex; flex-direction: column;
+  background-color: var(--forge-color-surface-base);
+  border-left: 1px solid var(--forge-color-border-subtle);
+}
+
+.context-panel__header {
+  display: flex; align-items: center; gap: var(--forge-space-2);
+  padding: var(--forge-space-3) var(--forge-space-4);
+  border-bottom: 1px solid var(--forge-color-border-subtle);
+  position: sticky; top: 0;
+  background-color: var(--forge-color-surface-base);
+}
+
+.context-panel__body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--forge-space-3) var(--forge-space-4);
+}
+
+.context-panel__footer {
+  position: sticky; bottom: 0;
+  padding: var(--forge-space-3) var(--forge-space-4);
+  border-top: 1px solid var(--forge-color-border-subtle);
+  background-color: var(--forge-color-surface-base);
+  display: flex; flex-direction: column; gap: var(--forge-space-2);
+}
+
+/* Bill summary block — tabular numbers, total in display size. */
+.context-panel__totals {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  row-gap: var(--forge-space-1);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.8125rem;
+  color: var(--forge-color-text-secondary);
+}
+.context-panel__totals > .label { color: var(--forge-color-text-secondary); }
+.context-panel__totals > .value { color: var(--forge-color-text-primary); text-align: right; }
+.context-panel__totals > .grand-label,
+.context-panel__totals > .grand-value {
+  font-size: 1.375rem; font-weight: 700;
+  color: var(--forge-color-text-primary);
+  padding-top: var(--forge-space-2);
+  border-top: 1px solid var(--forge-color-border-subtle);
+  margin-top: var(--forge-space-2);
+  letter-spacing: -0.02em;
+}
+
+/* Pull-up sheet trigger pill — visible below md. */
+.context-panel__sheet-trigger {
+  display: none;
+  position: fixed;
+  left: 50%; bottom: var(--forge-space-3);
+  transform: translateX(-50%);
+  padding: var(--forge-space-2) var(--forge-space-5);
+  background-color: var(--forge-color-brand-default);
+  color: var(--forge-color-brand-on-brand);
+  border-radius: var(--forge-radius-pill);
+  font-weight: 600;
+  z-index: var(--forge-z-sticky, 10);
+  box-shadow: var(--forge-shadow-overlay);
+}
+
+@media (max-width: 767px) {
+  .context-panel {
+    position: fixed;
+    inset: 0; top: auto;
+    height: 90vh;
+    border-left: 0;
+    border-top: 1px solid var(--forge-color-border-subtle);
+    border-radius: var(--forge-radius-card) var(--forge-radius-card) 0 0;
+    transform: translateY(100%);
+    transition: transform var(--forge-duration-moderate, 220ms) ease-out;
+    z-index: var(--forge-z-modal, 300);
+  }
+  .context-panel.is-open { transform: translateY(0); }
+  .context-panel__sheet-trigger { display: inline-flex; align-items: center; gap: var(--forge-space-2); }
+}

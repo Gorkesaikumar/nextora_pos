@@ -1,0 +1,169 @@
+{% comment %}
+{% comment %}
+  Current Order panel. Root #pos-cart-panel is swapped (outerHTML) by every
+  cart mutation — id and structure preserved. All hx endpoints unchanged:
+  clear / table-map / qty +- / remove / save / checkout.
+{% endcomment %}
+<div class="flex flex-col h-full bg-neutral-0 dark:bg-neutral-dark-100" id="pos-cart-panel">
+
+  <!-- Header -->
+  <div class="px-5 pt-5 pb-4 flex justify-between items-start">
+    <div>
+      <h2 class="text-heading-2 text-neutral-900 dark:text-neutral-dark-900">Current Order</h2>
+      <p class="text-caption-strong mt-1">
+        <span class="text-brand-default">{{ active_order.order_number|default:"0001" }}</span>
+        <span class="text-neutral-400 font-normal mx-1">·</span>
+        <span class="text-brand-default">{% if active_order %}{{ active_order.get_type_display }}{% else %}Takeaway{% endif %}</span>
+      </p>
+    </div>
+    {% if active_order %}
+    <button class="p-2 -mr-1 text-neutral-400 hover:text-semantic-danger transition-colors rounded-card hover:bg-neutral-100 dark:hover:bg-neutral-dark-150 focus:outline-none focus:ring-2 focus:ring-brand-default"
+            aria-label="Clear order"
+            hx-post="{% url 'ordering:pos_clear_cart' %}"
+            hx-target="#pos-cart-panel"
+            hx-swap="outerHTML"
+            hx-confirm="Clear the current order? This cannot be undone.">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+    </button>
+    {% endif %}
+  </div>
+
+  <!-- Table & Customer -->
+  <div class="px-5 space-y-2">
+    <button type="button"
+            class="w-full flex items-center gap-3 px-3 py-2.5 rounded-card border border-neutral-200 dark:border-neutral-dark-200 hover:bg-neutral-50 dark:hover:bg-neutral-dark-50 hover:border-neutral-300 transition-colors text-left focus:outline-none focus:ring-2 focus:ring-brand-default"
+            hx-get="{% url 'ordering:pos_table_map' %}"
+            hx-target="#pos-modal-container"
+            hx-swap="innerHTML">
+      <span class="w-7 h-7 rounded-full bg-neutral-100 dark:bg-neutral-dark-150 flex items-center justify-center shrink-0">
+        <svg class="w-4 h-4 text-neutral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+      </span>
+      <span class="flex-grow text-body text-neutral-700 dark:text-neutral-dark-700">{% if active_order and active_order.table_number %}Table {{ active_order.table_number }}{% else %}Select Table...{% endif %}</span>
+      <svg class="w-4 h-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+    </button>
+
+    <button type="button"
+            class="w-full flex items-center gap-3 px-3 py-2.5 rounded-card border border-neutral-200 dark:border-neutral-dark-200 hover:bg-neutral-50 dark:hover:bg-neutral-dark-50 hover:border-neutral-300 transition-colors text-left focus:outline-none focus:ring-2 focus:ring-brand-default">
+      <span class="w-7 h-7 rounded-full bg-neutral-100 dark:bg-neutral-dark-150 flex items-center justify-center shrink-0">
+        <svg class="w-4 h-4 text-neutral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+      </span>
+      <span class="flex-grow text-body text-neutral-700 dark:text-neutral-dark-700">{% if active_order and active_order.customer_name %}{{ active_order.customer_name }}{% else %}Assign Customer...{% endif %}</span>
+      <svg class="w-4 h-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+    </button>
+  </div>
+
+  <!-- Items -->
+  <div class="flex-grow overflow-y-auto px-5 py-4 space-y-3 min-h-0">
+    {% if active_order and active_order.items.all %}
+      {% for item in active_order.items.all %}
+      {% if item.status == 'active' %}
+      <div class="flex gap-3 items-center group">
+        <!-- Qty stepper -->
+        <div class="flex flex-col items-center border border-neutral-200 dark:border-neutral-dark-200 rounded-card overflow-hidden shrink-0">
+          <button class="w-9 h-8 flex items-center justify-center bg-neutral-50 hover:bg-neutral-100 dark:bg-neutral-dark-150 dark:hover:bg-neutral-dark-200 text-neutral-600 dark:text-neutral-dark-600 transition-colors focus:outline-none focus:ring-1 focus:ring-inset focus:ring-brand-default"
+                  aria-label="Increase quantity of {{ item.name_snapshot }}"
+                  hx-post="{% url 'ordering:pos_update_item' item.id 'add' %}" hx-target="#pos-cart-panel" hx-swap="outerHTML">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+          </button>
+          <div class="w-9 h-8 flex items-center justify-center bg-neutral-0 dark:bg-neutral-dark-100 text-body-strong tabular-nums border-y border-neutral-200 dark:border-neutral-dark-200">{{ item.qty|floatformat:"0" }}</div>
+          <button class="w-9 h-8 flex items-center justify-center bg-neutral-50 hover:bg-neutral-100 dark:bg-neutral-dark-150 dark:hover:bg-neutral-dark-200 text-neutral-600 dark:text-neutral-dark-600 transition-colors focus:outline-none focus:ring-1 focus:ring-inset focus:ring-brand-default"
+                  aria-label="Decrease quantity of {{ item.name_snapshot }}"
+                  hx-post="{% url 'ordering:pos_update_item' item.id 'sub' %}" hx-target="#pos-cart-panel" hx-swap="outerHTML">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M20 12H4"></path></svg>
+          </button>
+        </div>
+
+        <!-- Thumbnail -->
+        <div class="w-11 h-11 rounded-card bg-neutral-100 dark:bg-neutral-dark-150 flex items-center justify-center shrink-0 text-neutral-400 font-bold text-body-strong">
+          {{ item.name_snapshot|make_list|first|upper }}
+        </div>
+
+        <!-- Details -->
+        <div class="flex-grow min-w-0">
+          <div class="flex justify-between items-start gap-2">
+            <div class="text-body-strong text-neutral-900 dark:text-neutral-dark-900 truncate">{{ item.name_snapshot }}</div>
+            <div class="text-body-strong tabular-nums text-neutral-900 dark:text-neutral-dark-900 shrink-0">₹{{ item.line_total|floatformat:2 }}</div>
+          </div>
+          <div class="text-caption text-neutral-500 dark:text-neutral-dark-500 mt-0.5">₹{{ item.unit_price|floatformat:2 }} each</div>
+          {% if item.modifiers.all %}
+          <div class="text-caption text-neutral-500 mt-1 space-y-0.5">
+            {% for mod in item.modifiers.all %}
+            <div class="flex justify-between"><span>{{ mod.name_snapshot }}</span><span class="tabular-nums">₹{{ mod.price_delta|floatformat:2 }}</span></div>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Remove -->
+        <button class="p-1.5 text-neutral-300 hover:text-semantic-danger transition-colors shrink-0 opacity-0 group-hover:opacity-100 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-brand-default rounded-card"
+                aria-label="Remove {{ item.name_snapshot }}"
+                hx-post="{% url 'ordering:pos_remove_item' item.id %}" hx-target="#pos-cart-panel" hx-swap="outerHTML">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+        </button>
+      </div>
+      {% endif %}
+      {% endfor %}
+    {% else %}
+      <div class="h-full flex flex-col items-center justify-center text-neutral-400 py-10">
+        <svg class="w-12 h-12 mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+        <p class="text-body-strong text-neutral-500">Cart is empty</p>
+        <p class="text-caption mt-1">Select items from the menu to start</p>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Totals & actions -->
+  <div class="border-t border-neutral-200 dark:border-neutral-dark-200 bg-neutral-50 dark:bg-neutral-dark-50 px-5 py-4 space-y-3">
+    <div class="space-y-1.5">
+      <div class="flex justify-between text-body text-neutral-600 dark:text-neutral-dark-600">
+        <span>Subtotal</span>
+        <span class="tabular-nums">₹{{ active_order.subtotal|default:"0.00"|floatformat:2 }}</span>
+      </div>
+      <div class="flex justify-between text-body text-neutral-600 dark:text-neutral-dark-600">
+        <span>Discount</span>
+        <span class="tabular-nums">₹{{ active_order.discount_amount|default:"0.00"|floatformat:2 }}</span>
+      </div>
+      {% if active_order and active_order.tax_amount %}
+      <div class="flex justify-between text-body text-neutral-600 dark:text-neutral-dark-600">
+        <span>Taxes (GST)</span>
+        <span class="tabular-nums">₹{{ active_order.tax_amount|floatformat:2 }}</span>
+      </div>
+      {% endif %}
+      <div class="flex justify-between items-baseline text-heading-2 text-neutral-900 dark:text-neutral-dark-900 pt-2 border-t border-neutral-200 dark:border-neutral-dark-200 mt-1">
+        <span>Total</span>
+        <span class="tabular-nums">₹{{ active_order.total|default:"0.00"|floatformat:2 }}</span>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-3 pt-1">
+      <button class="btn btn-primary h-12"
+              {% if not active_order or not active_order.items.all %}disabled{% else %}
+              hx-post="{% url 'ordering:pos_save_order' %}"
+              hx-target="#pos-modal-container"
+              hx-swap="innerHTML"
+              x-data="{ saving: false }"
+              @htmx:before-request="saving = true"
+              @htmx:after-request="saving = false"
+              :disabled="saving"
+              :class="saving ? 'opacity-50 cursor-not-allowed' : ''"
+              {% endif %}>
+        <svg x-show="!saving" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+        <svg x-show="saving" x-cloak class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <span x-text="saving ? 'Saving...' : 'Save Order'">Save Order</span>
+      </button>
+      <button class="btn btn-primary h-12"
+              {% if not active_order or not active_order.items.all %}disabled{% else %}
+              hx-get="{% url 'ordering:pos_checkout_modal' %}"
+              hx-target="#pos-modal-container"
+              hx-swap="innerHTML"
+              {% endif %}>
+        Charge <span class="tabular-nums">₹{{ active_order.total|default:"0.00"|floatformat:2 }}</span>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
+      </button>
+    </div>
+  </div>
+
+</div>

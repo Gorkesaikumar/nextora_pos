@@ -1,0 +1,36 @@
+/* Status Rail — 32px persistent operational signals at the bottom. */
+
+.status-rail {
+  display: flex; align-items: center;
+  gap: var(--forge-space-4);
+  padding: 0 var(--forge-space-4);
+  height: var(--forge-zone-status-rail-height, 32px);
+  background-color: var(--forge-color-surface-base);
+  border-top: 1px solid var(--forge-color-border-subtle);
+  font-size: 0.6875rem;
+  color: var(--forge-color-text-secondary);
+}
+
+.status-rail__signal {
+  display: inline-flex; align-items: center; gap: var(--forge-space-1);
+  font-variant-numeric: tabular-nums;
+}
+.status-rail__signal--ok    { color: var(--forge-color-success-text); }
+.status-rail__signal--warn  { color: var(--forge-color-warning-text); }
+.status-rail__signal--error { color: var(--forge-color-danger-text); }
+
+.status-rail__dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background-color: currentColor;
+}
+
+.status-rail__spacer { flex: 1; }
+
+.status-rail__shortcut-hint {
+  font-family: var(--forge-type-family-mono);
+  padding: 1px var(--forge-space-1);
+  background-color: var(--forge-color-surface-kbd);
+  border: 1px solid var(--forge-color-border-subtle);
+  border-radius: var(--forge-radius-sharp);
+}

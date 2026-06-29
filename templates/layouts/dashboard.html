@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% comment %} Dashboard layout — Top Rail + Module Rail + Workspace + (optional Status Rail).
+   No Context Panel. Standard density. {% endcomment %}
+
+
+{% block body %}
+  <div class="zone-shell zone-shell--no-context{% if not show_status_rail %} zone-shell--no-status-rail{% endif %}">
+    {% include "_chrome/top_rail.html" %}
+    {% include "_chrome/module_rail.html" %}
+
+    <main id="main" class="zone-workspace workspace" tabindex="-1">
+      <div class="px-8 pt-8 pb-4 flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-bold text-neutral-800">{% block page_title %}Dashboard{% endblock %}</h1>
+          <div class="text-sm text-neutral-500 mt-1">{% block page_subtitle %}{% endblock %}</div>
+        </div>
+        <div class="flex items-center gap-3">
+          {% block primary_action %}{% endblock %}
+        </div>
+      </div>
+
+      {% block filter_strip %}{% endblock %}
+
+      <div class="workspace__body">
+        {% block workspace %}{% endblock %}
+      </div>
+
+      {% block page_footer %}{% include "_chrome/page_footer.html" %}{% endblock %}
+    </main>
+
+    {% if show_status_rail %}{% include "_chrome/status_rail.html" %}{% endif %}
+  </div>
+{% endblock %}

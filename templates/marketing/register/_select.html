@@ -1,0 +1,28 @@
+{% comment %}
+Reusable select field for the onboarding wizard. Same shape as _field.html
+but renders <select> with iterable `choices` of (value, label) tuples.
+{% endcomment %}
+<div class="{{ span|default:'' }}">
+  <label for="id_{{ name }}" class="block text-sm font-semibold text-neutral-800 mb-1.5">
+    {{ label }}{% if required %} <span class="text-red-500" aria-hidden="true">*</span>{% endif %}
+  </label>
+  <select id="id_{{ name }}"
+          name="{{ name }}"
+          {% if required %}required{% endif %}
+          {% if errors %}aria-invalid="true" aria-describedby="err_{{ name }}"{% elif hint %}aria-describedby="hint_{{ name }}"{% endif %}
+          class="block w-full px-3.5 py-2.5 text-sm bg-white border rounded-xl text-neutral-900 shadow-sm focus:outline-none transition-all appearance-none bg-no-repeat bg-right pr-10
+                 {% if errors %}border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-500/10{% else %}border-neutral-200 focus:border-neutral-900 focus:ring-2 focus:ring-neutral-900/10{% endif %}"
+          style="background-image: url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B6B75' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E&quot;); background-position: right 0.875rem center; background-size: 12px 12px;">
+    {% if placeholder %}<option value="">{{ placeholder }}</option>{% endif %}
+    {% for choice_value, choice_label in choices %}
+      <option value="{{ choice_value }}" {% if value == choice_value %}selected{% endif %}>{{ choice_label }}</option>
+    {% endfor %}
+  </select>
+  {% if errors %}
+    <p id="err_{{ name }}" class="mt-1.5 text-xs text-red-600 flex items-center gap-1">
+      <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i>{{ errors.0 }}
+    </p>
+  {% elif hint %}
+    <p id="hint_{{ name }}" class="mt-1.5 text-xs text-neutral-500">{{ hint }}</p>
+  {% endif %}
+</div>

@@ -1,0 +1,61 @@
+/* Workspace — the content region between rails. */
+
+.workspace {
+  display: flex; flex-direction: column;
+  background-color: var(--forge-color-surface-base);
+}
+
+/* In-flow workspace header (NOT the Top Rail). */
+.workspace__header {
+  display: flex; align-items: center; gap: var(--forge-space-3);
+  padding: var(--forge-space-5) var(--forge-space-6) var(--forge-space-3);
+}
+.workspace__title {
+  font-size: 1.375rem; font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--forge-color-text-primary);
+  margin: 0;
+}
+.workspace__subtitle {
+  font-size: 0.8125rem;
+  color: var(--forge-color-text-secondary);
+}
+.workspace__header-spacer { flex: 1; }
+
+/* Primary action — Forge C1: top-right of workspace. */
+.workspace__primary { margin-left: auto; }
+
+/* Filter strip (sticky just under workspace header) — reports/lists. */
+.workspace__filter-strip {
+  position: sticky; top: 0;
+  display: flex; align-items: center; gap: var(--forge-space-2);
+  padding: var(--forge-space-2) var(--forge-space-6);
+  background-color: var(--forge-color-surface-base);
+  border-bottom: 1px solid var(--forge-color-border-subtle);
+  z-index: var(--forge-z-raised, 1);
+}
+
+.workspace__body {
+  flex: 1;
+  padding: var(--forge-space-4) var(--forge-space-6) var(--forge-space-10);
+}
+
+/* Density variants — Forge §IV. */
+.workspace--compact .workspace__body { padding: var(--forge-space-3) var(--forge-space-4); }
+.workspace--comfortable .workspace__body { padding: var(--forge-space-8) var(--forge-space-8); }
+
+/* Sticky bottom action bar (e.g., long form save). */
+.workspace__action-bar {
+  position: sticky; bottom: 0;
+  display: flex; align-items: center; justify-content: flex-end;
+  gap: var(--forge-space-2);
+  padding: var(--forge-space-3) var(--forge-space-6);
+  background-color: var(--forge-color-surface-base);
+  border-top: 1px solid var(--forge-color-border-subtle);
+}
+
+@media (max-width: 767px) {
+  .workspace__header { padding: var(--forge-space-3) var(--forge-space-4) var(--forge-space-2); }
+  .workspace__body { padding: var(--forge-space-3) var(--forge-space-4) var(--forge-space-16); }
+  .workspace__filter-strip { padding: var(--forge-space-2) var(--forge-space-4); }
+}

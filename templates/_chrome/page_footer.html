@@ -1,0 +1,9 @@
+{# Page Footer — non-sticky, back-office layouts only. Never primary actions. #}
+<footer class="page-footer" role="contentinfo">
+  <span>© {{ year|default:'2026' }} Nextora</span>
+  <a href="#">Documentation</a>
+  <a href="#">Support</a>
+  <span class="page-footer__spacer"></span>
+  <span>v{{ app_version|default:'1.0.0' }}</span>
+  {% if tenant %}<span>{{ tenant.name }}</span>{% endif %}
+</footer>

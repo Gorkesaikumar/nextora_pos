@@ -1,0 +1,41 @@
+<div class="flex items-center gap-2 p-3 rounded-card border border-neutral-150 dark:border-neutral-dark-150 bg-neutral-0 dark:bg-neutral-dark-100 shadow-sm"
+     x-data="{ 
+       status: '{{ status|default:'printing' }}',
+       message: '{{ message|default:'Sending to kitchen...' }}'
+     }">
+     
+  <!-- Spinner for printing status -->
+  <template x-if="status === 'printing'">
+    <div class="relative flex items-center justify-center w-6 h-6 text-brand-default">
+      <svg class="animate-spin w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+    </div>
+  </template>
+
+  <!-- Success Icon -->
+  <template x-if="status === 'success'">
+    <div class="w-6 h-6 rounded-full bg-semantic-success-subtle text-semantic-success flex items-center justify-center dark:bg-semantic-success-subtle-dark dark:text-semantic-success-dark">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+    </div>
+  </template>
+
+  <!-- Error Icon -->
+  <template x-if="status === 'error'">
+    <div class="w-6 h-6 rounded-full bg-semantic-danger-subtle text-semantic-danger flex items-center justify-center dark:bg-semantic-danger-subtle-dark dark:text-semantic-danger-dark">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+    </div>
+  </template>
+
+  <div class="flex flex-col">
+    <span class="text-body-strong text-neutral-900 dark:text-neutral-dark-900 leading-tight" x-text="message"></span>
+    <span class="text-micro text-neutral-500" x-show="status === 'error'">Tap to retry</span>
+  </div>
+
+  <template x-if="status === 'error'">
+    <button class="ml-auto p-1.5 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-dark-600 transition-colors">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+    </button>
+  </template>
+</div>

@@ -1,0 +1,96 @@
+{% extends "layouts/dashboard.html" %}
+
+{% block page_title %}Inventory List{% endblock %}
+{% block page_subtitle %}<p class="text-caption text-neutral-500 mt-1">Manage stock levels, variants, and low-stock thresholds.</p>{% endblock %}
+
+{% block primary_action %}
+<button type="button" class="btn-primary">
+  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+  Add Stock Item
+</button>
+{% endblock %}
+
+{% block filter_strip %}
+<div class="flex flex-col sm:flex-row gap-4 mb-6">
+  <!-- Contextual Search -->
+  <div class="relative flex-grow max-w-md">
+    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+      <svg class="w-4 h-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+    </div>
+    <input type="search" class="form-input pl-10 h-11" placeholder="Search by SKU, item name...">
+  </div>
+
+  <div class="flex items-center gap-3">
+    <label class="flex items-center gap-2 cursor-pointer text-body text-neutral-700 dark:text-neutral-dark-700">
+      <input type="checkbox" class="form-checkbox text-brand-default focus:ring-brand-default rounded-sm border-neutral-300 dark:border-neutral-dark-300 dark:bg-neutral-dark-150">
+      Show Low Stock Only
+    </label>
+    <select class="form-select w-48 h-11 bg-neutral-0 dark:bg-neutral-dark-100">
+      <option value="all">All Categories</option>
+      <option value="ingredients">Ingredients</option>
+      <option value="packaging">Packaging</option>
+    </select>
+  </div>
+</div>
+{% endblock %}
+
+{% block workspace %}
+<div class="card overflow-hidden">
+  <div class="overflow-x-auto">
+    <table class="w-full text-left border-collapse">
+      <thead>
+        <tr class="bg-neutral-50 dark:bg-neutral-dark-50 border-b border-neutral-150 dark:border-neutral-dark-150 text-heading-3 text-neutral-700 dark:text-neutral-dark-700">
+          <th class="px-5 py-3 font-semibold">SKU / Item</th>
+          <th class="px-5 py-3 font-semibold">Category</th>
+          <th class="px-5 py-3 font-semibold">In Stock</th>
+          <th class="px-5 py-3 font-semibold">Threshold</th>
+          <th class="px-5 py-3 font-semibold text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-neutral-150 dark:divide-neutral-dark-150">
+        
+        <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-dark-50 transition-colors">
+          <td class="px-5 py-4">
+            <div class="text-body-strong text-neutral-900 dark:text-neutral-dark-900">Premium Beef Patties</div>
+            <div class="text-caption text-neutral-500 font-mono mt-0.5">ING-BP-01</div>
+          </td>
+          <td class="px-5 py-4">
+            <span class="inline-flex items-center px-2 py-0.5 rounded-sharp text-caption-strong bg-neutral-100 text-neutral-700 dark:bg-neutral-dark-150 dark:text-neutral-dark-700">Ingredients</span>
+          </td>
+          <td class="px-5 py-4">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-semantic-success dark:bg-semantic-success-dark"></span>
+              <span class="text-body-strong tabular-nums text-neutral-900 dark:text-neutral-dark-900">450 <span class="text-neutral-500 font-normal">units</span></span>
+            </div>
+          </td>
+          <td class="px-5 py-4 text-body text-neutral-600 dark:text-neutral-dark-600 tabular-nums">100</td>
+          <td class="px-5 py-4 text-right">
+            <button class="text-brand-default hover:text-brand-hover dark:text-brand-on-dark text-body-strong">Update</button>
+          </td>
+        </tr>
+
+        <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-dark-50 transition-colors bg-semantic-danger-subtle/20 dark:bg-semantic-danger-subtle-dark/10">
+          <td class="px-5 py-4">
+            <div class="text-body-strong text-neutral-900 dark:text-neutral-dark-900">Truffle Oil</div>
+            <div class="text-caption text-neutral-500 font-mono mt-0.5">ING-TO-05</div>
+          </td>
+          <td class="px-5 py-4">
+            <span class="inline-flex items-center px-2 py-0.5 rounded-sharp text-caption-strong bg-neutral-100 text-neutral-700 dark:bg-neutral-dark-150 dark:text-neutral-dark-700">Ingredients</span>
+          </td>
+          <td class="px-5 py-4">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-semantic-danger dark:bg-semantic-danger-dark animate-pulse"></span>
+              <span class="text-body-strong tabular-nums text-semantic-danger dark:text-semantic-danger-dark">2 <span class="opacity-75 font-normal">btls</span></span>
+            </div>
+          </td>
+          <td class="px-5 py-4 text-body text-neutral-600 dark:text-neutral-dark-600 tabular-nums">5</td>
+          <td class="px-5 py-4 text-right">
+            <button class="text-brand-default hover:text-brand-hover dark:text-brand-on-dark text-body-strong">Update</button>
+          </td>
+        </tr>
+
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

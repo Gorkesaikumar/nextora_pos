@@ -1,0 +1,29 @@
+/* Error State — failure to load/act + recovery action. */
+
+.errstate {
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center;
+  padding: var(--forge-space-12) var(--forge-space-6);
+  color: var(--forge-color-text-secondary);
+}
+.errstate__icon {
+  width: 48px; height: 48px;
+  color: var(--forge-color-danger-default);
+  margin-bottom: var(--forge-space-3);
+}
+.errstate__title {
+  font-size: 1.125rem; font-weight: 600;
+  color: var(--forge-color-text-primary);
+  margin: 0 0 var(--forge-space-1);
+}
+.errstate__msg { font-size: 0.8125rem; max-width: 420px; margin-bottom: var(--forge-space-4); }
+.errstate__id {
+  font-family: var(--forge-type-family-mono);
+  font-size: 0.6875rem;
+  color: var(--forge-color-text-tertiary);
+  margin-top: var(--forge-space-3);
+  user-select: all;
+}
+
+/* Permission-denied variant. */
+.errstate--denied .errstate__icon { color: var(--forge-color-warning-default); }

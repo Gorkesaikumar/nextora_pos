@@ -1,0 +1,115 @@
+{% extends "layouts/pos.html" %}
+{% comment %} Sample POS terminal — order strip, category strip, quick-key grid, and
+   the Context Panel with the order summary + Pay button. {% endcomment %}
+
+
+{% block title %}POS · Nextora{% endblock %}
+
+{% block top_rail_context %}
+  <span>Andheri West</span>
+  <span class="text-tertiary">/</span>
+  <span class="mono">ORD-2611-0143</span>
+{% endblock %}
+
+{% block pos_strip %}
+  <div class="pos-strip" role="group" aria-label="Order type and identifiers">
+    <button class="pos-strip__chip" aria-pressed="true">Dine-in</button>
+    <button class="pos-strip__chip" aria-pressed="false">Takeaway</button>
+    <button class="pos-strip__chip" aria-pressed="false">Delivery</button>
+    <span style="width:1px;height:24px;background:var(--forge-color-border-subtle);margin:0 var(--forge-space-2)"></span>
+    <button class="pos-strip__chip">Table 7</button>
+    <button class="pos-strip__chip">+ Add customer</button>
+    <span class="pos-strip__spacer"></span>
+    <label class="search" aria-label="Search products">
+      <svg class="search__icon" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M11 11l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <input type="search" class="search__input" placeholder="Search products…">
+      <span class="search__shortcut" aria-hidden="true">/</span>
+    </label>
+  </div>
+{% endblock %}
+
+{% block pos_categories %}
+  <div class="pos-categories" role="tablist" aria-label="Product categories">
+    <button class="tab" role="tab" aria-selected="true">All</button>
+    <button class="tab" role="tab" aria-selected="false">Starters</button>
+    <button class="tab" role="tab" aria-selected="false">Mains</button>
+    <button class="tab" role="tab" aria-selected="false">Breads</button>
+    <button class="tab" role="tab" aria-selected="false">Beverages</button>
+    <button class="tab" role="tab" aria-selected="false">Desserts</button>
+  </div>
+{% endblock %}
+
+{% block pos_body %}
+  <div class="pos-grid" role="grid" aria-label="Quick keys">
+    {% for item in pos_items|default:'1,2,3,4,5,6,7,8,9,10,11,12'|slice:':12' %}
+      {# Sample items — replace with category-filtered products. #}
+    {% endfor %}
+    <button class="pos-key" type="button"><span class="pos-key__name">Paneer Tikka</span><span class="pos-key__price">₹260</span></button>
+    <button class="pos-key" type="button"><span class="pos-key__name">Butter Chicken</span><span class="pos-key__price">₹340</span></button>
+    <button class="pos-key" type="button"><span class="pos-key__name">Veg Biryani</span><span class="pos-key__price">₹280</span></button>
+    <button class="pos-key" type="button"><span class="pos-key__name">Tandoori Roti</span><span class="pos-key__price">₹25</span></button>
+    <button class="pos-key" type="button"><span class="pos-key__name">Garlic Naan</span><span class="pos-key__price">₹70</span></button>
+    <button class="pos-key" type="button"><span class="pos-key__name">Masala Chai</span><span class="pos-key__price">₹40</span></button>
+    <button class="pos-key" type="button"><span class="pos-key__name">Mango Lassi</span><span class="pos-key__price">₹90</span></button>
+    <button class="pos-key" type="button"><span class="pos-key__name">Gulab Jamun (2 pc)</span><span class="pos-key__price">₹80</span></button>
+    <button class="pos-key" type="button"><span class="pos-key__name">Veg Spring Rolls</span><span class="pos-key__price">₹160</span></button>
+    <button class="pos-key" type="button"><span class="pos-key__name">Dal Makhani</span><span class="pos-key__price">₹240</span></button>
+    <button class="pos-key" type="button"><span class="pos-key__name">Jeera Rice</span><span class="pos-key__price">₹180</span></button>
+    <button class="pos-key" type="button"><span class="pos-key__name">Coke 300ml</span><span class="pos-key__price">₹60</span></button>
+  </div>
+{% endblock %}
+
+{% block context_panel %}
+  <header class="context-panel__header">
+    <div>
+      <div class="text-caption-strong">Table 7</div>
+      <div class="text-micro text-tertiary mono">ORD-2611-0143</div>
+    </div>
+    <span style="margin-left:auto" class="chip chip--info"><span class="chip__dot" aria-hidden="true"></span>Open</span>
+  </header>
+
+  <div class="context-panel__body">
+    <div class="pos-order" aria-label="Order lines">
+      <div class="pos-line">
+        <div class="pos-line__name">Paneer Tikka</div>
+        <div class="pos-line__qty"><button aria-label="Decrease">−</button><span>2</span><button aria-label="Increase">+</button></div>
+        <div class="pos-line__mods">Extra spicy · No onion</div>
+        <div class="pos-line__price">₹520</div>
+      </div>
+      <div class="pos-line">
+        <div class="pos-line__name">Butter Chicken</div>
+        <div class="pos-line__qty"><button aria-label="Decrease">−</button><span>1</span><button aria-label="Increase">+</button></div>
+        <div class="pos-line__price">₹340</div>
+      </div>
+      <div class="pos-line">
+        <div class="pos-line__name">Garlic Naan</div>
+        <div class="pos-line__qty"><button aria-label="Decrease">−</button><span>3</span><button aria-label="Increase">+</button></div>
+        <div class="pos-line__price">₹210</div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="context-panel__footer">
+    <div class="context-panel__totals">
+      <span class="label">Subtotal</span>     <span class="value">₹1,070.00</span>
+      <span class="label">Discount</span>     <span class="value">−₹50.00</span>
+      <span class="label">CGST 2.5%</span>    <span class="value">₹25.50</span>
+      <span class="label">SGST 2.5%</span>    <span class="value">₹25.50</span>
+      <span class="label">Round-off</span>    <span class="value">₹0.00</span>
+      <span class="grand-label">Total</span>  <span class="grand-value">₹1,071.00</span>
+    </div>
+
+    <div style="display:flex;gap:var(--forge-space-2)">
+      <button class="btn-ghost" type="button">Discount</button>
+      <button class="btn-ghost" type="button">Hold</button>
+      <button class="btn-ghost" type="button">Split</button>
+      <button class="btn-ghost" type="button">KOT</button>
+    </div>
+
+    <button class="btn-primary" type="button">
+      Pay · ₹1,071.00 <span class="text-micro" style="opacity:.7;margin-left:auto">P</span>
+    </button>
+  </footer>
+{% endblock %}
+
+{% block sheet_trigger_summary %}6 items · ₹1,071.00{% endblock %}

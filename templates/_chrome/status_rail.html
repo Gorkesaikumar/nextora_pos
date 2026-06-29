@@ -1,0 +1,30 @@
+{% comment %} Status Rail — 32px bottom bar, real-time operational signals.
+   Dismissible signals only; no action that leaves the current task. {% endcomment %}
+<footer class="zone-status-rail status-rail" role="contentinfo" aria-label="Operational status">
+  {% block status_rail_left %}
+    <span class="status-rail__signal status-rail__signal--ok">
+      <span class="status-rail__dot" aria-hidden="true"></span>
+      Shift open · {{ shift_started_at|default:'09:00' }}
+    </span>
+    <span class="status-rail__signal">
+      Open KOTs: <strong class="tabular">{{ open_kots_count|default:0 }}</strong>
+    </span>
+    <span class="status-rail__signal">
+      Active orders: <strong class="tabular">{{ active_orders_count|default:0 }}</strong>
+    </span>
+  {% endblock %}
+
+  <span class="status-rail__spacer"></span>
+
+  {% block status_rail_right %}
+    <span class="status-rail__signal">
+      Printer: {{ printer_state|default:'Ready' }}
+    </span>
+    <span class="status-rail__signal status-rail__signal--ok">
+      Synced {{ last_sync|default:'12s ago' }}
+    </span>
+    <span class="status-rail__signal">
+      Press <span class="status-rail__shortcut">?</span> for shortcuts
+    </span>
+  {% endblock %}
+</footer>

@@ -1,0 +1,128 @@
+/* The Forge zone grid.
+ *
+ * Five zones compose every operational layout. The grid is fixed at the
+ * outer edges (top rail / status rail / rails) and elastic in the centre.
+ *
+ *  ┌─────────────────────────────────────────────────────────┐
+ *  │  TOP RAIL                                  44px         │
+ *  ├──────┬──────────────────────────────┬───────────────────┤
+ *  │ MOD  │  WORKSPACE                   │  CONTEXT PANEL    │
+ *  │ RAIL │                              │  (optional)       │
+ *  │ 64px │                              │  340 / 380 px     │
+ *  ├──────┴──────────────────────────────┴───────────────────┤
+ *  │  STATUS RAIL                                 32px       │
+ *  └─────────────────────────────────────────────────────────┘
+ *
+ * Layouts add/remove zones by toggling modifier classes on .zone-shell:
+ *   .zone-shell--no-rails        → auth, print, invoice (no chrome)
+ *   .zone-shell--no-context      → dashboard, settings, reports
+ *   .zone-shell--no-status-rail  → back-office layouts without an active shift
+ *   html.sidebar-expanded .zone-shell → module rail at 250px
+ */
+
+.zone-shell {
+  display: grid;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  width: 100%;
+  transition: grid-template-columns 300ms ease-in-out;
+  grid-template-columns:
+    var(--forge-zone-module-rail-width, 64px)
+    1fr
+    var(--forge-zone-context-panel, 340px);
+  grid-template-rows:
+    var(--forge-zone-top-rail-height, 64px)
+    minmax(0, 1fr)
+    var(--forge-zone-status-rail-height, 32px);
+  grid-template-areas:
+    "module-rail top-rail    top-rail"
+    "module-rail workspace  context-panel"
+    "module-rail status-rail status-rail";
+  background-color: var(--forge-color-surface-base); /* Changed to slightly off-white bg */
+  color: var(--forge-color-text-body);
+}
+
+html.sidebar-expanded .zone-shell {
+  grid-template-columns:
+    var(--forge-zone-module-rail-expanded, 250px)
+    1fr
+    var(--forge-zone-context-panel, 340px);
+}
+
+.zone-shell--no-context {
+  grid-template-columns: var(--forge-zone-module-rail-width, 64px) 1fr;
+  grid-template-areas:
+    "module-rail top-rail"
+    "module-rail workspace"
+    "module-rail status-rail";
+}
+html.sidebar-expanded .zone-shell.zone-shell--no-context {
+  grid-template-columns: var(--forge-zone-module-rail-expanded, 250px) 1fr;
+}
+
+.zone-shell--no-status-rail {
+  grid-template-rows: var(--forge-zone-top-rail-height, 64px) 1fr;
+  grid-template-areas:
+    "module-rail top-rail    top-rail"
+    "module-rail workspace   context-panel";
+}
+.zone-shell--no-status-rail.zone-shell--no-context {
+  grid-template-areas:
+    "module-rail top-rail"
+    "module-rail workspace";
+}
+
+/* Bare shell — auth, print, invoice. No chrome at all. */
+.zone-shell--no-rails {
+  display: block;
+  min-height: 100vh;
+  grid-template: none;
+}
+
+/* Slot assignment. */
+.zone-top-rail      { grid-area: top-rail; }
+.zone-module-rail   { grid-area: module-rail; }
+.zone-workspace     { grid-area: workspace; min-width: 0; }
+.zone-context-panel { grid-area: context-panel; }
+.zone-status-rail   { grid-area: status-rail; }
+
+/* Independent scrolling — workspace owns one vertical scrollbar; rails and
+ * context panel scroll independently. Forge §0.6.2: never horizontal. */
+.zone-workspace,
+.zone-context-panel,
+.zone-module-rail {
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Responsive reflow.
+ * ≥ lg  : full layout.
+ * md    : module rail collapses to icons only, context panel narrows.
+ * < md  : module rail → bottom tab bar, context panel → pull-up sheet.
+ */
+@media (max-width: 1023px) {
+  .zone-shell {
+    grid-template-columns:
+      var(--forge-zone-module-rail-width, 64px) 1fr var(--forge-zone-context-panel-sm, 300px);
+  }
+}
+@media (max-width: 767px) {
+  .zone-shell,
+  html.sidebar-expanded .zone-shell,
+  .zone-shell--no-context,
+  .zone-shell--no-status-rail {
+    grid-template-columns: 1fr;
+    grid-template-rows:
+      var(--forge-zone-top-rail-height, 44px)
+      1fr
+      auto;
+    grid-template-areas:
+      "top-rail"
+      "workspace"
+      "module-rail";
+  }
+  .zone-context-panel { display: none; }
+  .zone-status-rail { display: none; }
+}

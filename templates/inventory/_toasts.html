@@ -1,0 +1,6 @@
+{% comment %} Renders Django messages into the shared toast region. {% endcomment %}
+{% if messages %}
+  {% for message in messages %}
+    {% include "components/toast.html" with message=message type=message.tags duration=4000 %}
+  {% endfor %}
+{% endif %}

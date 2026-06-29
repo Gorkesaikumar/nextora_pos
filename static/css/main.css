@@ -1,0 +1,59 @@
+/*
+ * Nextora POS — Forge CSS entry
+ *
+ * Plain CSS modules consuming the Forge design tokens directly. No build step,
+ * no PostCSS, no @apply — every value comes from --forge-* custom properties
+ * defined in tokens.css (the source of truth at design-system/tokens/tokens.css).
+ *
+ * Import order matters: tokens → reset → typography → zones → components →
+ * layouts. Layouts override component defaults, components override base.
+ */
+
+/* 1. Design tokens (source of truth) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url("./tokens.css");
+
+/* 2. Base */
+@import url("./base/reset.css");
+@import url("./base/typography.css");
+
+/* 3. Zones (Forge §II zone model) */
+@import url("./zones/layout.css");
+@import url("./zones/top-rail.css");
+@import url("./zones/module-rail.css");
+@import url("./zones/context-panel.css");
+@import url("./zones/status-rail.css");
+@import url("./zones/workspace.css");
+@import url("./zones/page-footer.css");
+
+/* 4. Components */
+@import url("./components/button.css");
+@import url("./components/input.css");
+@import url("./components/search.css");
+@import url("./components/dropdown.css");
+@import url("./components/tabs.css");
+@import url("./components/breadcrumb.css");
+@import url("./components/pagination.css");
+@import url("./components/card.css");
+@import url("./components/metric-card.css");
+@import url("./components/table.css");
+@import url("./components/timeline.css");
+@import url("./components/badge.css");
+@import url("./components/tag.css");
+@import url("./components/status-chip.css");
+@import url("./components/alert.css");
+@import url("./components/toast.css");
+@import url("./components/modal.css");
+@import url("./components/drawer.css");
+@import url("./components/skeleton.css");
+@import url("./components/empty-state.css");
+@import url("./components/error-state.css");
+
+/* 5. Layouts */
+@import url("./layouts/dashboard.css");
+@import url("./layouts/auth.css");
+@import url("./layouts/pos.css");
+@import url("./layouts/settings.css");
+@import url("./layouts/reports.css");
+@import url("./layouts/print.css");
+@import url("./layouts/invoice.css");

@@ -1,0 +1,38 @@
+/* Card — Level-2 raised surface. No shadow (Rule A4). */
+
+.card {
+  background-color: var(--forge-color-surface-raised);
+  border: 1px solid var(--forge-color-border-subtle);
+  border-radius: var(--forge-radius-card);
+  display: flex; flex-direction: column;
+  min-width: 0;
+}
+.card__header {
+  display: flex; align-items: center; gap: var(--forge-space-2);
+  padding: var(--forge-space-3) var(--forge-space-4);
+  border-bottom: 1px solid var(--forge-color-border-subtle);
+}
+.card__title {
+  font-size: 1.125rem; font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--forge-color-text-primary);
+  margin: 0;
+}
+.card__actions { margin-left: auto; display: flex; gap: var(--forge-space-1); }
+.card__body { padding: var(--forge-space-4); flex: 1; min-width: 0; }
+.card__footer {
+  padding: var(--forge-space-3) var(--forge-space-4);
+  border-top: 1px solid var(--forge-color-border-subtle);
+  display: flex; gap: var(--forge-space-2); align-items: center;
+}
+
+/* Density. */
+.card--compact .card__body { padding: var(--forge-space-3); }
+.card--comfortable .card__body { padding: var(--forge-space-6); }
+
+/* Clickable card — Component Inventory §2.2: keep a single activatable target. */
+.card--clickable {
+  cursor: pointer;
+  transition: background-color var(--forge-duration-fast, 80ms) ease-out;
+}
+.card--clickable:hover { background-color: var(--forge-color-surface-row-hover); }

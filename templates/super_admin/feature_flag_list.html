@@ -1,0 +1,99 @@
+{% extends "super_admin/layouts/platform.html" %}
+
+{% block platform_title %}Feature Flags{% endblock %}
+{% block header_title %}Feature Flags{% endblock %}
+{% block header_subtitle %}Manage system-wide feature flags and kill switches{% endblock %}
+
+{% block header_actions %}
+<a href="#" class="inline-flex items-center gap-2 px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white font-semibold rounded-lg shadow-sm transition-all text-sm">
+  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+  Create Flag
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-xl shadow-sm border border-neutral-200 overflow-hidden">
+  
+  <div class="p-4 border-b border-neutral-200 flex flex-col sm:flex-row gap-4 bg-white">
+    <form method="GET" action="{% url 'super_admin:feature_flag_list' %}" class="flex-1 flex gap-4">
+      <div class="relative flex-1 max-w-md group">
+        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+          <svg class="h-4 w-4 text-neutral-400 group-focus-within:text-brand-500 transition-colors" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clip-rule="evenodd" /></svg>
+        </div>
+        <input type="search" name="q" value="{{ current_q }}" class="block w-full rounded-lg border border-neutral-200 bg-neutral-50 py-2 pl-10 pr-3 text-sm text-neutral-900 placeholder-neutral-400 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:bg-white focus:outline-none transition-all" placeholder="Search flags by key or name...">
+      </div>
+      <button type="submit" class="hidden">Filter</button>
+    </form>
+  </div>
+
+  <div class="overflow-x-auto">
+    <table class="w-full text-left border-collapse">
+      <thead>
+        <tr class="bg-neutral-50/50 border-b border-neutral-200">
+          <th class="px-6 py-4 text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Flag Key</th>
+          <th class="px-6 py-4 text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Name / Description</th>
+          <th class="px-6 py-4 text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Default State</th>
+          <th class="px-6 py-4 text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Kill Switch</th>
+          <th class="px-6 py-4 text-[10px] font-bold text-neutral-500 uppercase tracking-widest text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-neutral-100">
+        {% for flag in flags %}
+        <tr class="hover:bg-neutral-50 transition-colors group bg-white">
+          <td class="px-6 py-4">
+            <div class="text-sm font-mono font-medium text-neutral-900 group-hover:text-brand-600 transition-colors">{{ flag.key }}</div>
+          </td>
+          <td class="px-6 py-4">
+            <div class="text-sm font-medium text-neutral-900">{{ flag.name }}</div>
+            <div class="text-xs text-neutral-500">{{ flag.description|truncatechars:60 }}</div>
+          </td>
+          <td class="px-6 py-4">
+            {% if flag.default_state %}
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-green-50 text-green-700 border border-green-100">Enabled</span>
+            {% else %}
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-neutral-100 text-neutral-600 border border-neutral-200">Disabled</span>
+            {% endif %}
+          </td>
+          <td class="px-6 py-4">
+            {% if flag.is_kill_switch %}
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-red-50 text-red-700 border border-red-100">Active</span>
+            {% else %}
+              <span class="text-neutral-400">-</span>
+            {% endif %}
+          </td>
+          <td class="px-6 py-4 text-right text-sm font-medium">
+            <a href="#" class="text-brand-600 hover:text-brand-500 transition-colors">Edit Rules</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" class="px-6 py-16 text-center bg-white">
+            <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-neutral-50 mb-4 border border-neutral-100">
+              <svg class="w-6 h-6 text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" /></svg>
+            </div>
+            <h3 class="text-sm font-medium text-neutral-900 mb-1">No feature flags found</h3>
+            <p class="text-xs text-neutral-500">Create a feature flag to get started.</p>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  
+  {% if is_paginated %}
+  <div class="px-6 py-4 border-t border-neutral-200 bg-white flex items-center justify-between">
+    <div class="text-xs text-neutral-500">
+      Showing <span class="font-medium text-neutral-900">{{ page_obj.start_index }}</span> to <span class="font-medium text-neutral-900">{{ page_obj.end_index }}</span> of <span class="font-medium text-neutral-900">{{ paginator.count }}</span> results
+    </div>
+    <div class="flex gap-2">
+      {% if page_obj.has_previous %}
+      <a href="?q={{ current_q }}&page={{ page_obj.previous_page_number }}" class="px-3 py-1.5 border border-neutral-200 rounded-lg text-xs bg-white text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 transition-all shadow-sm">Previous</a>
+      {% endif %}
+      {% if page_obj.has_next %}
+      <a href="?q={{ current_q }}&page={{ page_obj.next_page_number }}" class="px-3 py-1.5 border border-neutral-200 rounded-lg text-xs bg-white text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 transition-all shadow-sm">Next</a>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,196 @@
+{% load static %}<!doctype html>
+<html lang="{{ LANGUAGE_CODE|default:'en' }}" class="scroll-smooth">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>{% block title %}Nextora POS - Premium Restaurant Management{% endblock %}</title>
+
+  <!-- Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Core Scripts -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              900: '#1e3a8a',
+            }
+          },
+          animation: {
+            'fade-in-up': 'fadeInUp 0.8s ease-out forwards',
+          },
+          keyframes: {
+            fadeInUp: {
+              '0%': { opacity: '0', transform: 'translateY(20px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .glass-nav {
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+  </style>
+  {% block head_extra %}{% endblock %}
+</head>
+<body class="bg-slate-50 text-slate-900 antialiased selection:bg-brand-500 selection:text-white">
+
+  <!-- Public Navigation -->
+  <nav class="fixed w-full z-50 glass-nav transition-all duration-300" x-data="{ mobileMenuOpen: false }">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-20">
+        
+        <!-- Logo -->
+        <a href="/" class="flex-shrink-0 flex items-center gap-3 group" aria-label="Nextora Creations — Home">
+          <img src="{% static 'img/logo-mark.png' %}" alt="" class="h-12 w-12 select-none" draggable="false">
+          <span class="hidden sm:flex flex-col leading-tight">
+            <span class="text-base font-extrabold tracking-[0.14em] text-slate-900">NEXTORA CREATIONS</span>
+            <span class="text-[10px] font-semibold tracking-[0.22em] text-slate-500 uppercase">Point of Sale</span>
+          </span>
+        </a>
+
+        <!-- Desktop Menu -->
+        <div class="hidden md:flex space-x-8">
+          <a href="#features" class="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Features</a>
+          <a href="#how-it-works" class="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">How it Works</a>
+          <a href="#pricing" class="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Pricing</a>
+          <a href="#faq" class="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">FAQ</a>
+        </div>
+
+        <!-- CTA Buttons -->
+        <div class="hidden md:flex items-center space-x-4">
+          <a href="{% url 'identity:login' %}" class="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Log in</a>
+          <a href="{% url 'marketing:register' %}" class="inline-flex items-center justify-center px-5 py-2.5 text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 rounded-lg shadow-sm transition-all focus:ring-4 focus:ring-slate-200">
+            Start Free Trial
+          </a>
+        </div>
+
+        <!-- Mobile Menu Button -->
+        <div class="md:hidden flex items-center">
+          <button @click="mobileMenuOpen = !mobileMenuOpen" class="text-slate-500 hover:text-slate-900 focus:outline-none">
+            <i data-lucide="menu" class="w-6 h-6" x-show="!mobileMenuOpen"></i>
+            <i data-lucide="x" class="w-6 h-6" x-show="mobileMenuOpen" x-cloak></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Menu Panel -->
+    <div x-show="mobileMenuOpen" x-transition x-cloak class="md:hidden bg-white border-t border-slate-100 shadow-xl absolute w-full">
+      <div class="px-4 pt-2 pb-6 space-y-2">
+        <a href="#features" @click="mobileMenuOpen = false" class="block px-3 py-2 text-base font-medium text-slate-700 hover:bg-slate-50 rounded-md">Features</a>
+        <a href="#how-it-works" @click="mobileMenuOpen = false" class="block px-3 py-2 text-base font-medium text-slate-700 hover:bg-slate-50 rounded-md">How it Works</a>
+        <a href="#pricing" @click="mobileMenuOpen = false" class="block px-3 py-2 text-base font-medium text-slate-700 hover:bg-slate-50 rounded-md">Pricing</a>
+        <div class="pt-4 mt-2 border-t border-slate-100 flex flex-col gap-3">
+          <a href="{% url 'identity:login' %}" class="block w-full text-center px-4 py-2 text-base font-medium text-slate-700 border border-slate-200 rounded-lg">Log in</a>
+          <a href="{% url 'marketing:register' %}" class="block w-full text-center px-4 py-2 text-base font-medium text-white bg-slate-900 rounded-lg">Start Free Trial</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="pt-20">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-slate-200 pt-16 pb-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 mb-12">
+        
+        <div class="col-span-2 lg:col-span-2">
+          <div class="flex items-center gap-3 mb-6">
+            <img src="{% static 'img/logo-mark.png' %}" alt="" class="h-12 w-12 select-none" draggable="false">
+            <span class="flex flex-col leading-tight">
+              <span class="text-base font-extrabold tracking-[0.14em] text-slate-900">NEXTORA CREATIONS</span>
+              <span class="text-[10px] font-semibold tracking-[0.22em] text-slate-500 uppercase">Point of Sale</span>
+            </span>
+          </div>
+          <p class="text-slate-500 text-sm leading-relaxed max-w-sm mb-6">
+            The modern, cloud-based point of sale system by Nextora Creations — designed to help ambitious restaurants run efficiently and scale effortlessly.
+          </p>
+          <div class="flex gap-4 text-slate-400">
+            <a href="#" class="hover:text-brand-600 transition-colors"><i data-lucide="twitter" class="w-5 h-5"></i></a>
+            <a href="#" class="hover:text-brand-600 transition-colors"><i data-lucide="github" class="w-5 h-5"></i></a>
+            <a href="#" class="hover:text-brand-600 transition-colors"><i data-lucide="linkedin" class="w-5 h-5"></i></a>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="font-semibold text-slate-900 mb-4">Product</h4>
+          <ul class="space-y-3 text-sm text-slate-500">
+            <li><a href="#" class="hover:text-brand-600 transition-colors">Features</a></li>
+            <li><a href="#" class="hover:text-brand-600 transition-colors">Pricing</a></li>
+            <li><a href="#" class="hover:text-brand-600 transition-colors">Integrations</a></li>
+            <li><a href="#" class="hover:text-brand-600 transition-colors">Changelog</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="font-semibold text-slate-900 mb-4">Resources</h4>
+          <ul class="space-y-3 text-sm text-slate-500">
+            <li><a href="#" class="hover:text-brand-600 transition-colors">Documentation</a></li>
+            <li><a href="#" class="hover:text-brand-600 transition-colors">Blog</a></li>
+            <li><a href="#" class="hover:text-brand-600 transition-colors">Help Center</a></li>
+            <li><a href="#" class="hover:text-brand-600 transition-colors">Community</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="font-semibold text-slate-900 mb-4">Legal & Admin</h4>
+          <ul class="space-y-3 text-sm text-slate-500">
+            <li><a href="#" class="hover:text-brand-600 transition-colors">Privacy Policy</a></li>
+            <li><a href="#" class="hover:text-brand-600 transition-colors">Terms of Service</a></li>
+            <li><a href="#" class="hover:text-brand-600 transition-colors">Cookie Policy</a></li>
+            <li><a href="#" class="hover:text-brand-600 transition-colors">Security</a></li>
+            <li><a href="{% url 'super_admin:login' %}" target="_blank" class="hover:text-brand-600 transition-colors font-medium">Super Admin Portal</a></li>
+          </ul>
+        </div>
+
+      </div>
+      
+      <div class="pt-8 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
+        <p class="text-sm text-slate-400">© 2026 Nextora Creations. All rights reserved.</p>
+        <div class="flex items-center gap-2 text-sm text-slate-400">
+          <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+          All systems operational
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    lucide.createIcons();
+    document.body.addEventListener('htmx:afterSwap', function(evt) {
+        lucide.createIcons();
+    });
+  </script>
+</body>
+</html>

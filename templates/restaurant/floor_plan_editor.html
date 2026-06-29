@@ -1,0 +1,161 @@
+{% extends "layouts/dashboard.html" %}
+
+{% block page_title %}{{ floor.name }} - Visual Layout Editor{% endblock %}
+{% block page_subtitle %}<p class="text-caption text-neutral-500 mt-1">Drag and drop tables to match your physical floor plan. Layout is percentage-based to be responsive.</p>{% endblock %}
+
+{% block primary_action %}
+<div class="flex items-center gap-3">
+  <a href="{% url 'restaurant:table_list' %}" class="btn-secondary">
+    Cancel
+  </a>
+  <button type="button" id="save-layout-btn" class="btn-primary">
+    Save Layout
+  </button>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="relative w-full h-[70vh] bg-neutral-100 border-2 border-neutral-200 rounded-xl overflow-hidden shadow-inner" id="floor-grid" style="background-image: radial-gradient(#d4d4d4 1px, transparent 1px); background-size: 20px 20px;">
+  
+  {% for table in tables %}
+  <div class="table-element absolute flex items-center justify-center cursor-grab active:cursor-grabbing hover:ring-2 hover:ring-brand-default transition-shadow rounded shadow-sm
+              {% if table.shape == 'circle' %}rounded-full{% endif %} 
+              {% if table.status == 'occupied' %}bg-semantic-warning-light text-semantic-warning-dark border border-semantic-warning{% else %}bg-neutral-0 text-neutral-800 border border-neutral-300{% endif %}"
+       data-id="{{ table.id }}"
+       style="left: {{ table.position_x|default:0 }}%; top: {{ table.position_y|default:0 }}%; width: {% if table.capacity <= 2 %}60px{% elif table.capacity <= 4 %}80px{% else %}100px{% endif %}; height: {% if table.shape == 'rectangle' %}60px{% elif table.capacity <= 2 %}60px{% elif table.capacity <= 4 %}80px{% else %}100px{% endif %};">
+       <span class="font-bold text-sm pointer-events-none select-none">T{{ table.number }}</span>
+  </div>
+  {% endfor %}
+
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const container = document.getElementById('floor-grid');
+  const elements = document.querySelectorAll('.table-element');
+  const saveBtn = document.getElementById('save-layout-btn');
+  
+  let activeElement = null;
+  let isDragging = false;
+  let startX, startY;
+  let elementStartX, elementStartY;
+  
+  // Track updates in a Map: tableId -> {x, y}
+  const pendingUpdates = new Map();
+
+  elements.forEach(el => {
+    el.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      activeElement = el;
+      
+      // Get bounding rects
+      const containerRect = container.getBoundingClientRect();
+      const elRect = el.getBoundingClientRect();
+      
+      startX = e.clientX;
+      startY = e.clientY;
+      
+      // Calculate current percentage values from inline styles or computed styles
+      const style = window.getComputedStyle(el);
+      elementStartX = parseFloat(style.left) / containerRect.width * 100;
+      elementStartY = parseFloat(style.top) / containerRect.height * 100;
+      
+      el.classList.add('z-10', 'ring-2', 'ring-brand-default', 'opacity-90');
+    });
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (!isDragging || !activeElement) return;
+    
+    e.preventDefault();
+    
+    const containerRect = container.getBoundingClientRect();
+    
+    const deltaX = e.clientX - startX;
+    const deltaY = e.clientY - startY;
+    
+    // Convert delta pixels to percentage of container
+    const deltaXPercent = (deltaX / containerRect.width) * 100;
+    const deltaYPercent = (deltaY / containerRect.height) * 100;
+    
+    let newX = elementStartX + deltaXPercent;
+    let newY = elementStartY + deltaYPercent;
+    
+    // Grid Snap (Snap to nearest 2%)
+    newX = Math.round(newX / 2) * 2;
+    newY = Math.round(newY / 2) * 2;
+    
+    // Boundary checks
+    newX = Math.max(0, Math.min(newX, 95));
+    newY = Math.max(0, Math.min(newY, 90));
+    
+    activeElement.style.left = `${newX}%`;
+    activeElement.style.top = `${newY}%`;
+    
+    pendingUpdates.set(activeElement.dataset.id, { x: newX, y: newY });
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (activeElement) {
+      activeElement.classList.remove('z-10', 'ring-2', 'ring-brand-default', 'opacity-90');
+    }
+    isDragging = false;
+    activeElement = null;
+  });
+
+  // Save Layout
+  saveBtn.addEventListener('click', () => {
+    if (pendingUpdates.size === 0) {
+      window.dispatchEvent(new CustomEvent('open-dialog', {
+        detail: { type: 'alert', theme: 'info', title: 'No Changes', message: 'There are no layout changes to save.' }
+      }));
+      return;
+    }
+    
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = 'Saving...';
+    
+    const updates = Array.from(pendingUpdates.entries()).map(([id, pos]) => ({
+      id: id,
+      x: pos.x,
+      y: pos.y
+    }));
+    
+    fetch('{% url "restaurant:floor_layout_save" floor.id %}', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': '{{ csrf_token }}'
+      },
+      body: JSON.stringify({ updates: updates })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.status === 'success') {
+        // Show success toast (using a simple alert or custom UI if available)
+        pendingUpdates.clear();
+        saveBtn.innerHTML = 'Saved!';
+        setTimeout(() => {
+          saveBtn.innerHTML = 'Save Layout';
+          saveBtn.disabled = false;
+        }, 2000);
+      } else {
+        window.dispatchEvent(new CustomEvent('open-dialog', {
+          detail: { type: 'alert', theme: 'danger', title: 'Save Error', message: 'Error saving layout: ' + data.message }
+        }));
+        saveBtn.innerHTML = 'Save Layout';
+        saveBtn.disabled = false;
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      window.dispatchEvent(new CustomEvent('open-dialog', {
+        detail: { type: 'alert', theme: 'danger', title: 'Network Error', message: 'A network error occurred while saving the layout.' }
+      }));
+      saveBtn.innerHTML = 'Save Layout';
+      saveBtn.disabled = false;
+    });
+  });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,78 @@
+/* Top Rail — 44px persistent header. */
+
+.top-rail {
+  display: flex;
+  align-items: center;
+  gap: var(--forge-space-4);
+  padding: 0 var(--forge-space-4);
+  height: var(--forge-zone-top-rail-height, 44px);
+  background-color: var(--forge-color-surface-header);
+  border-bottom: 1px solid var(--forge-color-border-subtle);
+  position: sticky;
+  top: 0;
+  z-index: var(--forge-z-sticky, 10);
+}
+
+.top-rail__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--forge-space-2);
+  font-weight: 700;
+  color: var(--forge-color-text-primary);
+  letter-spacing: -0.015em;
+}
+
+.top-rail__breadcrumb-slot,
+.top-rail__context-slot {
+  display: flex;
+  align-items: center;
+  gap: var(--forge-space-3);
+  color: var(--forge-color-text-secondary);
+  font-size: 0.8125rem;
+  min-width: 0;
+}
+
+.top-rail__spacer { flex: 1; }
+
+.top-rail__cluster {
+  display: flex;
+  align-items: center;
+  gap: var(--forge-space-2);
+}
+
+.top-rail__icon-btn {
+  width: 32px; height: 32px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: var(--forge-radius-pill);
+  color: var(--forge-color-icon-secondary);
+  transition: background-color var(--forge-duration-standard, 150ms) ease-out;
+}
+.top-rail__icon-btn:hover { background-color: var(--forge-color-surface-row-hover); }
+.top-rail__icon-btn[aria-pressed="true"] { color: var(--forge-color-brand-default); }
+
+/* Frosted variant when content scrolls underneath. */
+.top-rail--frosted {
+  background-color: color-mix(in srgb, var(--forge-color-surface-header) 80%, transparent);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+
+/* Sync / offline pill. */
+.top-rail__status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--forge-space-1);
+  padding: 2px var(--forge-space-2);
+  border-radius: var(--forge-radius-pill);
+  background-color: var(--forge-color-surface-base);
+  font-size: 0.6875rem;
+  color: var(--forge-color-text-secondary);
+}
+.top-rail__status-pill--ok    { color: var(--forge-color-success-text); }
+.top-rail__status-pill--warn  { color: var(--forge-color-warning-text); }
+.top-rail__status-pill--error { color: var(--forge-color-danger-text); }
+
+@media (max-width: 767px) {
+  .top-rail__breadcrumb-slot,
+  .top-rail__context-slot { display: none; }
+}

@@ -1,0 +1,59 @@
+[project]
+name = "nextora-pos"
+version = "0.1.0"
+description = "Nextora POS — multi-tenant SaaS POS platform"
+requires-python = ">=3.12"
+
+# ---------------------------------------------------------------------------
+# Tooling configuration. The application packages live under ./src so that
+# business code is physically separated from project config (config/) and
+# deployment assets (deploy/). This keeps the Clean Architecture dependency
+# rule visible at the filesystem level: dependencies point INWARD, toward src.
+# ---------------------------------------------------------------------------
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "config"]
+extend-exclude = ["migrations"]
+
+[tool.ruff.lint]
+# E/W pycodestyle, F pyflakes, I import-sort, UP pyupgrade, B bugbear,
+# DJ django, S bandit (security), C90 mccabe complexity.
+select = ["E", "W", "F", "I", "UP", "B", "DJ", "S", "C90"]
+ignore = ["S101"]  # allow assert in tests
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**" = ["S"]
+"config/settings/*" = ["F403", "F405"]  # settings use star-imports by design
+
+[tool.mypy]
+python_version = "3.12"
+plugins = ["mypy_django_plugin.main"]
+mypy_path = "src"
+strict_optional = true
+warn_unused_ignores = true
+disallow_untyped_defs = true
+exclude = ["migrations/"]
+
+[tool.django-stubs]
+django_settings_module = "config.settings.dev"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings.dev"
+python_files = ["test_*.py", "tests.py"]
+pythonpath = ["src"]
+# --no-migrations builds the test schema directly from models (no migration
+# files committed yet). Remove it once the migration graph is in place.
+addopts = "--strict-markers --reuse-db --no-migrations"
+testpaths = ["tests"]
+
+[tool.coverage.run]
+source = ["src"]
+omit = ["*/migrations/*", "*/tests/*"]

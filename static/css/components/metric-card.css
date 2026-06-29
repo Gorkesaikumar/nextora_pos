@@ -1,0 +1,49 @@
+/* Metric Card — one KPI, tabular value, signed delta. */
+
+.metric {
+  background-color: var(--forge-color-surface-raised);
+  border: 1px solid var(--forge-color-border-subtle);
+  border-radius: var(--forge-radius-card);
+  padding: var(--forge-space-4);
+  display: flex; flex-direction: column;
+  gap: var(--forge-space-2);
+  min-width: 0;
+}
+.metric__label {
+  font-size: 0.6875rem;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--forge-color-text-tertiary);
+  font-weight: 600;
+}
+.metric__value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--forge-color-text-primary);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.14;
+}
+.metric__delta {
+  display: inline-flex; align-items: center; gap: var(--forge-space-1);
+  font-size: 0.6875rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.metric__delta--up    { color: var(--forge-color-success-text); }
+.metric__delta--down  { color: var(--forge-color-danger-text); }
+.metric__delta--flat  { color: var(--forge-color-text-tertiary); }
+.metric__delta-icon {
+  width: 12px; height: 12px;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.metric__compare {
+  font-size: 0.6875rem;
+  color: var(--forge-color-text-tertiary);
+}
+
+/* Sparkline slot. */
+.metric__spark { margin-top: var(--forge-space-2); height: 36px; }
+
+/* Skeleton variant. */
+.metric--loading .metric__value,
+.metric--loading .metric__delta { color: transparent; background: var(--forge-color-surface-base); border-radius: var(--forge-radius-sharp); }

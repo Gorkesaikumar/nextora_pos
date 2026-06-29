@@ -1,0 +1,45 @@
+{% extends "layouts/auth.html" %}
+
+{% block auth_title %}Select Workspace{% endblock %}
+{% block auth_subtitle %}<p class="text-caption text-neutral-500 mt-1">You are a member of multiple workspaces. Choose one to continue.</p>{% endblock %}
+
+{% block auth_body %}
+<div class="space-y-3 mt-4">
+  {% for membership in memberships %}
+  <a href="{% url 'tenants:set_tenant' membership.tenant.slug %}" class="flex items-center gap-3 p-3 border border-neutral-150 dark:border-neutral-dark-150 rounded-card hover:bg-neutral-50 dark:hover:bg-neutral-dark-150 hover:border-neutral-300 dark:hover:border-neutral-dark-300 transition-colors group">
+    
+    <!-- Avatar -->
+    <div class="w-10 h-10 rounded-card bg-brand-subtle text-brand-default flex items-center justify-center font-bold text-body-strong shrink-0 group-hover:bg-brand-default group-hover:text-white transition-colors">
+      {{ membership.tenant.name|make_list|first|upper }}
+    </div>
+
+    <!-- Details -->
+    <div class="flex flex-col flex-grow min-w-0">
+      <span class="text-body-strong text-neutral-900 dark:text-neutral-dark-900 truncate">{{ membership.tenant.name }}</span>
+      <span class="text-caption text-neutral-500 truncate">{{ membership.role.name|default:"Member" }}</span>
+    </div>
+
+    <!-- Arrow -->
+    <div class="text-neutral-400 group-hover:text-brand-default transition-colors">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+    </div>
+  </a>
+  {% empty %}
+  <div class="p-4 bg-semantic-warning-subtle dark:bg-semantic-warning-subtle-dark border border-semantic-warning dark:border-semantic-warning-dark rounded-card">
+    <p class="text-body text-semantic-warning-dark dark:text-semantic-warning flex items-center">
+      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+      No active workspaces found.
+    </p>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="pt-6">
+  <form method="POST" action="{% url 'identity:logout' %}">
+    {% csrf_token %}
+    <button type="submit" class="w-full text-center text-caption text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-dark-800 font-medium transition-colors">
+      Sign out instead
+    </button>
+  </form>
+</div>
+{% endblock %}

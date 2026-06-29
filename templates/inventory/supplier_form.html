@@ -1,0 +1,71 @@
+{% extends "layouts/dashboard.html" %}
+
+{% block page_title %}{{ action }} Supplier{% endblock %}
+{% block page_subtitle %}<p class="text-caption text-neutral-500 mt-1">{% if action == 'Create' %}Add a new vendor to your supplier directory.{% else %}Update supplier details.{% endif %}</p>{% endblock %}
+{% block toasts %}{% include "inventory/_toasts.html" %}{% endblock %}
+
+{% block primary_action %}
+<a href="{% url 'inventory:supplier_list' %}" class="inline-flex items-center text-sm font-semibold text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white transition-colors">
+  <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+  Back to Suppliers
+</a>
+{% endblock %}
+
+{% block workspace %}
+<form method="POST" class="max-w-4xl space-y-6 pb-6">
+  {% csrf_token %}
+  {% if form.non_field_errors %}
+  <div class="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded-xl text-sm">{{ form.non_field_errors.0 }}</div>
+  {% endif %}
+
+  <div class="bg-white dark:bg-neutral-dark-100 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-dark-200 overflow-hidden">
+    <div class="px-6 py-4 border-b border-neutral-200 dark:border-neutral-dark-300 bg-neutral-50 dark:bg-neutral-dark-200">
+      <h3 class="text-base font-bold text-neutral-900 dark:text-white">Profile</h3>
+      <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">Name, code and primary contact details.</p>
+    </div>
+    <div class="p-6 space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {% include "inventory/_field.html" with field=form.name label="Name" required=True %}
+        {% include "inventory/_field.html" with field=form.code label="Supplier Code" %}
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {% include "inventory/_field.html" with field=form.contact_person label="Contact Person" %}
+        {% include "inventory/_field.html" with field=form.phone label="Phone" %}
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {% include "inventory/_field.html" with field=form.email label="Email" %}
+        {% include "inventory/_field.html" with field=form.credit_days label="Credit Days" %}
+      </div>
+      {% include "inventory/_field.html" with field=form.address label="Address" %}
+    </div>
+  </div>
+
+  <div class="bg-white dark:bg-neutral-dark-100 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-dark-200 overflow-hidden">
+    <div class="px-6 py-4 border-b border-neutral-200 dark:border-neutral-dark-300 bg-neutral-50 dark:bg-neutral-dark-200">
+      <h3 class="text-base font-bold text-neutral-900 dark:text-white">Tax &amp; Banking</h3>
+      <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">For input tax credit and payment reconciliation.</p>
+    </div>
+    <div class="p-6 space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {% include "inventory/_field.html" with field=form.gstin label="GSTIN" %}
+        {% include "inventory/_field.html" with field=form.pan label="PAN" %}
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {% include "inventory/_field.html" with field=form.bank_name label="Bank Name" %}
+        {% include "inventory/_field.html" with field=form.bank_account_no label="Account No." %}
+        {% include "inventory/_field.html" with field=form.bank_ifsc label="IFSC" %}
+      </div>
+      <label class="flex items-center gap-2 cursor-pointer text-sm font-medium text-neutral-800 dark:text-neutral-200 pt-2">
+        {{ form.is_active }} Active supplier
+      </label>
+    </div>
+  </div>
+
+  <div class="flex items-center justify-end gap-3">
+    <a href="{% url 'inventory:supplier_list' %}" class="px-5 py-2.5 text-sm font-semibold text-neutral-700 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white transition-colors">Cancel</a>
+    <button type="submit" class="btn-primary">
+      {% if action == 'Create' %}Create Supplier{% else %}Save Changes{% endif %}
+    </button>
+  </div>
+</form>
+{% endblock %}

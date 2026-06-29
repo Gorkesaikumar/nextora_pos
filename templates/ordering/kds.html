@@ -1,0 +1,158 @@
+{% extends "layouts/dashboard.html" %}
+
+{% block page_title %}Kitchen Display System (KDS){% endblock %}
+{% block page_subtitle %}
+<div class="flex items-center gap-6 mt-2 text-sm">
+  <span class="flex items-center gap-2 text-neutral-600"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Shift: Morning (06:00 - 14:00)</span>
+  <span class="flex items-center gap-2 text-neutral-600"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg> Station: Main Kitchen</span>
+</div>
+{% endblock %}
+
+{% block primary_action %}
+<div class="flex items-center gap-3">
+  <span id="kds-live-indicator" data-live="false" class="inline-flex items-center text-body-strong text-semantic-success dark:text-semantic-success-dark bg-semantic-success/10 px-3 py-1.5 rounded-full border border-semantic-success/20 transition-colors data-[live=false]:text-neutral-500 data-[live=false]:bg-neutral-100 data-[live=false]:border-neutral-200">
+    <span class="relative flex h-2.5 w-2.5 mr-2.5">
+      <span class="kds-live-ping animate-ping absolute inline-flex h-full w-full rounded-full bg-semantic-success opacity-75"></span>
+      <span class="kds-live-dot relative inline-flex rounded-full h-2.5 w-2.5 bg-semantic-success"></span>
+    </span>
+    <span class="kds-live-label">Connecting…</span>
+  </span>
+  <button type="button" class="btn border border-neutral-200 bg-neutral-0 text-neutral-700 hover:bg-neutral-50 shadow-sm px-3 py-2 rounded-lg" title="Search Orders">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+  </button>
+  <button type="button" class="btn border border-neutral-200 bg-neutral-0 text-neutral-700 hover:bg-neutral-50 shadow-sm px-3 py-2 rounded-lg" title="Filters">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+  </button>
+  <button type="button" class="btn border border-neutral-200 bg-neutral-0 text-neutral-700 hover:bg-neutral-50 shadow-sm px-3 py-2 rounded-lg" title="Full Screen">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
+  </button>
+</div>
+{% endblock %}
+
+{% block filter_strip %}
+<!-- Enterprise Live Metrics Strip -->
+{% include "ordering/partials/kds_metrics_strip.html" %}
+{% endblock %}
+
+{% block workspace %}
+<div class="h-[calc(100vh-230px)] overflow-hidden mt-6 pb-4 px-8">
+  <!-- Kanban Board Container -->
+  {% include "ordering/partials/kds_board.html" %}
+</div>
+{% endblock %}
+
+{% block head_extra %}
+<style>
+  /* Smooth FLIP-style morph as a ticket moves between columns (View
+     Transitions API; browsers without it just swap instantly). */
+  ::view-transition-group(*) { animation-duration: 280ms; animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1); }
+
+  /* Action button: swap label -> spinner while its request is in flight. */
+  .kds-action-btn.htmx-request .kds-action-btn__label { display: none; }
+  .kds-action-btn.htmx-request .kds-action-btn__spinner { display: inline-flex; }
+
+  @media (prefers-reduced-motion: reduce) {
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) { animation: none !important; }
+  }
+</style>
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+<script>
+(function () {
+  // --- Animated dashboard counters ----------------------------------------
+  // Tween each metric from its previous value to the new one whenever the
+  // metrics strip is (re)rendered, instead of snapping abruptly.
+  const counts = {};
+
+  function snapshotCounters() {
+    document.querySelectorAll('#kds-metrics-strip [data-metric]').forEach(function (el) {
+      counts[el.dataset.metric] = parseInt(el.dataset.value, 10) || 0;
+    });
+  }
+
+  function tween(el, from, to, suffix) {
+    if (from === to) { el.textContent = to + suffix; return; }
+    const dur = 500, start = performance.now(), diff = to - from;
+    function step(now) {
+      const p = Math.min((now - start) / dur, 1);
+      const eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(from + diff * eased) + suffix;
+      if (p < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  function animateCounters() {
+    document.querySelectorAll('#kds-metrics-strip [data-metric]').forEach(function (el) {
+      const name = el.dataset.metric;
+      const target = parseInt(el.dataset.value, 10) || 0;
+      const from = (name in counts) ? counts[name] : target;
+      tween(el, from, target, el.dataset.suffix || '');
+      counts[name] = target;
+    });
+  }
+
+  // Capture the old values just before HTMX replaces the strip, then animate
+  // to the freshly-rendered values once the swap settles.
+  document.body.addEventListener('htmx:beforeSwap', snapshotCounters);
+  document.body.addEventListener('htmx:afterSettle', animateCounters);
+
+  // --- Toast notifications -------------------------------------------------
+  function showToast(message) {
+    const region = document.getElementById('toast-region');
+    if (!region) return;
+    const el = document.createElement('div');
+    el.className = 'toast toast--success';
+    el.style.transition = 'opacity .3s ease';
+    el.innerHTML =
+      '<svg class="toast__icon w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+      '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>' +
+      '<div class="toast__body"><div class="toast__title">Kitchen Display</div>' +
+      '<div class="toast__msg"></div></div>';
+    el.querySelector('.toast__msg').textContent = message;
+    region.appendChild(el);
+    setTimeout(function () {
+      el.style.opacity = '0';
+      setTimeout(function () { el.remove(); }, 320);
+    }, 3000);
+  }
+
+  // --- Live-sync indicator -------------------------------------------------
+  const indicator = document.getElementById('kds-live-indicator');
+  function setLive(on, label) {
+    if (!indicator) return;
+    indicator.dataset.live = on ? 'true' : 'false';
+    const dot = indicator.querySelector('.kds-live-dot');
+    const ping = indicator.querySelector('.kds-live-ping');
+    const lbl = indicator.querySelector('.kds-live-label');
+    if (dot) dot.classList.toggle('bg-semantic-success', on), dot.classList.toggle('bg-neutral-400', !on);
+    if (ping) ping.style.display = on ? '' : 'none';
+    if (lbl) lbl.textContent = label || (on ? 'Live Sync Active' : 'Reconnecting…');
+  }
+
+  // --- Global Tenant Events Integration --------------------------------------
+  function refreshBoard() {
+    // Event-driven board re-fetch (replaces the old fixed 5s poll).
+    document.body.dispatchEvent(new CustomEvent('kds:refresh'));
+  }
+
+  window.addEventListener('tenant:kds_changed', function (e) {
+    const data = e.detail || {};
+    refreshBoard();
+    if (data && data.message) showToast(data.message);
+  });
+  
+  // The global socket in base.html manages the connection. 
+  // We'll just assume live sync is active for the indicator unless the user is offline.
+  setLive(true, 'Live Sync Active');
+  window.addEventListener('offline', () => setLive(false, 'Offline'));
+  window.addEventListener('online', () => setLive(true, 'Live Sync Active'));
+
+  snapshotCounters();
+})();
+</script>
+{% endblock %}

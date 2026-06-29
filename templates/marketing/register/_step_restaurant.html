@@ -1,0 +1,25 @@
+{% comment %}Step 2 — Restaurant details{% endcomment %}
+{% load marketing_extras %}
+<div x-show="step === 2" x-transition.opacity.duration.200ms x-cloak>
+
+  <header class="mb-7">
+    <p class="text-xs font-semibold tracking-[0.18em] uppercase text-neutral-500 mb-2">Step 2 of 4</p>
+    <h2 class="text-2xl font-bold tracking-tight text-neutral-900">About your restaurant</h2>
+    <p class="mt-1.5 text-sm text-neutral-500">These details power your invoices, KOTs and reports — you can edit them later in settings.</p>
+  </header>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    {% include "marketing/register/_field.html" with name="restaurant-restaurant_name" label="Restaurant name" placeholder="Spice Garden" required=True value=form_restaurant.restaurant_name.value errors=form_restaurant.restaurant_name.errors span="sm:col-span-2" %}
+
+    {% choices_for form_restaurant "business_type" as bt_choices %}
+    {% include "marketing/register/_select.html" with name="restaurant-business_type" label="Business type" required=True choices=bt_choices value=form_restaurant.business_type.value errors=form_restaurant.business_type.errors %}
+
+    {% choices_for form_restaurant "country" as country_choices %}
+    {% include "marketing/register/_select.html" with name="restaurant-country" label="Country" required=True choices=country_choices value=form_restaurant.country.value errors=form_restaurant.country.errors %}
+
+    {% include "marketing/register/_field.html" with name="restaurant-state" label="State / Province" placeholder="Karnataka" required=True value=form_restaurant.state.value errors=form_restaurant.state.errors %}
+    {% include "marketing/register/_field.html" with name="restaurant-city" label="City" placeholder="Bengaluru" required=True value=form_restaurant.city.value errors=form_restaurant.city.errors %}
+
+    {% include "marketing/register/_field.html" with name="restaurant-postal_code" label="Postal code" placeholder="560001" required=True value=form_restaurant.postal_code.value errors=form_restaurant.postal_code.errors %}
+  </div>
+</div>

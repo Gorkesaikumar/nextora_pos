@@ -1,0 +1,37 @@
+{% comment %}
+Reusable input field for the onboarding wizard.
+
+Variables:
+  label       — visible label text (required)
+  name        — input name attribute (with prefix, e.g. "account-email")
+  type        — input type (default "text")
+  value       — initial value
+  placeholder — placeholder text
+  required    — boolean
+  autocomplete — html autocomplete token
+  hint        — small helper text under input (optional)
+  errors      — list of error strings (from form.field.errors)
+  span        — column-span override (default "" = single col)
+{% endcomment %}
+<div class="{{ span|default:'' }}">
+  <label for="id_{{ name }}" class="block text-sm font-semibold text-neutral-800 mb-1.5">
+    {{ label }}{% if required %} <span class="text-red-500" aria-hidden="true">*</span>{% endif %}
+  </label>
+  <input id="id_{{ name }}"
+         name="{{ name }}"
+         type="{{ type|default:'text' }}"
+         value="{{ value|default:'' }}"
+         placeholder="{{ placeholder|default:'' }}"
+         {% if autocomplete %}autocomplete="{{ autocomplete }}"{% endif %}
+         {% if required %}required{% endif %}
+         {% if errors %}aria-invalid="true" aria-describedby="err_{{ name }}"{% elif hint %}aria-describedby="hint_{{ name }}"{% endif %}
+         class="block w-full px-3.5 py-2.5 text-sm bg-white border rounded-xl text-neutral-900 placeholder-neutral-400 shadow-sm focus:outline-none transition-all
+                {% if errors %}border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-500/10{% else %}border-neutral-200 focus:border-neutral-900 focus:ring-2 focus:ring-neutral-900/10{% endif %}">
+  {% if errors %}
+    <p id="err_{{ name }}" class="mt-1.5 text-xs text-red-600 flex items-center gap-1">
+      <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i>{{ errors.0 }}
+    </p>
+  {% elif hint %}
+    <p id="hint_{{ name }}" class="mt-1.5 text-xs text-neutral-500">{{ hint }}</p>
+  {% endif %}
+</div>

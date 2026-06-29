@@ -1,0 +1,26 @@
+<div id="pos-cart-panel" hx-swap-oob="true">
+  {% include "ordering/partials/cart_panel.html" with active_order=None %}
+</div>
+
+<!-- Overlay -->
+<div id="save-order-overlay" class="fixed inset-0 bg-neutral-900/50 backdrop-blur-sm z-50 flex items-center justify-center animate-fade-in p-4 lg:p-0">
+  
+  <!-- Modal Content -->
+  <div class="bg-neutral-0 dark:bg-neutral-dark-100 w-full max-w-sm rounded-2xl shadow-xl overflow-hidden animate-slide-up flex flex-col p-8 text-center items-center">
+    
+    <!-- Success Icon -->
+    <div class="w-20 h-20 bg-semantic-info-subtle dark:bg-semantic-info-subtle-dark text-semantic-info dark:text-semantic-info-dark rounded-full flex items-center justify-center mb-6">
+       <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+       </svg>
+    </div>
+    
+    <h2 class="text-heading-2 text-neutral-900 dark:text-neutral-dark-900 mb-2">Order Placed!</h2>
+    <p class="text-body text-neutral-600 dark:text-neutral-dark-600 mb-8">The order has been sent to the kitchen.</p>
+    
+    <button class="inline-flex items-center justify-center gap-2 w-full h-12 rounded-card bg-brand-default text-white hover:bg-brand-hover font-semibold text-body-strong shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-brand-focus focus:ring-offset-2"
+            onclick="document.getElementById('pos-modal-container').innerHTML = '';">
+      Done
+    </button>
+  </div>
+</div>

@@ -1,0 +1,598 @@
+{% extends "layouts/dashboard.html" %}
+
+{% block title %}Dashboard · Nextora{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block page_subtitle %}Overview of your restaurant business{% endblock %}
+
+{% block primary_action %}
+  <form id="date-filter-form" method="GET" class="flex items-center gap-3 bg-white border border-neutral-200 rounded-lg px-3 py-1.5 shadow-sm text-sm font-medium text-neutral-600 relative cursor-pointer hover:bg-neutral-50 transition-colors">
+    <i data-lucide="calendar" class="w-4 h-4 text-neutral-400"></i>
+    <span>{{ display_date }}</span>
+    <i data-lucide="calendar-days" class="w-4 h-4 ml-2 text-neutral-400"></i>
+    <input type="date" name="date" class="absolute inset-0 opacity-0 cursor-pointer" onchange="document.getElementById('date-filter-form').submit();" value="{{ selected_date_str }}">
+  </form>
+  <a href="{% url 'ordering:pos_main' %}" class="btn bg-[var(--forge-color-brand-default)] hover:bg-[var(--forge-color-brand-hover)] text-white font-medium rounded-lg px-4 py-2 flex items-center gap-2 shadow-sm transition-colors">
+    <i data-lucide="plus" class="w-4 h-4"></i>
+    New Order
+  </a>
+{% endblock %}
+
+{% block workspace %}
+<div id="dashboard-content" 
+     class="px-8 pb-12 space-y-6 relative" 
+     x-data="productTour()" x-init="initTour()"
+     hx-get="{% url 'reporting:home' %}"
+     hx-trigger="tenant:order_changed from:window, tenant:payment_captured from:window, tenant:kds_changed from:window"
+     hx-select="#dashboard-content"
+     hx-swap="outerHTML">
+
+  <!-- KPI Cards -->
+  <section class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4" aria-label="Key metrics">
+    <!-- Revenue Today -->
+    <article class="bg-white rounded-xl border border-neutral-100 p-4 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow min-w-0">
+      <div class="flex items-start justify-between gap-2">
+        <div class="min-w-0">
+          <h3 class="text-xs font-semibold text-neutral-500 uppercase tracking-wide">Revenue Today</h3>
+          <p class="text-2xl font-bold text-neutral-800 mt-1 tabular-nums truncate" title="₹{{ revenue_today }}" data-metric="revenue" data-value="{{ revenue_today_raw }}" data-prefix="₹">{{ revenue_today|default:"0.00" }}</p>
+        </div>
+        <div class="w-10 h-10 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-900 shrink-0">
+          <i data-lucide="indian-rupee" class="w-5 h-5"></i>
+        </div>
+      </div>
+      <div class="mt-4 flex items-center text-xs font-medium text-emerald-600">
+        <i data-lucide="trending-up" class="w-3 h-3 mr-1 shrink-0"></i>
+        12% vs yesterday
+      </div>
+    </article>
+
+    <!-- Orders Today -->
+    <article class="bg-white rounded-xl border border-neutral-100 p-4 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow min-w-0">
+      <div class="flex items-start justify-between gap-2">
+        <div class="min-w-0">
+          <h3 class="text-xs font-semibold text-neutral-500 uppercase tracking-wide">Orders Today</h3>
+          <p class="text-2xl font-bold text-neutral-800 mt-1 tabular-nums truncate" data-metric="orders" data-value="{{ order_count }}">{{ order_count|default:"0" }}</p>
+        </div>
+        <div class="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0">
+          <i data-lucide="receipt" class="w-5 h-5"></i>
+        </div>
+      </div>
+      <div class="mt-4 flex items-center text-xs font-medium text-emerald-600">
+        <i data-lucide="trending-up" class="w-3 h-3 mr-1 shrink-0"></i>
+        8% vs yesterday
+      </div>
+    </article>
+
+    <!-- Avg Ticket Size -->
+    <article class="bg-white rounded-xl border border-neutral-100 p-4 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow min-w-0">
+      <div class="flex items-start justify-between gap-2">
+        <div class="min-w-0">
+          <h3 class="text-xs font-semibold text-neutral-500 uppercase tracking-wide">Avg. Ticket Size</h3>
+          <p class="text-2xl font-bold text-neutral-800 mt-1 tabular-nums truncate" title="₹{{ avg_ticket }}" data-metric="avg_ticket" data-value="{{ avg_ticket_raw }}" data-prefix="₹">{{ avg_ticket|default:"0.00" }}</p>
+        </div>
+        <div class="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center text-purple-600 shrink-0">
+          <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
+        </div>
+      </div>
+      <div class="mt-4 flex items-center text-xs font-medium text-neutral-400">
+        <i data-lucide="minus" class="w-3 h-3 mr-1 shrink-0"></i>
+        No change
+      </div>
+    </article>
+
+    <!-- Tables Turned -->
+    <article class="bg-white rounded-xl border border-neutral-100 p-4 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow min-w-0">
+      <div class="flex items-start justify-between gap-2">
+        <div class="min-w-0">
+          <h3 class="text-xs font-semibold text-neutral-500 uppercase tracking-wide">Tables Turned</h3>
+          <p class="text-2xl font-bold text-neutral-800 mt-1 tabular-nums truncate" data-metric="tables" data-value="{{ tables_turned }}">{{ tables_turned|default:"0" }}</p>
+        </div>
+        <div class="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center text-orange-500 shrink-0">
+          <i data-lucide="users" class="w-5 h-5"></i>
+        </div>
+      </div>
+      <div class="mt-4 flex items-center text-xs font-medium text-emerald-600">
+        <i data-lucide="check-circle" class="w-3 h-3 mr-1 shrink-0"></i>
+        Orders Completed
+      </div>
+    </article>
+
+    <!-- Refunds Today -->
+    <article class="bg-white rounded-xl border border-neutral-100 p-4 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow min-w-0">
+      <div class="flex items-start justify-between gap-2">
+        <div class="min-w-0">
+          <h3 class="text-xs font-semibold text-neutral-500 uppercase tracking-wide">Refunds Today</h3>
+          <p class="text-2xl font-bold text-neutral-800 mt-1 tabular-nums truncate" title="₹{{ refunds_today }}" data-metric="refunds" data-value="{{ refunds_today_raw }}" data-prefix="₹">{{ refunds_today|default:"0.00" }}</p>
+        </div>
+        <div class="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center text-red-600 shrink-0">
+          <i data-lucide="refresh-ccw" class="w-5 h-5"></i>
+        </div>
+      </div>
+      <div class="mt-4 flex items-center text-xs font-medium text-red-600">
+        <i data-lucide="trending-down" class="w-3 h-3 mr-1 shrink-0"></i>
+        0% vs yesterday
+      </div>
+    </article>
+
+    <!-- Open KOTs -->
+    <article class="bg-white rounded-xl border border-neutral-100 p-4 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow min-w-0">
+      <div class="flex items-start justify-between gap-2">
+        <div class="min-w-0">
+          <h3 class="text-xs font-semibold text-neutral-500 uppercase tracking-wide">Open KOTs</h3>
+          <p class="text-2xl font-bold text-neutral-800 mt-1 tabular-nums truncate" data-metric="kots" data-value="{{ open_kots }}">{{ open_kots|default:"0" }}</p>
+        </div>
+        <div class="w-10 h-10 rounded-full bg-teal-50 flex items-center justify-center text-teal-600 shrink-0">
+          <i data-lucide="file-text" class="w-5 h-5"></i>
+        </div>
+      </div>
+      <div class="mt-4 flex items-center text-xs font-medium text-neutral-500">
+        Across all stations
+      </div>
+    </article>
+  </section>
+
+  <!-- Charts & Summary Row -->
+  <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Revenue Overview -->
+    <article class="lg:col-span-2 bg-white rounded-2xl border border-neutral-100 p-6 shadow-sm flex flex-col">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-base font-bold text-neutral-800">Revenue Overview</h2>
+        <div class="flex items-center gap-1 text-sm text-neutral-500 cursor-pointer hover:bg-neutral-50 px-2 py-1 rounded">
+          Last 14 days <i data-lucide="chevron-down" class="w-4 h-4"></i>
+        </div>
+      </div>
+      <div class="flex-1 flex items-end justify-between min-h-[250px] border border-neutral-100 rounded-xl bg-white p-4">
+        {% if revenue_chart %}
+          <div class="flex-1 flex items-end justify-between h-full space-x-1 sm:space-x-2">
+            {% for data in revenue_chart %}
+              <div class="group relative flex flex-col items-center justify-end h-full w-full">
+                <!-- Tooltip -->
+                <div class="absolute bottom-full mb-2 hidden group-hover:flex flex-col items-center z-10">
+                  <div class="bg-neutral-800 text-white text-[10px] font-bold py-1 px-2 rounded whitespace-nowrap shadow-lg">
+                    ₹{{ data.value|floatformat:"2" }}
+                  </div>
+                  <div class="w-2 h-2 bg-neutral-800 transform rotate-45 -mt-1"></div>
+                </div>
+                <!-- Bar -->
+                <div class="w-full bg-[var(--forge-color-brand-default)] hover:bg-[var(--forge-color-brand-hover)] rounded-t transition-all duration-300" style="height: {{ data.height }}%; min-height: 4px;"></div>
+                <!-- Label -->
+                <span class="text-[9px] sm:text-[10px] font-medium text-neutral-400 mt-2 rotate-45 sm:rotate-0 origin-left whitespace-nowrap">{{ data.date }}</span>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="flex-1 flex flex-col items-center justify-center h-full">
+            <i data-lucide="bar-chart" class="w-8 h-8 mb-3 text-neutral-300"></i>
+            <p class="font-semibold text-neutral-600 mb-1">No revenue data yet</p>
+            <p class="text-xs text-neutral-400">Revenue will appear here once you start taking orders.</p>
+          </div>
+        {% endif %}
+      </div>
+    </article>
+
+    <!-- Order Summary -->
+    <article class="bg-white rounded-2xl border border-neutral-100 p-6 shadow-sm">
+      <h2 class="text-base font-bold text-neutral-800 mb-6">Order Summary</h2>
+      <ul class="space-y-4">
+        <li class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-neutral-100 flex items-center justify-center text-neutral-900"><i data-lucide="utensils" class="w-4 h-4"></i></div>
+            <span class="text-sm font-medium text-neutral-700">Dine In</span>
+          </div>
+          <span class="text-sm font-bold text-neutral-900">{{ dine_in_count|default:"0" }}</span>
+        </li>
+        <li class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600"><i data-lucide="shopping-bag" class="w-4 h-4"></i></div>
+            <span class="text-sm font-medium text-neutral-700">Take Away</span>
+          </div>
+          <span class="text-sm font-bold text-neutral-900">{{ take_away_count|default:"0" }}</span>
+        </li>
+        <li class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center text-orange-600"><i data-lucide="truck" class="w-4 h-4"></i></div>
+            <span class="text-sm font-medium text-neutral-700">Delivery</span>
+          </div>
+          <span class="text-sm font-bold text-neutral-900">{{ delivery_count|default:"0" }}</span>
+        </li>
+        <li class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-rose-50 flex items-center justify-center text-rose-600"><i data-lucide="x-circle" class="w-4 h-4"></i></div>
+            <span class="text-sm font-medium text-neutral-700">Cancelled</span>
+          </div>
+          <span class="text-sm font-bold text-neutral-900">{{ cancelled_count|default:"0" }}</span>
+        </li>
+      </ul>
+      <div class="mt-6 pt-4 border-t border-neutral-100 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600"><i data-lucide="list" class="w-4 h-4"></i></div>
+          <span class="text-sm font-bold text-neutral-800">Total Orders</span>
+        </div>
+        <span class="text-sm font-bold text-neutral-900">{{ total_orders_count|default:"0" }}</span>
+      </div>
+    </article>
+  </section>
+
+  <!-- Data Tables Row -->
+  <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Top Selling Items -->
+    <article class="bg-white rounded-2xl border border-neutral-100 p-6 shadow-sm">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-base font-bold text-neutral-800">Top Selling Items</h2>
+        <a href="#" class="text-xs font-semibold text-[var(--forge-color-brand-default)] hover:underline">View all</a>
+      </div>
+      <table class="w-full text-left text-xs text-neutral-500 mb-4">
+        <thead>
+          <tr class="border-b border-neutral-100">
+            <th class="pb-2 font-medium">#</th>
+            <th class="pb-2 font-medium">Item</th>
+            <th class="pb-2 font-medium text-right">Qty Sold</th>
+            <th class="pb-2 font-medium text-right">Revenue</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in top_items %}
+          <tr class="border-b border-neutral-50 hover:bg-neutral-50 transition-colors">
+            <td class="py-2">{{ forloop.counter }}</td>
+            <td class="py-2 font-medium text-neutral-800">{{ item.name_snapshot }}</td>
+            <td class="py-2 text-right">{{ item.qty_sold|floatformat:"0" }}</td>
+            <td class="py-2 text-right font-medium text-emerald-600">₹{{ item.revenue|default:"0.00" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% if not top_items %}
+      <div class="flex flex-col items-center justify-center text-center py-6">
+        <div class="w-10 h-10 bg-neutral-50 rounded-lg flex items-center justify-center mb-3">
+          <i data-lucide="file-box" class="w-5 h-5 text-neutral-400"></i>
+        </div>
+        <h3 class="text-sm font-bold text-neutral-700 mb-1">No data available</h3>
+        <p class="text-xs text-neutral-500">No items sold yet today.</p>
+      </div>
+      {% endif %}
+    </article>
+
+    <!-- Top Branches -->
+    <article class="bg-white rounded-2xl border border-neutral-100 p-6 shadow-sm">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-base font-bold text-neutral-800">Top Branches</h2>
+        <a href="#" class="text-xs font-semibold text-[var(--forge-color-brand-default)] hover:underline">View all</a>
+      </div>
+      <table class="w-full text-left text-xs text-neutral-500 mb-4">
+        <thead>
+          <tr class="border-b border-neutral-100">
+            <th class="pb-2 font-medium">#</th>
+            <th class="pb-2 font-medium">Branch</th>
+            <th class="pb-2 font-medium text-right">Revenue</th>
+            <th class="pb-2 font-medium text-right">Orders</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for branch in top_branches %}
+          <tr class="border-b border-neutral-50 hover:bg-neutral-50 transition-colors">
+            <td class="py-2">{{ forloop.counter }}</td>
+            <td class="py-2 font-medium text-neutral-800">{{ branch.name }}</td>
+            <td class="py-2 text-right font-medium text-emerald-600">₹{{ branch.revenue|default:"0.00" }}</td>
+            <td class="py-2 text-right">{{ branch.orders }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% if not top_branches %}
+      <div class="flex flex-col items-center justify-center text-center py-6">
+        <div class="w-10 h-10 bg-neutral-50 rounded-lg flex items-center justify-center mb-3">
+          <i data-lucide="building-2" class="w-5 h-5 text-neutral-400"></i>
+        </div>
+        <h3 class="text-sm font-bold text-neutral-700 mb-1">No data available</h3>
+        <p class="text-xs text-neutral-500">No orders yet today.</p>
+      </div>
+      {% endif %}
+    </article>
+
+    <!-- Recent Orders -->
+    <article class="bg-white rounded-2xl border border-neutral-100 p-6 shadow-sm">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-base font-bold text-neutral-800">Recent Orders</h2>
+        <a href="#" class="text-xs font-semibold text-[var(--forge-color-brand-default)] hover:underline">View all</a>
+      </div>
+      <table class="w-full text-left text-xs text-neutral-500 mb-4">
+        <thead>
+          <tr class="border-b border-neutral-100">
+            <th class="pb-2 font-medium">Order ID</th>
+            <th class="pb-2 font-medium">Type</th>
+            <th class="pb-2 font-medium text-right">Amount</th>
+            <th class="pb-2 font-medium text-right">Status</th>
+            <th class="pb-2 font-medium text-right">Time</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for order in recent_orders %}
+          <tr class="border-b border-neutral-50 hover:bg-neutral-50 transition-colors">
+            <td class="py-2 font-medium text-neutral-800">{{ order.order_number|default:order.id|stringformat:"s"|slice:":8" }}...</td>
+            <td class="py-2">{{ order.get_type_display }}</td>
+            <td class="py-2 text-right font-medium text-emerald-600">₹{{ order.total }}</td>
+            <td class="py-2 text-right">
+              <span class="px-2 py-1 bg-neutral-100 text-neutral-600 rounded text-[10px] uppercase font-bold">{{ order.get_status_display }}</span>
+            </td>
+            <td class="py-2 text-right text-neutral-400">{{ order.opened_at|date:"h:i A" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% if not recent_orders %}
+      <div class="flex flex-col items-center justify-center text-center py-6">
+        <div class="w-10 h-10 bg-neutral-50 rounded-lg flex items-center justify-center mb-3">
+          <i data-lucide="receipt" class="w-5 h-5 text-neutral-400"></i>
+        </div>
+        <h3 class="text-sm font-bold text-neutral-700 mb-1">No orders yet</h3>
+        <p class="text-xs text-neutral-500">New orders will appear here.</p>
+      </div>
+      {% endif %}
+    </article>
+  </section>
+
+  <!-- Quick Actions -->
+  <section class="bg-white rounded-2xl border border-neutral-100 p-6 shadow-sm">
+    <h2 class="text-base font-bold text-neutral-800 mb-4">Quick Actions</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
+      <a href="{% url 'ordering:pos_main' %}" class="flex items-center gap-3 p-3 rounded-xl border border-neutral-100 hover:border-[var(--forge-color-brand-default)] hover:shadow-sm transition-all group">
+        <div class="w-10 h-10 rounded-lg bg-neutral-100 flex items-center justify-center text-neutral-900 group-hover:bg-neutral-900 group-hover:text-white transition-colors"><i data-lucide="plus" class="w-5 h-5"></i></div>
+        <div>
+          <div class="text-sm font-bold text-neutral-800">New Order</div>
+          <div class="text-[10px] text-neutral-500">Create a new order</div>
+        </div>
+      </a>
+      <a href="{% url 'ordering:pos_tables_main' %}" class="flex items-center gap-3 p-3 rounded-xl border border-neutral-100 hover:border-neutral-300 hover:shadow-sm transition-all group">
+        <div class="w-10 h-10 rounded-lg bg-neutral-50 flex items-center justify-center text-neutral-600 group-hover:bg-neutral-100 transition-colors"><i data-lucide="armchair" class="w-5 h-5"></i></div>
+        <div>
+          <div class="text-sm font-bold text-neutral-800">Table Management</div>
+          <div class="text-[10px] text-neutral-500">View and manage tables</div>
+        </div>
+      </a>
+      <a href="{% url 'ordering:kds_main' %}" class="flex items-center gap-3 p-3 rounded-xl border border-neutral-100 hover:border-neutral-300 hover:shadow-sm transition-all group">
+        <div class="w-10 h-10 rounded-lg bg-neutral-50 flex items-center justify-center text-neutral-600 group-hover:bg-neutral-100 transition-colors"><i data-lucide="chef-hat" class="w-5 h-5"></i></div>
+        <div>
+          <div class="text-sm font-bold text-neutral-800">KOT View</div>
+          <div class="text-[10px] text-neutral-500">View kitchen orders</div>
+        </div>
+      </a>
+      <a href="javascript:void(0);" class="flex items-center gap-3 p-3 rounded-xl border border-neutral-100 hover:border-neutral-300 hover:shadow-sm transition-all group">
+        <div class="w-10 h-10 rounded-lg bg-neutral-50 flex items-center justify-center text-neutral-600 group-hover:bg-neutral-100 transition-colors"><i data-lucide="bar-chart-3" class="w-5 h-5"></i></div>
+        <div>
+          <div class="text-sm font-bold text-neutral-800">Sales Report</div>
+          <div class="text-[10px] text-neutral-500">View detailed sales</div>
+        </div>
+      </a>
+      <a href="javascript:void(0);" class="flex items-center gap-3 p-3 rounded-xl border border-neutral-100 hover:border-neutral-300 hover:shadow-sm transition-all group">
+        <div class="w-10 h-10 rounded-lg bg-neutral-50 flex items-center justify-center text-neutral-600 group-hover:bg-neutral-100 transition-colors"><i data-lucide="package" class="w-5 h-5"></i></div>
+        <div>
+          <div class="text-sm font-bold text-neutral-800">Inventory</div>
+          <div class="text-[10px] text-neutral-500">Check stock levels</div>
+        </div>
+      </a>
+    </div>
+  </section>
+
+  <!-- Product Tour Overlay -->
+  <template x-if="active">
+    <div class="fixed inset-0 z-[9999] pointer-events-none overflow-hidden">
+      
+      <!-- Highlight Box (Transparent with giant box-shadow overlay) -->
+      <div class="absolute rounded-xl shadow-[0_0_0_9999px_rgba(15,23,42,0.7)] transition-all duration-500 ease-out z-10 pointer-events-auto border-2 border-indigo-500 ring-4 ring-indigo-500/20"
+           :style="`top: ${highlightBox.top}px; left: ${highlightBox.left}px; width: ${highlightBox.width}px; height: ${highlightBox.height}px;`">
+      </div>
+
+      <!-- Tooltip -->
+      <div class="absolute z-20 w-80 bg-white rounded-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] overflow-hidden transition-all duration-500 ease-out pointer-events-auto border border-neutral-100"
+           :style="`top: ${tooltipPos.top}px; left: ${tooltipPos.left}px; transform: scale(${active ? 1 : 0.95}); opacity: ${active ? 1 : 0};`">
+        
+        <!-- Decorative Top Bar -->
+        <div class="h-1.5 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
+        
+        <!-- Header -->
+        <div class="p-6 pb-4 relative">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2 px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-md">
+              <i data-lucide="info" class="w-3.5 h-3.5"></i>
+              <span class="text-[10px] font-bold tracking-widest uppercase" x-text="`Step ${stepIndex + 1} of ${steps.length}`"></span>
+            </div>
+            <button @click="endTour()" class="w-7 h-7 flex items-center justify-center rounded-full text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 transition-colors" aria-label="Close tour">
+              <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+          </div>
+          <h3 class="text-lg font-bold text-neutral-900 mb-2" x-text="currentStep.title"></h3>
+          <p class="text-sm text-neutral-500 leading-relaxed" x-text="currentStep.text"></p>
+        </div>
+        
+        <!-- Footer Controls -->
+        <div class="px-6 py-4 bg-neutral-50 border-t border-neutral-100 flex items-center justify-between">
+          <button @click="endTour()" class="text-xs font-semibold text-neutral-400 hover:text-neutral-700 transition-colors underline-offset-4 hover:underline">Skip Tour</button>
+          <div class="flex items-center gap-2">
+            <button @click="prev()" :disabled="stepIndex === 0" 
+                    class="w-9 h-9 flex items-center justify-center rounded-xl border border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 disabled:opacity-40 disabled:hover:bg-white disabled:cursor-not-allowed transition-all shadow-sm">
+              <i data-lucide="chevron-left" class="w-4 h-4"></i>
+            </button>
+            
+            <button @click="next()" x-show="stepIndex < steps.length - 1" 
+                    class="px-5 py-2 rounded-xl bg-neutral-900 text-white text-sm font-semibold hover:bg-neutral-800 active:scale-95 transition-all shadow-md flex items-center gap-2">
+              Next <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+            </button>
+            
+            <button @click="endTour()" x-show="stepIndex === steps.length - 1" 
+                    class="px-5 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm font-semibold hover:from-indigo-500 hover:to-purple-500 active:scale-95 transition-all shadow-md flex items-center gap-2">
+              <i data-lucide="check" class="w-4 h-4"></i> Finish
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </template>
+
+</div>
+
+<script>
+  function productTour() {
+    return {
+      active: false,
+      stepIndex: 0,
+      highlightBox: { top: -1000, left: -1000, width: 0, height: 0 },
+      tooltipPos: { top: -1000, left: -1000 },
+      steps: [
+        { target: 'nav-dashboard', title: 'Dashboard', text: "View today's sales, revenue, business performance, and quick insights." },
+        { target: 'nav-orders', title: 'Orders', text: 'Create new orders, manage dine-in, takeaway, and delivery orders.' },
+        { target: 'nav-tables', title: 'Tables', text: 'Manage restaurant tables and monitor occupancy.' },
+        { target: 'nav-kot-kitchen', title: 'Kitchen', text: 'Track kitchen orders and preparation status.' },
+        { target: 'nav-menu-items', title: 'Menu', text: 'Add and manage products, categories, modifiers, and pricing.' },
+        { target: 'nav-inventory', title: 'Inventory', text: 'Track stock, suppliers, purchases, and low-stock alerts.' },
+        { target: 'nav-customers', title: 'Customers', text: 'Manage customer profiles, loyalty programs, and purchase history.' },
+        { target: 'nav-sales-report', title: 'Reports', text: 'Analyze sales, tax, inventory, and business performance.' },
+        { target: 'nav-settings', title: 'Settings', text: 'Configure restaurant information, users, printers, taxes, and subscriptions.' },
+      ],
+      
+      get currentStep() {
+        return this.steps[this.stepIndex];
+      },
+
+      initTour() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('tour') === 'start' || localStorage.getItem('nx_force_tour') === 'true') {
+          localStorage.removeItem('nx_force_tour'); // clear if set
+          // Remove param from URL without reload
+          if (urlParams.has('tour')) {
+             const newUrl = window.location.pathname;
+             window.history.replaceState({}, document.title, newUrl);
+          }
+          // Slight delay to allow icons and layout to render fully
+          setTimeout(() => this.startTour(), 300);
+        }
+      },
+      
+      startTour() {
+        this.active = true;
+        this.stepIndex = 0;
+        this.updatePositions();
+        
+        // Listen to resize to keep highlight box aligned
+        window.addEventListener('resize', this.updatePositionsBound);
+        // Bind keydown for escape/arrows
+        window.addEventListener('keydown', this.handleKeydown);
+      },
+      
+      endTour() {
+        this.active = false;
+        window.removeEventListener('resize', this.updatePositionsBound);
+        window.removeEventListener('keydown', this.handleKeydown);
+      },
+      
+      next() {
+        if (this.stepIndex < this.steps.length - 1) {
+          this.stepIndex++;
+          this.updatePositions();
+        }
+      },
+      
+      prev() {
+        if (this.stepIndex > 0) {
+          this.stepIndex--;
+          this.updatePositions();
+        }
+      },
+
+      updatePositionsBound: null,
+      handleKeydown: null,
+
+      init() {
+        this.updatePositionsBound = this.updatePositions.bind(this);
+        this.handleKeydown = (e) => {
+          if (e.key === 'Escape') this.endTour();
+          if (e.key === 'ArrowRight') this.next();
+          if (e.key === 'ArrowLeft') this.prev();
+        };
+      },
+      
+      updatePositions() {
+        this.$nextTick(() => {
+          if (!this.active) return;
+          const targetEl = document.getElementById(this.currentStep.target);
+          if (!targetEl) {
+             console.warn('Tour target not found:', this.currentStep.target);
+             return;
+          }
+          
+          // Scroll target into view if needed
+          targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          
+          const rect = targetEl.getBoundingClientRect();
+          const pad = 4; // padding around the highlight
+          
+          this.highlightBox = {
+            top: rect.top - pad,
+            left: rect.left - pad,
+            width: rect.width + pad * 2,
+            height: rect.height + pad * 2
+          };
+          
+          // Position tooltip to the right of the highlight box
+          const tooltipWidth = 288; // 72 * 4 (w-72)
+          let tooltipLeft = rect.right + 16;
+          // If tooltip goes off screen, place it to the left
+          if (tooltipLeft + tooltipWidth > window.innerWidth) {
+             tooltipLeft = rect.left - tooltipWidth - 16;
+          }
+          
+          this.tooltipPos = {
+            top: Math.max(16, rect.top + (rect.height / 2) - 100), // Vertically center with target approximately
+            left: tooltipLeft
+          };
+          
+          // Refresh lucide icons in tooltip
+          window.lucide && window.lucide.createIcons();
+        });
+      }
+    };
+  }
+
+  // --- Animated Dashboard Counters ---
+  (function() {
+    const counts = {};
+
+    function snapshotCounters() {
+      document.querySelectorAll('#dashboard-content [data-metric]').forEach(function (el) {
+        counts[el.dataset.metric] = parseFloat(el.dataset.value) || 0;
+      });
+    }
+
+    function tween(el, from, to, prefix) {
+      if (from === to) { 
+        // For currency, format to 2 decimals if needed, otherwise integer
+        el.textContent = prefix + (Number.isInteger(to) ? to : to.toFixed(2)); 
+        return; 
+      }
+      const dur = 500, start = performance.now(), diff = to - from;
+      function step(now) {
+        const p = Math.min((now - start) / dur, 1);
+        const eased = 1 - Math.pow(1 - p, 3);
+        const current = from + diff * eased;
+        el.textContent = prefix + (Number.isInteger(to) ? Math.round(current) : current.toFixed(2));
+        if (p < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+
+    function animateCounters() {
+      document.querySelectorAll('#dashboard-content [data-metric]').forEach(function (el) {
+        const name = el.dataset.metric;
+        const target = parseFloat(el.dataset.value) || 0;
+        const from = (name in counts) ? counts[name] : target;
+        tween(el, from, target, el.dataset.prefix || '');
+        counts[name] = target;
+      });
+    }
+
+    document.body.addEventListener('htmx:beforeSwap', snapshotCounters);
+    document.body.addEventListener('htmx:afterSettle', animateCounters);
+    
+    // Initial snapshot
+    snapshotCounters();
+  })();
+</script>
+{% endblock %}

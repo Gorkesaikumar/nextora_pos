@@ -1,0 +1,102 @@
+{% extends "layouts/dashboard.html" %}
+
+{% block page_title %}Security Permission Matrix{% endblock %}
+{% block page_subtitle %}<p class="text-caption text-neutral-500 mt-1">Directly grant or revoke functional capabilities across all custom roles.</p>{% endblock %}
+
+{% block primary_action %}
+<a href="{% url 'employees:role_list' %}" class="btn-secondary">
+  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+  Back to Roles
+</a>
+{% endblock %}
+
+{% block workspace %}
+{% csrf_token %}
+<div class="card overflow-hidden bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl mt-6">
+  <div class="overflow-x-auto max-h-[75vh]">
+    <table class="w-full text-left border-collapse table-fixed min-w-[800px]">
+      <thead class="sticky top-0 bg-neutral-50 dark:bg-neutral-900 z-10">
+        <tr class="border-b border-neutral-200 dark:border-neutral-700 text-heading-3 text-neutral-700 dark:text-neutral-300">
+          <th class="px-5 py-4 font-bold w-[300px] bg-neutral-50 dark:bg-neutral-900">Permission Name & Code</th>
+          {% for r in roles %}
+            <th class="px-3 py-4 font-bold text-center text-xs">
+              <div>{{ r.name }}</div>
+              <div class="text-[9px] text-neutral-400 font-mono mt-0.5 font-normal">
+                {% if r.is_system %}System{% else %}Custom{% endif %}
+              </div>
+            </th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-neutral-100 dark:divide-neutral-700/50">
+        {% for row in matrix %}
+          <tr class="hover:bg-neutral-50/50 dark:hover:bg-neutral-850 transition-colors">
+            <td class="px-5 py-3 bg-white dark:bg-neutral-800 sticky left-0 z-0">
+              <div class="text-xs font-semibold text-neutral-800 dark:text-neutral-200">{{ row.permission.name }}</div>
+              <div class="text-[9px] text-neutral-400 font-mono mt-0.5">{{ row.permission.code }}</div>
+            </td>
+            
+            {% for grant in row.role_grants %}
+              <td class="px-3 py-3 text-center">
+                <input type="checkbox" 
+                       {% if grant.granted %}checked{% endif %}
+                       {% if grant.is_system %}disabled class="opacity-50 cursor-not-allowed"{% else %}class="form-checkbox text-brand-default rounded cursor-pointer" onchange="updateMatrixPermission(this, '{{ grant.role_id }}', '{{ row.permission.id }}')"{% endif %}>
+              </td>
+            {% endfor %}
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  function updateMatrixPermission(checkbox, roleId, permissionId) {
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+    // Disable temporarily during the write operation
+    checkbox.disabled = true;
+    
+    fetch('.', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'X-CSRFToken': csrftoken
+      },
+      body: new URLSearchParams({
+        'role_id': roleId,
+        'permission_id': permissionId,
+        'granted': checkbox.checked ? 'true' : 'false'
+      })
+    })
+    .then(res => {
+      checkbox.disabled = false;
+      if (!res.ok) {
+        // Rollback on failure
+        checkbox.checked = !checkbox.checked;
+        showToast('Error', 'Failed to update system permissions. System roles are protected.', 'error');
+      } else {
+        showToast('Success', 'Access permissions updated successfully.', 'success');
+      }
+    })
+    .catch(err => {
+      checkbox.disabled = false;
+      checkbox.checked = !checkbox.checked;
+      showToast('Error', 'Network connection failure.', 'error');
+    });
+  }
+
+  // Toast Notification helper consistent with system designs
+  function showToast(title, message, type = 'success') {
+    const event = new CustomEvent('show-toast', {
+      detail: {
+        title: title,
+        message: message,
+        type: type
+      },
+      bubbles: true
+    });
+    document.dispatchEvent(event);
+  }
+</script>
+{% endblock %}

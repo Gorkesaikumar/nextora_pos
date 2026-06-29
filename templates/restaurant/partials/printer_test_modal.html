@@ -1,0 +1,39 @@
+<div class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+  <div class="bg-white dark:bg-neutral-800 rounded-xl shadow-lg border border-neutral-200 dark:border-neutral-700 max-w-sm w-full flex flex-col">
+    <!-- Header -->
+    <div class="px-6 py-4 border-b border-neutral-100 dark:border-neutral-700 flex justify-between items-center">
+      <h3 class="text-xs font-bold uppercase tracking-wider text-neutral-500">
+        Simulated Thermal Printer Feed
+      </h3>
+      <button onclick="this.closest('.fixed').remove()" class="text-neutral-400 hover:text-neutral-600">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
+    </div>
+
+    <!-- Thermal Print Visual Feed -->
+    <div class="p-6 bg-neutral-100 dark:bg-neutral-900 flex justify-center">
+      <div class="bg-white text-neutral-900 font-mono text-[10px] leading-relaxed p-6 w-64 shadow-md border-t-4 border-dashed border-neutral-300 space-y-1">
+        <div class="text-center font-bold text-xs uppercase tracking-wider mb-2">
+          {{ receipt.printer_name }}
+        </div>
+        <div class="text-center text-[9px] text-neutral-500 mb-4">
+          Conn: {{ receipt.connection }}<br>
+          Time: {{ receipt.timestamp }}
+        </div>
+        
+        {% for line in receipt.test_lines %}
+          <div class="whitespace-pre">{% if line == "---------------------------" or line == "===============================" or line == "-------------------------------" %}<div class="border-t border-dashed border-neutral-300 my-1"></div>{% else %}{{ line }}{% endif %}</div>
+        {% endfor %}
+        
+        <div class="pt-6 border-b border-dashed border-neutral-300"></div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="px-6 py-4 border-t border-neutral-100 dark:border-neutral-700 flex justify-end">
+      <button onclick="this.closest('.fixed').remove()" class="px-4 py-2 bg-neutral-900 text-white rounded-lg text-xs font-semibold hover:bg-neutral-800">
+        Dismiss Print Job
+      </button>
+    </div>
+  </div>
+</div>

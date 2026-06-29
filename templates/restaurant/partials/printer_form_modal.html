@@ -1,0 +1,110 @@
+<div class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+  <div class="bg-white dark:bg-neutral-800 rounded-xl shadow-lg border border-neutral-200 dark:border-neutral-700 max-w-lg w-full flex flex-col">
+    <!-- Header -->
+    <div class="px-6 py-4 border-b border-neutral-100 dark:border-neutral-700 flex justify-between items-center">
+      <h3 class="text-md font-bold text-neutral-900 dark:text-white">
+        {% if form.instance.pk %}Edit Printer Configuration{% else %}Register Printer{% endif %}
+      </h3>
+      <button onclick="this.closest('.fixed').remove()" class="text-neutral-400 hover:text-neutral-600">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
+    </div>
+
+    <!-- Form -->
+    <form {% if form.instance.pk %}hx-post="{% url 'restaurant:printer_update' form.instance.pk %}"{% else %}hx-post="{% url 'restaurant:printer_create' %}"{% endif %}
+          hx-target="#dialog-container"
+          class="p-6 space-y-4">
+      {% csrf_token %}
+      
+      {% if form.non_field_errors %}
+        <div class="p-3 bg-red-50 text-red-700 text-xs rounded-lg">
+          {{ form.non_field_errors }}
+        </div>
+      {% endif %}
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-semibold text-neutral-500 mb-1">Printer Name <span class="text-red-500">*</span></label>
+          {{ form.name }}
+          <span class="text-[10px] text-red-500">{{ form.name.errors }}</span>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-neutral-500 mb-1">Printer Code <span class="text-red-500">*</span></label>
+          {{ form.code }}
+          <span class="text-[10px] text-red-500">{{ form.code.errors }}</span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-3 gap-4">
+        <div>
+          <label class="block text-xs font-semibold text-neutral-500 mb-1">Brand</label>
+          {{ form.brand }}
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-neutral-500 mb-1">Model</label>
+          {{ form.model }}
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-neutral-500 mb-1">Type</label>
+          {{ form.kind }}
+        </div>
+      </div>
+
+      <div class="border-t border-neutral-100 dark:border-neutral-700 pt-4">
+        <h4 class="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-3">Connection Details</h4>
+        <div class="grid grid-cols-3 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-neutral-500 mb-1">Interface</label>
+            {{ form.connection_type }}
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-neutral-500 mb-1">IP Address</label>
+            {{ form.ip_address }}
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-neutral-500 mb-1">Port</label>
+            {{ form.port }}
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4 border-t border-neutral-100 dark:border-neutral-700 pt-4">
+        <div>
+          <label class="block text-xs font-semibold text-neutral-500 mb-1">Paper Width</label>
+          {{ form.paper_width }}
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-neutral-500 mb-1">Branch Scope</label>
+          {{ form.location_id }}
+        </div>
+      </div>
+
+      <div class="grid grid-cols-3 gap-4 pt-2">
+        <div>
+          <label class="block text-xs font-semibold text-neutral-500 mb-1">Status</label>
+          {{ form.status }}
+        </div>
+        <div class="flex items-center gap-4 col-span-2 mt-4">
+          <label class="flex items-center gap-2 text-xs font-semibold text-neutral-700 dark:text-neutral-200 cursor-pointer">
+            {{ form.is_default }}
+            <span>Is Default</span>
+          </label>
+          <label class="flex items-center gap-2 text-xs font-semibold text-neutral-700 dark:text-neutral-200 cursor-pointer">
+            {{ form.is_active }}
+            <span>Is Active</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="border-t border-neutral-100 dark:border-neutral-700 pt-4 flex justify-end gap-2">
+        <button type="button" onclick="this.closest('.fixed').remove()" class="px-4 py-2 bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-200 rounded-lg text-xs font-semibold hover:bg-neutral-200">
+          Cancel
+        </button>
+        <button type="submit" class="px-4 py-2 bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900 rounded-lg text-xs font-semibold hover:bg-neutral-800">
+          Save Printer
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

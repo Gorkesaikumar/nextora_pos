@@ -1,0 +1,48 @@
+{% comment %} Pinned at-a-glance metrics above the thin status rail. {% endcomment %}
+<div id="pos-stats-panel" class="shrink-0 px-5 pb-3 pt-0 bg-neutral-50 dark:bg-neutral-dark-50"
+     hx-get="{% url 'ordering:pos_main' %}"
+     hx-trigger="tenant:order_changed from:window, tenant:payment_captured from:window, tenant:kds_changed from:window"
+     hx-select="#pos-stats-panel"
+     hx-swap="outerHTML transition:true">
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-neutral-0 dark:bg-neutral-dark-100 border border-neutral-200 dark:border-neutral-dark-200 rounded-card p-2.5 shadow-sm">
+    <div class="flex items-center gap-3">
+      <span class="w-9 h-9 rounded-card bg-neutral-100 dark:bg-neutral-dark-150 flex items-center justify-center text-neutral-500 shrink-0">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+      </span>
+      <div class="min-w-0">
+        <div class="text-caption text-neutral-500 dark:text-neutral-dark-500 truncate">Total Items</div>
+        <div class="text-body-strong tabular-nums text-neutral-900 dark:text-neutral-dark-900">{{ stat_total_items|default:0 }}</div>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <span class="w-9 h-9 rounded-card bg-neutral-100 dark:bg-neutral-dark-150 flex items-center justify-center text-neutral-500 shrink-0">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5a1.99 1.99 0 011.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.99 1.99 0 013 12V7a4 4 0 014-4z"></path></svg>
+      </span>
+      <div class="min-w-0">
+        <div class="text-caption text-neutral-500 dark:text-neutral-dark-500 truncate">Categories</div>
+        <div class="text-body-strong tabular-nums text-neutral-900 dark:text-neutral-dark-900">{{ stat_categories|default:0 }}</div>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <span class="w-9 h-9 rounded-card bg-neutral-100 dark:bg-neutral-dark-150 flex items-center justify-center text-neutral-500 shrink-0">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+      </span>
+      <div class="min-w-0">
+        <div class="text-caption text-neutral-500 dark:text-neutral-dark-500 truncate">Active Orders</div>
+        <div class="text-body-strong tabular-nums text-neutral-900 dark:text-neutral-dark-900">{{ stat_active_orders|default:0 }}</div>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <span class="w-9 h-9 rounded-card bg-neutral-100 dark:bg-neutral-dark-150 flex items-center justify-center text-neutral-500 shrink-0">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+      </span>
+      <div class="min-w-0">
+        <div class="text-caption text-neutral-500 dark:text-neutral-dark-500 truncate">Open KOTs</div>
+        <div class="text-body-strong tabular-nums text-neutral-900 dark:text-neutral-dark-900">{{ stat_open_kots|default:0 }}</div>
+      </div>
+    </div>
+  </div>
+</div>

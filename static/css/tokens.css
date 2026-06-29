@@ -1,0 +1,925 @@
+/*
+ * ============================================================
+ *  NEXTORA POS — FORGE DESIGN TOKEN SYSTEM
+ *  Version: 1.0  |  Codename: Forge
+ *  Source of truth: DESIGN-nextora.md
+ *
+ *  Naming convention:
+ *    --forge-{category}-{variant}-{modifier}
+ *
+ *    category   → color, space, radius, type, shadow,
+ *                  border, motion, opacity, z, bp, size
+ *    variant    → semantic name (brand, surface, neutral…)
+ *    modifier   → scale step, state, or mode qualifier
+ *
+ *  Two root blocks:
+ *    :root          → Light mode (default)
+ *    [data-theme="dark"] → Dark mode overrides
+ *
+ *  All design decisions are expressed as tokens.
+ *  No hardcoded values anywhere in the codebase.
+ * ============================================================
+ */
+
+/* ============================================================
+   SECTION 1 — PRIMITIVE PALETTE
+   Raw hex values. Never used directly in components.
+   Components always reference semantic tokens.
+   ============================================================ */
+
+:root {
+
+  /* --- Brand Indigo primitives (updated to vibrant premium blue) --- */
+  --forge-primitive-indigo-50:  #eff6ff;
+  --forge-primitive-indigo-100: #dbeafe;
+  --forge-primitive-indigo-200: #bfdbfe;
+  --forge-primitive-indigo-300: #93c5fd;
+  --forge-primitive-indigo-400: #60a5fa;
+  --forge-primitive-indigo-500: #3b82f6;
+  --forge-primitive-indigo-600: #2563eb;  /* brand default */
+  --forge-primitive-indigo-700: #1d4ed8;  /* brand hover */
+  --forge-primitive-indigo-800: #1e40af;  /* brand pressed */
+  --forge-primitive-indigo-900: #1e3a8a;
+
+  /* --- Semantic Green primitives --- */
+  --forge-primitive-green-50:  #DCFCE7;
+  --forge-primitive-green-100: #BBF7D0;
+  --forge-primitive-green-200: #86EFAC;
+  --forge-primitive-green-300: #4ADE80;
+  --forge-primitive-green-400: #22C55E;
+  --forge-primitive-green-500: #16A34A;  /* success default */
+  --forge-primitive-green-600: #15803D;
+  --forge-primitive-green-700: #166534;
+  --forge-primitive-green-800: #14532D;
+  --forge-primitive-green-900: #052E16;
+
+  /* --- Semantic Amber primitives --- */
+  --forge-primitive-amber-50:  #FEF3C7;
+  --forge-primitive-amber-100: #FDE68A;
+  --forge-primitive-amber-200: #FCD34D;
+  --forge-primitive-amber-300: #FBBF24;
+  --forge-primitive-amber-400: #F59E0B;
+  --forge-primitive-amber-500: #D97706;  /* warning default */
+  --forge-primitive-amber-600: #B45309;
+  --forge-primitive-amber-700: #92400E;
+  --forge-primitive-amber-800: #451A03;
+  --forge-primitive-amber-900: #2D1002;
+
+  /* --- Semantic Red primitives --- */
+  --forge-primitive-red-50:  #FEE2E2;
+  --forge-primitive-red-100: #FECACA;
+  --forge-primitive-red-200: #FCA5A5;
+  --forge-primitive-red-300: #F87171;
+  --forge-primitive-red-400: #EF4444;
+  --forge-primitive-red-500: #DC2626;  /* danger default */
+  --forge-primitive-red-600: #B91C1C;
+  --forge-primitive-red-700: #991B1B;
+  --forge-primitive-red-800: #450A0A;
+  --forge-primitive-red-900: #2D0505;
+
+  /* --- Semantic Sky primitives --- */
+  --forge-primitive-sky-50:  #E0F2FE;
+  --forge-primitive-sky-100: #BAE6FD;
+  --forge-primitive-sky-200: #7DD3FC;
+  --forge-primitive-sky-300: #38BDF8;
+  --forge-primitive-sky-400: #0EA5E9;
+  --forge-primitive-sky-500: #0284C7;  /* info default */
+  --forge-primitive-sky-600: #0369A1;
+  --forge-primitive-sky-700: #075985;
+  --forge-primitive-sky-800: #0C4A6E;
+  --forge-primitive-sky-900: #082F49;
+
+  /* --- Neutral primitives (warm, not cold blue-gray) --- */
+  --forge-primitive-neutral-0:   #FFFFFF;
+  --forge-primitive-neutral-50:  #F8F8F8;
+  --forge-primitive-neutral-100: #F2F2F2;
+  --forge-primitive-neutral-150: #EBEBEB;
+  --forge-primitive-neutral-200: #E0E0E0;
+  --forge-primitive-neutral-300: #CBCBCB;
+  --forge-primitive-neutral-400: #A8A8A8;
+  --forge-primitive-neutral-500: #848484;
+  --forge-primitive-neutral-600: #5C5C5C;
+  --forge-primitive-neutral-700: #3D3D3D;
+  --forge-primitive-neutral-800: #252525;
+  --forge-primitive-neutral-900: #141414;
+
+  /* --- Dark neutral primitives (warm dark, not pure black) --- */
+  --forge-primitive-dark-0:   #1A1A1C;
+  --forge-primitive-dark-50:  #212124;
+  --forge-primitive-dark-100: #2A2A2E;
+  --forge-primitive-dark-150: #313136;
+  --forge-primitive-dark-200: #3C3C42;
+  --forge-primitive-dark-300: #4F4F57;
+  --forge-primitive-dark-400: #6B6B75;
+  --forge-primitive-dark-500: #8C8C98;
+  --forge-primitive-dark-600: #ABABBA;
+  --forge-primitive-dark-700: #C8C8D8;
+  --forge-primitive-dark-800: #E0E0EE;
+  --forge-primitive-dark-900: #F0F0F8;
+
+  /* --- Data / Chart primitives --- */
+  --forge-primitive-data-1: #4F6EF7;  /* indigo  — primary series */
+  --forge-primitive-data-2: #E07B39;  /* amber   — secondary      */
+  --forge-primitive-data-3: #2DB5A3;  /* teal    — tertiary       */
+  --forge-primitive-data-4: #9B6DDE;  /* violet  — quaternary     */
+  --forge-primitive-data-5: #D4596A;  /* rose    — quinary        */
+  --forge-primitive-data-6: #5BA85B;  /* forest  — sixth          */
+}
+
+
+/* ============================================================
+   SECTION 2 — LIGHT MODE SEMANTIC TOKENS  (:root default)
+   ============================================================ */
+
+:root {
+
+  /* ------ 2A. BRAND COLOR ------ */
+  /* Premium monochrome — deep black with subtle warm undertone */
+  --forge-color-brand-default:    var(--forge-primitive-neutral-900);  /* #141414 */
+  --forge-color-brand-hover:      var(--forge-primitive-neutral-800);  /* #252525 */
+  --forge-color-brand-pressed:    #000000;
+  --forge-color-brand-subtle:     var(--forge-primitive-neutral-100);  /* #F2F2F2 */
+  --forge-color-brand-on-brand:   var(--forge-primitive-neutral-0);
+  --forge-color-brand-focus-ring: var(--forge-primitive-neutral-700);
+  /* on-dark variant (higher luminance for dark surfaces) */
+  --forge-color-brand-on-dark:    var(--forge-primitive-neutral-50);
+
+  /* ------ 2B. SEMANTIC — SUCCESS ------ */
+  --forge-color-success-default:  var(--forge-primitive-green-500);
+  --forge-color-success-subtle:   var(--forge-primitive-green-50);
+  --forge-color-success-text:     var(--forge-primitive-green-600);
+  --forge-color-success-border:   var(--forge-primitive-green-200);
+  --forge-color-success-on:       var(--forge-primitive-neutral-0);
+
+  /* ------ 2C. SEMANTIC — WARNING ------ */
+  --forge-color-warning-default:  var(--forge-primitive-amber-500);
+  --forge-color-warning-subtle:   var(--forge-primitive-amber-50);
+  --forge-color-warning-text:     var(--forge-primitive-amber-600);
+  --forge-color-warning-border:   var(--forge-primitive-amber-200);
+  --forge-color-warning-on:       var(--forge-primitive-neutral-0);
+
+  /* ------ 2D. SEMANTIC — DANGER ------ */
+  --forge-color-danger-default:   var(--forge-primitive-red-500);
+  --forge-color-danger-subtle:    var(--forge-primitive-red-50);
+  --forge-color-danger-text:      var(--forge-primitive-red-600);
+  --forge-color-danger-border:    var(--forge-primitive-red-200);
+  --forge-color-danger-on:        var(--forge-primitive-neutral-0);
+
+  /* ------ 2E. SEMANTIC — INFO ------ */
+  --forge-color-info-default:     var(--forge-primitive-sky-500);
+  --forge-color-info-subtle:      var(--forge-primitive-sky-50);
+  --forge-color-info-text:        var(--forge-primitive-sky-600);
+  --forge-color-info-border:      var(--forge-primitive-sky-100);
+  --forge-color-info-on:          var(--forge-primitive-neutral-0);
+
+  /* ------ 2F. SURFACE LEVELS (Light) ------ */
+  --forge-color-surface-ground:   var(--forge-primitive-neutral-100); /* #F2F2F2 */
+  --forge-color-surface-base:     var(--forge-primitive-neutral-50);  /* #F8F8F8 */
+  --forge-color-surface-raised:   var(--forge-primitive-neutral-0);   /* #FFFFFF */
+  --forge-color-surface-overlay:  var(--forge-primitive-neutral-0);   /* #FFFFFF */
+  --forge-color-surface-toast:    var(--forge-primitive-neutral-800); /* #252525 */
+  --forge-color-surface-toast-fg: var(--forge-primitive-neutral-0);
+
+  /* ------ 2G. TEXT (Light) ------ */
+  --forge-color-text-primary:     var(--forge-primitive-neutral-800); /* #252525 */
+  --forge-color-text-body:        var(--forge-primitive-neutral-700); /* #3D3D3D */
+  --forge-color-text-secondary:   var(--forge-primitive-neutral-600); /* #5C5C5C */
+  --forge-color-text-tertiary:    var(--forge-primitive-neutral-500); /* #848484 */
+  --forge-color-text-placeholder: var(--forge-primitive-neutral-400); /* #A8A8A8 */
+  --forge-color-text-disabled:    var(--forge-primitive-neutral-300); /* #CBCBCB */
+  --forge-color-text-on-dark:     var(--forge-primitive-neutral-0);   /* #FFFFFF */
+  --forge-color-text-inverse:     var(--forge-primitive-neutral-0);
+
+  /* ------ 2H. BORDER (Light) ------ */
+  --forge-color-border-strong:    var(--forge-primitive-neutral-200); /* #E0E0E0 */
+  --forge-color-border-default:   var(--forge-primitive-neutral-150); /* #EBEBEB */
+  --forge-color-border-subtle:    var(--forge-primitive-neutral-100); /* #F2F2F2 */
+  --forge-color-border-disabled:  var(--forge-primitive-neutral-300); /* #CBCBCB */
+  --forge-color-border-focus:     var(--forge-primitive-indigo-500);
+  --forge-color-border-danger:    var(--forge-primitive-red-500);
+  --forge-color-border-success:   var(--forge-primitive-green-500);
+  --forge-color-border-warning:   var(--forge-primitive-amber-500);
+
+  /* ------ 2I. ICON (Light) ------ */
+  --forge-color-icon-primary:     var(--forge-primitive-neutral-700);
+  --forge-color-icon-secondary:   var(--forge-primitive-neutral-500);
+  --forge-color-icon-tertiary:    var(--forge-primitive-neutral-400);
+  --forge-color-icon-disabled:    var(--forge-primitive-neutral-300);
+  --forge-color-icon-on-brand:    var(--forge-primitive-neutral-0);
+  --forge-color-icon-brand:       var(--forge-primitive-indigo-500);
+  --forge-color-icon-success:     var(--forge-primitive-green-500);
+  --forge-color-icon-warning:     var(--forge-primitive-amber-500);
+  --forge-color-icon-danger:      var(--forge-primitive-red-500);
+  --forge-color-icon-info:        var(--forge-primitive-sky-500);
+
+  /* ------ 2J. DATA COLORS ------ */
+  --forge-color-data-1: var(--forge-primitive-data-1);
+  --forge-color-data-2: var(--forge-primitive-data-2);
+  --forge-color-data-3: var(--forge-primitive-data-3);
+  --forge-color-data-4: var(--forge-primitive-data-4);
+  --forge-color-data-5: var(--forge-primitive-data-5);
+  --forge-color-data-6: var(--forge-primitive-data-6);
+
+  /* ------ 2K. SPECIAL SURFACES ------ */
+  --forge-color-surface-sidebar:  var(--forge-primitive-neutral-50);
+  --forge-color-surface-header:   var(--forge-primitive-neutral-0);
+  --forge-color-surface-kbd:      var(--forge-primitive-neutral-100);
+  --forge-color-surface-code:     var(--forge-primitive-neutral-50);
+  --forge-color-surface-selection: var(--forge-primitive-indigo-50);
+  --forge-color-surface-row-hover: rgba(79, 110, 247, 0.04);
+  --forge-color-surface-row-selected: var(--forge-primitive-indigo-50);
+  --forge-color-surface-row-danger: var(--forge-primitive-red-50);
+}
+
+
+/* ============================================================
+   SECTION 3 — DARK MODE SEMANTIC TOKENS
+   ============================================================ */
+
+[data-theme="dark"] {
+
+  /* ------ 3A. BRAND COLOR (Dark) — Premium monochrome ------ */
+  --forge-color-brand-default:    var(--forge-primitive-neutral-0);    /* white pops on dark */
+  --forge-color-brand-hover:      var(--forge-primitive-neutral-50);
+  --forge-color-brand-pressed:    var(--forge-primitive-neutral-100);
+  --forge-color-brand-subtle:     rgba(255, 255, 255, 0.08);
+  --forge-color-brand-on-brand:   var(--forge-primitive-neutral-900);
+  --forge-color-brand-focus-ring: var(--forge-primitive-neutral-0);
+  --forge-color-brand-on-dark:    var(--forge-primitive-neutral-0);
+
+  /* ------ 3B. SEMANTIC — SUCCESS (Dark) ------ */
+  --forge-color-success-default:  var(--forge-primitive-green-300);
+  --forge-color-success-subtle:   var(--forge-primitive-green-800);
+  --forge-color-success-text:     var(--forge-primitive-green-300);
+  --forge-color-success-border:   var(--forge-primitive-green-700);
+  --forge-color-success-on:       var(--forge-primitive-dark-0);
+
+  /* ------ 3C. SEMANTIC — WARNING (Dark) ------ */
+  --forge-color-warning-default:  var(--forge-primitive-amber-200);
+  --forge-color-warning-subtle:   var(--forge-primitive-amber-800);
+  --forge-color-warning-text:     var(--forge-primitive-amber-200);
+  --forge-color-warning-border:   var(--forge-primitive-amber-700);
+  --forge-color-warning-on:       var(--forge-primitive-dark-0);
+
+  /* ------ 3D. SEMANTIC — DANGER (Dark) ------ */
+  --forge-color-danger-default:   var(--forge-primitive-red-300);
+  --forge-color-danger-subtle:    var(--forge-primitive-red-800);
+  --forge-color-danger-text:      var(--forge-primitive-red-300);
+  --forge-color-danger-border:    var(--forge-primitive-red-700);
+  --forge-color-danger-on:        var(--forge-primitive-dark-0);
+
+  /* ------ 3E. SEMANTIC — INFO (Dark) ------ */
+  --forge-color-info-default:     var(--forge-primitive-sky-300);
+  --forge-color-info-subtle:      var(--forge-primitive-sky-800);
+  --forge-color-info-text:        var(--forge-primitive-sky-300);
+  --forge-color-info-border:      var(--forge-primitive-sky-700);
+  --forge-color-info-on:          var(--forge-primitive-dark-0);
+
+  /* ------ 3F. SURFACE LEVELS (Dark) ------ */
+  --forge-color-surface-ground:   var(--forge-primitive-dark-0);   /* #1A1A1C */
+  --forge-color-surface-base:     var(--forge-primitive-dark-50);  /* #212124 */
+  --forge-color-surface-raised:   var(--forge-primitive-dark-100); /* #2A2A2E */
+  --forge-color-surface-overlay:  var(--forge-primitive-dark-100); /* #2A2A2E */
+  --forge-color-surface-toast:    var(--forge-primitive-dark-900); /* #F0F0F8 */
+  --forge-color-surface-toast-fg: var(--forge-primitive-dark-0);
+
+  /* ------ 3G. TEXT (Dark) ------ */
+  --forge-color-text-primary:     var(--forge-primitive-dark-800); /* #E0E0EE */
+  --forge-color-text-body:        var(--forge-primitive-dark-700); /* #C8C8D8 */
+  --forge-color-text-secondary:   var(--forge-primitive-dark-600); /* #ABABBA */
+  --forge-color-text-tertiary:    var(--forge-primitive-dark-500); /* #8C8C98 */
+  --forge-color-text-placeholder: var(--forge-primitive-dark-400); /* #6B6B75 */
+  --forge-color-text-disabled:    var(--forge-primitive-dark-300); /* #4F4F57 */
+  --forge-color-text-on-dark:     var(--forge-primitive-dark-900);
+  --forge-color-text-inverse:     var(--forge-primitive-dark-0);
+
+  /* ------ 3H. BORDER (Dark) ------ */
+  --forge-color-border-strong:    var(--forge-primitive-dark-200); /* #3C3C42 */
+  --forge-color-border-default:   var(--forge-primitive-dark-150); /* #313136 */
+  --forge-color-border-subtle:    var(--forge-primitive-dark-100); /* #2A2A2E */
+  --forge-color-border-disabled:  var(--forge-primitive-dark-300);
+  --forge-color-border-focus:     var(--forge-primitive-indigo-400);
+  --forge-color-border-danger:    var(--forge-primitive-red-300);
+  --forge-color-border-success:   var(--forge-primitive-green-300);
+  --forge-color-border-warning:   var(--forge-primitive-amber-200);
+
+  /* ------ 3I. ICON (Dark) ------ */
+  --forge-color-icon-primary:     var(--forge-primitive-dark-700);
+  --forge-color-icon-secondary:   var(--forge-primitive-dark-500);
+  --forge-color-icon-tertiary:    var(--forge-primitive-dark-400);
+  --forge-color-icon-disabled:    var(--forge-primitive-dark-300);
+  --forge-color-icon-on-brand:    var(--forge-primitive-neutral-0);
+  --forge-color-icon-brand:       var(--forge-primitive-indigo-400);
+  --forge-color-icon-success:     var(--forge-primitive-green-300);
+  --forge-color-icon-warning:     var(--forge-primitive-amber-200);
+  --forge-color-icon-danger:      var(--forge-primitive-red-300);
+  --forge-color-icon-info:        var(--forge-primitive-sky-300);
+
+  /* ------ 3K. SPECIAL SURFACES (Dark) ------ */
+  --forge-color-surface-sidebar:  var(--forge-primitive-dark-50);
+  --forge-color-surface-header:   var(--forge-primitive-dark-100);
+  --forge-color-surface-kbd:      var(--forge-primitive-dark-150);
+  --forge-color-surface-code:     var(--forge-primitive-dark-100);
+  --forge-color-surface-selection: rgba(79, 110, 247, 0.20);
+  --forge-color-surface-row-hover: rgba(255, 255, 255, 0.04);
+  --forge-color-surface-row-selected: rgba(79, 110, 247, 0.15);
+  --forge-color-surface-row-danger: rgba(220, 38, 38, 0.12);
+}
+
+
+/* ============================================================
+   SECTION 4 — TYPOGRAPHY TOKENS
+   ============================================================ */
+
+:root {
+
+  /* ------ 4A. FONT FAMILIES ------ */
+  --forge-font-sans:
+    "Inter", system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+
+  --forge-font-mono:
+    ui-monospace, "Cascadia Code", "Fira Code",
+    "JetBrains Mono", "Consolas", monospace;
+
+  /* ------ 4B. FONT FEATURE SETTINGS ------ */
+  --forge-font-features-default: "ss03" on, "cv11" on;   /* rounded a, curved l */
+  --forge-font-features-tabular: "tnum" on, "ss03" on;   /* tabular numbers + rounded a */
+  --forge-font-features-numeric: "tnum" on, "lnum" on;   /* tabular lining numbers */
+
+  /* ------ 4C. FONT SIZES — 8-step scale ------ */
+  --forge-type-size-micro:    0.6875rem;  /* 11px */
+  --forge-type-size-caption:  0.8125rem;  /* 13px */
+  --forge-type-size-body:     0.9375rem;  /* 15px */
+  --forge-type-size-body-lg:  1rem;       /* 16px — labels, button text */
+  --forge-type-size-h3:       0.9375rem;  /* 15px — same size, higher weight */
+  --forge-type-size-h2:       1.125rem;   /* 18px */
+  --forge-type-size-h1:       1.375rem;   /* 22px */
+  --forge-type-size-display:  1.75rem;    /* 28px */
+
+  /* ------ 4D. FONT WEIGHTS ------ */
+  --forge-type-weight-regular: 400;
+  --forge-type-weight-medium:  400;  /* deliberately same; no 500 */
+  --forge-type-weight-semibold: 600;
+  --forge-type-weight-bold:    700;
+
+  /* ------ 4E. LINE HEIGHTS ------ */
+  --forge-type-leading-tight:    1.14;  /* display headings */
+  --forge-type-leading-snug:     1.22;  /* h1, h2 */
+  --forge-type-leading-normal:   1.33;  /* h3, labels */
+  --forge-type-leading-body:     1.47;  /* body copy */
+  --forge-type-leading-relaxed:  1.60;  /* long-form reading */
+  --forge-type-leading-caption:  1.38;  /* captions */
+  --forge-type-leading-micro:    1.27;  /* micro / fine print */
+  --forge-type-leading-none:     1.00;  /* button labels, badges */
+
+  /* ------ 4F. LETTER SPACING ------ */
+  --forge-type-tracking-tight:    -0.03em;   /* display: 28px → -0.84px approx */
+  --forge-type-tracking-snug:     -0.015em;  /* h1, h2 */
+  --forge-type-tracking-normal:    0em;      /* body, h3 */
+  --forge-type-tracking-wide:      0.01em;   /* captions */
+  --forge-type-tracking-wider:     0.02em;   /* micro, kbd labels */
+  --forge-type-tracking-widest:    0.06em;   /* uppercase badge labels */
+
+  /* ------ 4G. COMPOSITE TYPE STYLES ------ */
+  /* display */
+  --forge-type-display-size:     var(--forge-type-size-display);
+  --forge-type-display-weight:   var(--forge-type-weight-bold);
+  --forge-type-display-leading:  var(--forge-type-leading-tight);
+  --forge-type-display-tracking: var(--forge-type-tracking-tight);
+
+  /* heading-1 */
+  --forge-type-h1-size:     var(--forge-type-size-h1);
+  --forge-type-h1-weight:   var(--forge-type-weight-semibold);
+  --forge-type-h1-leading:  var(--forge-type-leading-snug);
+  --forge-type-h1-tracking: var(--forge-type-tracking-snug);
+
+  /* heading-2 */
+  --forge-type-h2-size:     var(--forge-type-size-h2);
+  --forge-type-h2-weight:   var(--forge-type-weight-semibold);
+  --forge-type-h2-leading:  var(--forge-type-leading-snug);
+  --forge-type-h2-tracking: var(--forge-type-tracking-snug);
+
+  /* heading-3 */
+  --forge-type-h3-size:     var(--forge-type-size-h3);
+  --forge-type-h3-weight:   var(--forge-type-weight-semibold);
+  --forge-type-h3-leading:  var(--forge-type-leading-normal);
+  --forge-type-h3-tracking: var(--forge-type-tracking-normal);
+
+  /* body */
+  --forge-type-body-size:     var(--forge-type-size-body);
+  --forge-type-body-weight:   var(--forge-type-weight-regular);
+  --forge-type-body-leading:  var(--forge-type-leading-body);
+  --forge-type-body-tracking: var(--forge-type-tracking-normal);
+
+  /* body-strong */
+  --forge-type-body-strong-size:     var(--forge-type-size-body);
+  --forge-type-body-strong-weight:   var(--forge-type-weight-semibold);
+  --forge-type-body-strong-leading:  var(--forge-type-leading-body);
+  --forge-type-body-strong-tracking: var(--forge-type-tracking-normal);
+
+  /* caption */
+  --forge-type-caption-size:     var(--forge-type-size-caption);
+  --forge-type-caption-weight:   var(--forge-type-weight-regular);
+  --forge-type-caption-leading:  var(--forge-type-leading-caption);
+  --forge-type-caption-tracking: var(--forge-type-tracking-wide);
+
+  /* caption-strong */
+  --forge-type-caption-strong-size:     var(--forge-type-size-caption);
+  --forge-type-caption-strong-weight:   var(--forge-type-weight-semibold);
+  --forge-type-caption-strong-leading:  var(--forge-type-leading-caption);
+  --forge-type-caption-strong-tracking: var(--forge-type-tracking-wide);
+
+  /* micro */
+  --forge-type-micro-size:     var(--forge-type-size-micro);
+  --forge-type-micro-weight:   var(--forge-type-weight-regular);
+  --forge-type-micro-leading:  var(--forge-type-leading-micro);
+  --forge-type-micro-tracking: var(--forge-type-tracking-wider);
+}
+
+
+/* ============================================================
+   SECTION 5 — SPACING TOKENS
+   ============================================================ */
+
+:root {
+  /* Base unit: 4px */
+  --forge-space-0:  0px;
+  --forge-space-px: 1px;
+  --forge-space-1:  0.25rem;   /*  4px */
+  --forge-space-2:  0.5rem;    /*  8px */
+  --forge-space-3:  0.75rem;   /* 12px */
+  --forge-space-4:  1rem;      /* 16px */
+  --forge-space-5:  1.25rem;   /* 20px */
+  --forge-space-6:  1.5rem;    /* 24px */
+  --forge-space-7:  1.75rem;   /* 28px */
+  --forge-space-8:  2rem;      /* 32px */
+  --forge-space-9:  2.25rem;   /* 36px */
+  --forge-space-10: 2.5rem;    /* 40px */
+  --forge-space-11: 2.75rem;   /* 44px — touch target min */
+  --forge-space-12: 3rem;      /* 48px — touch target preferred */
+  --forge-space-14: 3.5rem;    /* 56px */
+  --forge-space-16: 4rem;      /* 64px */
+  --forge-space-20: 5rem;      /* 80px — marketing sections only */
+  --forge-space-24: 6rem;      /* 96px */
+  --forge-space-32: 8rem;      /* 128px */
+
+  /* ------ Named semantic spacing ------ */
+  --forge-space-touch-min:  var(--forge-space-11); /* 44px — WCAG 2.5.5 */
+  --forge-space-touch-pref: var(--forge-space-12); /* 48px — POS terminal preferred */
+
+  /* Density mode: Compact (POS terminal) */
+  --forge-density-compact-card:     var(--forge-space-3); /* 12px */
+  --forge-density-compact-list-v:   var(--forge-space-2); /*  8px */
+  --forge-density-compact-section:  var(--forge-space-4); /* 16px */
+
+  /* Density mode: Standard (manager back-office) */
+  --forge-density-standard-card:    var(--forge-space-5); /* 20px */
+  --forge-density-standard-list-v:  var(--forge-space-3); /* 12px */
+  --forge-density-standard-section: var(--forge-space-6); /* 24px */
+
+  /* Density mode: Comfortable (onboarding, settings) */
+  --forge-density-comfort-card:     var(--forge-space-6); /* 24px */
+  --forge-density-comfort-list-v:   var(--forge-space-4); /* 16px */
+  --forge-density-comfort-section:  var(--forge-space-8); /* 32px */
+}
+
+
+/* ============================================================
+   SECTION 6 — BORDER RADIUS TOKENS
+   ============================================================ */
+
+:root {
+  --forge-radius-none:  0px;
+  --forge-radius-sharp: 0.25rem;   /*  4px — data, badges, inputs */
+  --forge-radius-card:  0.5rem;    /*  8px — cards, panels, modals */
+  --forge-radius-lg:    0.75rem;   /* 12px — larger containers */
+  --forge-radius-pill:  9999px;    /* pill — primary buttons, search, chips */
+  --forge-radius-full:  9999px;    /* circle — icon buttons */
+}
+
+
+/* ============================================================
+   SECTION 7 — BORDER TOKENS
+   ============================================================ */
+
+:root {
+  --forge-border-width-none:    0px;
+  --forge-border-width-hairline: 1px;
+  --forge-border-width-default: 1px;
+  --forge-border-width-medium:  1.5px;
+  --forge-border-width-thick:   2px;
+  --forge-border-width-focus:   2px;
+
+  /* Composite border shorthand tokens */
+  --forge-border-default:
+    var(--forge-border-width-default) solid var(--forge-color-border-default);
+  --forge-border-strong:
+    var(--forge-border-width-default) solid var(--forge-color-border-strong);
+  --forge-border-subtle:
+    var(--forge-border-width-hairline) solid var(--forge-color-border-subtle);
+  --forge-border-danger:
+    var(--forge-border-width-medium) solid var(--forge-color-border-danger);
+  --forge-border-success:
+    var(--forge-border-width-medium) solid var(--forge-color-border-success);
+  --forge-border-warning:
+    var(--forge-border-width-medium) solid var(--forge-color-border-warning);
+  --forge-border-focus:
+    var(--forge-border-width-focus) solid var(--forge-color-border-focus);
+}
+
+
+/* ============================================================
+   SECTION 8 — SHADOW / ELEVATION TOKENS
+   ============================================================ */
+
+:root {
+  /*
+   * Forge uses ONE shadow (shadow-overlay) for floating elements.
+   * Cards, buttons, inputs, and list rows NEVER have shadows.
+   * Depth = surface colour step change, not box-shadow.
+   */
+
+  --forge-shadow-none: none;
+
+  /* Level 3 — Overlay: modals, dropdowns, floating panels */
+  --forge-shadow-overlay:
+    0 4px 16px rgba(0, 0, 0, 0.10),
+    0 1px  4px rgba(0, 0, 0, 0.07);
+
+  /* Level 4 — Toast: highest layer */
+  --forge-shadow-toast:
+    0 8px 24px rgba(0, 0, 0, 0.14),
+    0 2px  6px rgba(0, 0, 0, 0.08);
+
+  /* Subtle ring: used for cards on same-level surfaces */
+  --forge-shadow-ring:
+    0 0 0 1px var(--forge-color-border-default);
+
+  /* Focus ring — applied via outline, not box-shadow */
+  --forge-shadow-focus-ring:
+    0 0 0 2px var(--forge-color-surface-raised),
+    0 0 0 4px var(--forge-color-brand-focus-ring);
+}
+
+/* Dark mode shadow adjustments — deeper alpha */
+[data-theme="dark"] {
+  --forge-shadow-overlay:
+    0 4px 20px rgba(0, 0, 0, 0.36),
+    0 1px  6px rgba(0, 0, 0, 0.24);
+
+  --forge-shadow-toast:
+    0 8px 32px rgba(0, 0, 0, 0.48),
+    0 2px  8px rgba(0, 0, 0, 0.28);
+
+  --forge-shadow-ring:
+    0 0 0 1px var(--forge-color-border-default);
+}
+
+
+/* ============================================================
+   SECTION 9 — FOCUS STATE TOKENS
+   ============================================================ */
+
+:root {
+  --forge-focus-ring-width:  2px;
+  --forge-focus-ring-offset: 2px;
+  --forge-focus-ring-color:  var(--forge-color-brand-focus-ring);
+  --forge-focus-ring-style:  solid;
+
+  /* Shorthand for outline property */
+  --forge-focus-outline:
+    var(--forge-focus-ring-width)
+    var(--forge-focus-ring-style)
+    var(--forge-focus-ring-color);
+}
+
+/* Focus utility class — applied via JS focus-visible polyfill or :focus-visible */
+:focus-visible {
+  outline: var(--forge-focus-outline);
+  outline-offset: var(--forge-focus-ring-offset);
+  border-radius: inherit;
+}
+
+
+/* ============================================================
+   SECTION 10 — OPACITY TOKENS
+   ============================================================ */
+
+:root {
+  --forge-opacity-0:        0;
+  --forge-opacity-disabled: 0.40;
+  --forge-opacity-overlay:  0.50;
+  --forge-opacity-scrim:    0.60;
+  --forge-opacity-muted:    0.72;
+  --forge-opacity-subtle:   0.85;
+  --forge-opacity-full:     1;
+
+  /* Frosted glass surfaces */
+  --forge-opacity-frosted-light: 0.80;
+  --forge-opacity-frosted-dark:  0.85;
+  --forge-backdrop-blur-frosted: blur(20px) saturate(180%);
+}
+
+
+/* ============================================================
+   SECTION 11 — MOTION / ANIMATION TOKENS
+   ============================================================ */
+
+:root {
+  /* ------ 11A. DURATION ------ */
+  --forge-duration-instant:  0ms;     /* tab switches, toggles */
+  --forge-duration-fast:     80ms;    /* button press, badge count */
+  --forge-duration-standard: 150ms;   /* focus ring, chip select */
+  --forge-duration-moderate: 220ms;   /* toast, dropdown, collapse */
+  --forge-duration-deliberate: 300ms; /* modal open, page nav */
+  --forge-duration-slow:     500ms;   /* skeleton → content only */
+
+  /* ------ 11B. EASING ------ */
+  --forge-ease-default:    ease-out;
+  --forge-ease-in:         cubic-bezier(0.4, 0, 1, 1);
+  --forge-ease-out:        cubic-bezier(0, 0, 0.2, 1);
+  --forge-ease-in-out:     cubic-bezier(0.4, 0, 0.2, 1);
+  --forge-ease-spring:     cubic-bezier(0.34, 1.56, 0.64, 1);
+  --forge-ease-sharp:      cubic-bezier(0.4, 0, 0.6, 1);
+
+  /* ------ 11C. TRANSITION SHORTHAND TOKENS ------ */
+  --forge-transition-fast:
+    var(--forge-duration-fast) var(--forge-ease-in-out);
+
+  --forge-transition-standard:
+    var(--forge-duration-standard) var(--forge-ease-out);
+
+  --forge-transition-moderate:
+    var(--forge-duration-moderate) var(--forge-ease-out);
+
+  --forge-transition-deliberate:
+    var(--forge-duration-deliberate) var(--forge-ease-in-out);
+
+  /* ------ 11D. SYSTEM MOTION TOKENS ------ */
+  /* Press confirm — universal tactile signal */
+  --forge-motion-press-scale:      scale(0.97);
+  --forge-motion-press-duration:   var(--forge-duration-fast);
+  --forge-motion-press-release:    var(--forge-duration-standard);
+
+  /* Toast entry */
+  --forge-motion-toast-enter-from: translateY(-8px);
+  --forge-motion-toast-enter-to:   translateY(0);
+  --forge-motion-toast-duration:   var(--forge-duration-moderate);
+
+  /* Focus ring transition */
+  --forge-motion-focus-duration: var(--forge-duration-standard);
+
+  /* Skeleton shimmer */
+  --forge-motion-skeleton-duration: 1.5s;
+  --forge-motion-skeleton-timing:   ease-in-out;
+}
+
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --forge-duration-fast:       0ms;
+    --forge-duration-standard:   0ms;
+    --forge-duration-moderate:  50ms;  /* keep state changes perceptible */
+    --forge-duration-deliberate: 50ms;
+    --forge-duration-slow:       50ms;
+    --forge-motion-press-scale:  scale(1); /* remove scale on press */
+  }
+}
+
+
+/* ============================================================
+   SECTION 12 — Z-INDEX TOKENS
+   ============================================================ */
+
+:root {
+  --forge-z-below:       -1;   /* behind ground (rare) */
+  --forge-z-base:         0;   /* stacking context root */
+  --forge-z-raised:       1;   /* cards slightly above base */
+  --forge-z-sticky:      10;   /* sticky headers, rails */
+  --forge-z-dropdown:    100;  /* dropdown menus, date pickers */
+  --forge-z-overlay:     200;  /* modal backdrops */
+  --forge-z-modal:       300;  /* modal dialogs */
+  --forge-z-toast:       400;  /* notification toasts */
+  --forge-z-tooltip:     500;  /* tooltips (always topmost) */
+  --forge-z-debug:       9999; /* dev overlay tools */
+}
+
+
+/* ============================================================
+   SECTION 13 — BREAKPOINT TOKENS
+   (documented as CSS custom properties; usage via media queries)
+   ============================================================ */
+
+:root {
+  /*
+   * Breakpoints cannot be used inside calc() in media queries
+   * directly, but they are documented here as reference tokens
+   * and consumed by the Tailwind config as JS values.
+   *
+   * bp-sm:  640px  — large phone / small tablet
+   * bp-md:  768px  — standard tablet portrait
+   * bp-lg:  1024px — tablet landscape / small desktop
+   * bp-xl:  1280px — standard desktop POS terminal
+   * bp-2xl: 1440px — large desktop / wide terminal
+   * bp-3xl: 1920px — extra wide (reporting dashboards)
+   */
+  --forge-bp-sm:  640px;
+  --forge-bp-md:  768px;
+  --forge-bp-lg:  1024px;
+  --forge-bp-xl:  1280px;
+  --forge-bp-2xl: 1440px;
+  --forge-bp-3xl: 1920px;
+}
+
+
+/* ============================================================
+   SECTION 14 — CONTAINER / LAYOUT TOKENS
+   ============================================================ */
+
+:root {
+  /* Zone dimensions */
+  --forge-zone-top-rail-height:     44px;
+  --forge-zone-status-rail-height:  32px;
+  --forge-zone-module-rail-width:   64px;
+  --forge-zone-module-rail-expanded: 220px;
+  --forge-zone-context-panel:       340px;
+  --forge-zone-context-panel-lg:    380px;
+  --forge-zone-context-panel-sm:    300px;
+
+  /* Content max widths */
+  --forge-container-xs:   480px;
+  --forge-container-sm:   640px;
+  --forge-container-md:   768px;
+  --forge-container-lg:  1024px;
+  --forge-container-xl:  1280px;
+  --forge-container-2xl: 1440px;
+  --forge-container-prose: 65ch;  /* max readable line length */
+}
+
+
+/* ============================================================
+   SECTION 15 — ICON TOKENS
+   ============================================================ */
+
+:root {
+  /* Icon sizes — always multiples of 4px */
+  --forge-icon-xs:  12px;  /* inline / badge icons */
+  --forge-icon-sm:  16px;  /* caption-level icons */
+  --forge-icon-md:  20px;  /* standard UI icons (body level) */
+  --forge-icon-lg:  24px;  /* heading-level icons */
+  --forge-icon-xl:  32px;  /* section / illustration icons */
+  --forge-icon-2xl: 48px;  /* empty state illustrations */
+
+  /* Icon touch target padding (adds space around small icons) */
+  --forge-icon-touch-padding: 12px; /* 20px icon + 12px padding = 44px target */
+
+  /* Stroke width for outline icons */
+  --forge-icon-stroke-sm:  1.5px;
+  --forge-icon-stroke-md:  1.75px;
+  --forge-icon-stroke-lg:  2px;
+
+  /* Icon system: Lucide React (stroke-based, AGPL-compatible)
+   * Stroke width: 1.75px at 20px (md), 1.5px at 16px (sm)
+   * All icons in the Forge system must be from Lucide.
+   * No mixing of icon libraries within the product.
+   */
+}
+
+
+/* ============================================================
+   SECTION 16 — ANIMATION KEYFRAMES
+   ============================================================ */
+
+@keyframes forge-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes forge-fade-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+@keyframes forge-slide-in-top {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+@keyframes forge-slide-in-bottom {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+
+@keyframes forge-slide-in-right {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0);    }
+}
+
+@keyframes forge-slide-in-left {
+  from { opacity: 0; transform: translateX(-16px); }
+  to   { opacity: 1; transform: translateX(0);     }
+}
+
+@keyframes forge-scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1);    }
+}
+
+@keyframes forge-shake {
+  0%   { transform: translateX(0);    }
+  15%  { transform: translateX(-4px); }
+  30%  { transform: translateX(4px);  }
+  45%  { transform: translateX(-3px); }
+  60%  { transform: translateX(3px);  }
+  75%  { transform: translateX(-2px); }
+  90%  { transform: translateX(2px);  }
+  100% { transform: translateX(0);    }
+}
+
+@keyframes forge-skeleton-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+@keyframes forge-spin {
+  from { transform: rotate(0deg);   }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes forge-pulse {
+  0%, 100% { opacity: 1;    }
+  50%       { opacity: 0.45; }
+}
+
+/* Reduced-motion: replace all animations with instant fade */
+@media (prefers-reduced-motion: reduce) {
+  @keyframes forge-slide-in-top    { from { opacity:0; } to { opacity:1; } }
+  @keyframes forge-slide-in-bottom { from { opacity:0; } to { opacity:1; } }
+  @keyframes forge-slide-in-right  { from { opacity:0; } to { opacity:1; } }
+  @keyframes forge-slide-in-left   { from { opacity:0; } to { opacity:1; } }
+  @keyframes forge-scale-in        { from { opacity:0; } to { opacity:1; } }
+  @keyframes forge-shake            { from { } to { } }
+  @keyframes forge-skeleton-shimmer { from { } to { } }
+  @keyframes forge-spin  { from { } to { } }
+  @keyframes forge-pulse { 0%,100% { opacity:1; } }
+}
+
+/* ============================================================
+   SECTION 17 — SKELETON SHIMMER SURFACE
+   ============================================================ */
+
+:root {
+  --forge-skeleton-base:
+    var(--forge-color-border-default);
+
+  --forge-skeleton-highlight:
+    var(--forge-color-surface-raised);
+
+  --forge-skeleton-gradient:
+    linear-gradient(
+      90deg,
+      var(--forge-skeleton-base)       0%,
+      var(--forge-skeleton-highlight)  50%,
+      var(--forge-skeleton-base)       100%
+    );
+}
+
+[data-theme="dark"] {
+  --forge-skeleton-base:      var(--forge-color-border-default);
+  --forge-skeleton-highlight: rgba(255, 255, 255, 0.07);
+}
+
+
+/* ============================================================
+   SECTION 18 — GLOBAL BASE STYLES
+   (apply tokens to document root — not component styles)
+   ============================================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-family:              var(--forge-font-sans);
+  font-size:                16px; /* 1rem base */
+  font-feature-settings:    var(--forge-font-features-default);
+  -webkit-font-smoothing:   antialiased;
+  -moz-osx-font-smoothing:  grayscale;
+  text-rendering:           optimizeLegibility;
+  color:                    var(--forge-color-text-body);
+  background-color:         var(--forge-color-surface-ground);
+  accent-color:             var(--forge-color-brand-default);
+  scroll-behavior:          smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+
+::selection {
+  background-color: var(--forge-color-surface-selection);
+  color:            var(--forge-color-text-primary);
+}

@@ -1,0 +1,77 @@
+{% extends "layouts/dashboard.html" %}
+
+{% block page_title %}General Settings{% endblock %}
+{% block page_subtitle %}<p class="text-caption text-neutral-500 mt-1">Configure your business profile, localization, and operating hours.</p>{% endblock %}
+
+{% block primary_action %}
+<button type="button" class="btn-primary">
+  Save Changes
+</button>
+{% endblock %}
+
+{% block workspace %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+  
+  <!-- Sidebar Navigation for Settings -->
+  <aside class="lg:col-span-1 space-y-1">
+    <a href="#" class="block px-4 py-2.5 rounded-card bg-neutral-100 text-neutral-900 font-medium dark:bg-neutral-dark-150 dark:text-neutral-dark-900 transition-colors">
+      Business Profile
+    </a>
+    <a href="#" class="block px-4 py-2.5 rounded-card text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 dark:text-neutral-dark-600 dark:hover:bg-neutral-dark-150 dark:hover:text-neutral-dark-900 transition-colors">
+      Locations & Branches
+    </a>
+    <a href="#" class="block px-4 py-2.5 rounded-card text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 dark:text-neutral-dark-600 dark:hover:bg-neutral-dark-150 dark:hover:text-neutral-dark-900 transition-colors">
+      Tax & Compliance
+    </a>
+    <a href="#" class="block px-4 py-2.5 rounded-card text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 dark:text-neutral-dark-600 dark:hover:bg-neutral-dark-150 dark:hover:text-neutral-dark-900 transition-colors">
+      Receipt Configuration
+    </a>
+  </aside>
+
+  <!-- Settings Form Area -->
+  <div class="lg:col-span-2 space-y-6">
+    
+    <!-- Section: Business Details -->
+    <div class="card p-6">
+      <h3 class="text-heading-3 text-neutral-900 dark:text-neutral-dark-900 mb-4">Business Details</h3>
+      <div class="space-y-4">
+        <div>
+          <label class="form-label block mb-1">Business Name</label>
+          <input type="text" class="form-input w-full" value="Nextora Burger Joint">
+        </div>
+        <div>
+          <label class="form-label block mb-1">Support Email</label>
+          <input type="email" class="form-input w-full" value="hello@nextora.test">
+        </div>
+        <div>
+          <label class="form-label block mb-1">Phone Number</label>
+          <input type="tel" class="form-input w-full" value="+91 98765 43210">
+        </div>
+      </div>
+    </div>
+
+    <!-- Section: Localization -->
+    <div class="card p-6">
+      <h3 class="text-heading-3 text-neutral-900 dark:text-neutral-dark-900 mb-4">Localization</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="form-label block mb-1">Default Currency</label>
+          <select class="form-select w-full">
+            <option value="INR" selected>INR (₹)</option>
+            <option value="USD">USD ($)</option>
+            <option value="EUR">EUR (€)</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label block mb-1">Timezone</label>
+          <select class="form-select w-full">
+            <option value="Asia/Kolkata" selected>Asia/Kolkata (IST)</option>
+            <option value="America/New_York">America/New_York (EST)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

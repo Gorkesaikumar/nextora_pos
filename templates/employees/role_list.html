@@ -1,0 +1,75 @@
+{% extends "layouts/dashboard.html" %}
+
+{% block page_title %}Roles & Access Configurations{% endblock %}
+{% block page_subtitle %}<p class="text-caption text-neutral-500 mt-1">Configure role levels, custom roles, clone permissions, and audit the global authorization matrix.</p>{% endblock %}
+
+{% block primary_action %}
+<div class="flex gap-2">
+  <a href="{% url 'employees:role_matrix' %}" class="btn-secondary">
+    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path></svg>
+    Permission Matrix
+  </a>
+  <button hx-get="{% url 'employees:role_create' %}" hx-target="#dialog-container" class="btn-primary">
+    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+    New Role
+  </button>
+</div>
+{% endblock %}
+
+{% block workspace %}
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6"
+     hx-get="{% url 'employees:role_list' %}"
+     hx-trigger="roleListChanged from:body"
+     hx-select=".grid">
+  {% for role in roles %}
+  <!-- Role Card -->
+  <div class="card-standard bg-white dark:bg-neutral-800 p-6 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm flex flex-col justify-between hover:border-brand-default transition-all">
+    <div>
+      <div class="flex justify-between items-start border-b border-neutral-100 dark:border-neutral-700 pb-4 mb-4">
+        <div>
+          <h3 class="text-md font-bold text-neutral-900 dark:text-white flex items-center gap-2">
+            {{ role.name }}
+            {% if role.is_system %}
+            <span class="inline-flex px-1.5 py-0.5 rounded text-[8px] bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300 font-bold uppercase tracking-wider">System</span>
+            {% endif %}
+          </h3>
+          <p class="text-xs text-neutral-500 mt-1">{{ role.description|default:"No description provided." }}</p>
+        </div>
+        <div class="bg-neutral-100 dark:bg-neutral-700 px-3 py-1 rounded text-xs font-bold text-neutral-700 dark:text-neutral-300">
+          {{ role.memberships.count }} Users
+        </div>
+      </div>
+      <div class="space-y-2">
+        {% for permission in role.permissions.all|slice:":3" %}
+        <div class="flex items-center text-xs text-neutral-600 dark:text-neutral-400">
+          <svg class="w-4 h-4 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+          {{ permission.name }}
+        </div>
+        {% empty %}
+        <div class="text-xs text-neutral-400 italic">No specific permissions granted.</div>
+        {% endfor %}
+        
+        {% if role.permissions.count > 3 %}
+        <div class="text-xs text-neutral-400 font-semibold mt-2">+ {{ role.permissions.count|add:"-3" }} more permissions</div>
+        {% endif %}
+      </div>
+    </div>
+    <div class="mt-6 pt-4 border-t border-neutral-100 dark:border-neutral-700 text-right flex justify-end gap-2">
+      {% if not role.is_system %}
+        <button hx-get="{% url 'employees:role_update' role.id %}" hx-target="#dialog-container" class="text-xs font-bold text-brand-default hover:text-brand-hover">Edit Role</button>
+        <button hx-post="{% url 'employees:role_delete' role.id %}" hx-confirm="Permanently delete role profile?" class="text-xs font-bold text-red-500 hover:text-red-700">Delete</button>
+      {% else %}
+        <span class="text-xs text-neutral-400 italic">System role configuration is locked.</span>
+      {% endif %}
+    </div>
+  </div>
+  {% empty %}
+  <div class="col-span-full py-12 text-center text-neutral-500">
+    No roles found.
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Dialog Container -->
+<div id="dialog-container"></div>
+{% endblock %}

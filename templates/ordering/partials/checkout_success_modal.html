@@ -1,0 +1,26 @@
+<div id="pos-cart-panel" hx-swap-oob="true">
+  {% include "ordering/partials/cart_panel.html" with active_order=None %}
+</div>
+
+<!-- Overlay -->
+<div id="checkout-overlay" class="fixed inset-0 bg-neutral-900/50 backdrop-blur-sm z-50 flex items-center justify-center animate-fade-in p-4 lg:p-0">
+  
+  <!-- Modal Content -->
+  <div class="bg-neutral-0 dark:bg-neutral-dark-100 w-full max-w-sm rounded-2xl shadow-xl overflow-hidden animate-slide-up flex flex-col p-8 text-center items-center">
+    
+    <!-- Success Icon -->
+    <div class="w-20 h-20 bg-semantic-success-subtle dark:bg-semantic-success-subtle-dark text-semantic-success dark:text-semantic-success-dark rounded-full flex items-center justify-center mb-6">
+       <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
+       </svg>
+    </div>
+    
+    <h2 class="text-heading-2 text-neutral-900 dark:text-neutral-dark-900 mb-2">Payment Successful!</h2>
+    <p class="text-body text-neutral-600 dark:text-neutral-dark-600 mb-8">Order Charged Successfully.</p>
+    
+    <button class="btn btn-primary w-full h-12"
+            onclick="document.getElementById('pos-modal-container').innerHTML = '';">
+      Done
+    </button>
+  </div>
+</div>

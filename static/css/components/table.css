@@ -1,0 +1,64 @@
+/* Table — dense, sortable. Real table semantics required in templates. */
+
+.table-wrap {
+  background-color: var(--forge-color-surface-raised);
+  border: 1px solid var(--forge-color-border-subtle);
+  border-radius: var(--forge-radius-card);
+  overflow: hidden;
+}
+
+.table-toolbar {
+  display: flex; align-items: center; gap: var(--forge-space-2);
+  padding: var(--forge-space-3) var(--forge-space-4);
+  border-bottom: 1px solid var(--forge-color-border-subtle);
+}
+.table-toolbar__spacer { flex: 1; }
+
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.8125rem;
+}
+.table thead th {
+  position: sticky; top: 0;
+  background-color: var(--forge-color-surface-base);
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--forge-color-text-tertiary);
+  padding: var(--forge-space-2) var(--forge-space-3);
+  border-bottom: 1px solid var(--forge-color-border-subtle);
+  white-space: nowrap;
+  z-index: var(--forge-z-raised, 1);
+}
+.table th[aria-sort] { cursor: pointer; }
+.table th[aria-sort="ascending"]::after  { content: " ↑"; color: var(--forge-color-brand-default); }
+.table th[aria-sort="descending"]::after { content: " ↓"; color: var(--forge-color-brand-default); }
+
+.table tbody td {
+  padding: var(--forge-space-3) var(--forge-space-3);
+  border-bottom: 1px solid var(--forge-color-border-subtle);
+  color: var(--forge-color-text-primary);
+  vertical-align: middle;
+}
+.table tbody tr:hover { background-color: var(--forge-color-surface-row-hover); }
+.table tbody tr[aria-selected="true"] { background-color: var(--forge-color-surface-row-selected); }
+
+/* Number / money cells. */
+.table .num, .table th.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Compact density (POS, KDS). */
+.table--compact tbody td { padding: var(--forge-space-2) var(--forge-space-2); }
+
+/* Empty-state row (sits inside tbody). */
+.table__empty-cell {
+  padding: var(--forge-space-10) var(--forge-space-4);
+  text-align: center;
+  color: var(--forge-color-text-secondary);
+}

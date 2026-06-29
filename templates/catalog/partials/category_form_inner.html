@@ -1,0 +1,25 @@
+<div class="space-y-4">
+  <div class="space-y-1">
+    <label for="{{ category_form.name.id_for_label }}" class="block text-sm font-semibold text-neutral-800 dark:text-neutral-200">
+      Category Name <span class="text-semantic-danger">*</span>
+    </label>
+    {{ category_form.name }}
+    {% if category_form.name.errors %}
+      <div class="text-sm font-medium text-semantic-danger mt-1">
+        {{ category_form.name.errors.0 }}
+      </div>
+    {% endif %}
+  </div>
+  
+  <div class="space-y-1">
+    <label for="{{ category_form.description.id_for_label }}" class="block text-sm font-semibold text-neutral-800 dark:text-neutral-200">
+      Description
+    </label>
+    {{ category_form.description }}
+    {% if category_form.description.errors %}
+      <div class="text-sm font-medium text-semantic-danger mt-1">
+        {{ category_form.description.errors.0 }}
+      </div>
+    {% endif %}
+  </div>
+</div>

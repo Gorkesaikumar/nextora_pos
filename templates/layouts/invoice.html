@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{# Invoice base — covers thermal receipt and A4 GST tax invoice via blocks. #}
+
+
+{% block body %}
+  <main id="main" tabindex="-1">
+    {% block invoice_body %}{% endblock %}
+  </main>
+{% endblock %}

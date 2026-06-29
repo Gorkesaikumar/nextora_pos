@@ -1,0 +1,23 @@
+/* Reports — sticky filter bar + tabs + KPI strip + charts/tables. */
+
+.reports-filters {
+  position: sticky;
+  top: var(--forge-zone-top-rail-height, 44px);
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--forge-space-2);
+  padding: var(--forge-space-3) var(--forge-space-6);
+  background-color: var(--forge-color-surface-base);
+  border-bottom: 1px solid var(--forge-color-border-subtle);
+  z-index: var(--forge-z-sticky, 10);
+}
+.reports-filters__spacer { flex: 1; }
+.reports-filters__freshness {
+  font-size: 0.6875rem;
+  color: var(--forge-color-text-tertiary);
+}
+
+.reports-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--forge-space-4);
+}
+@media (min-width: 1024px) { .reports-grid--two { grid-template-columns: 1fr 1fr; } }

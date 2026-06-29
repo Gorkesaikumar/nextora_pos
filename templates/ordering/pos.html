@@ -1,0 +1,104 @@
+{% extends "layouts/pos.html" %}
+
+{% comment %}
+  POS billing screen. Search stays contextual (Forge Rule C5 — the top rail
+  deliberately omits global search), elevated here with a barcode affordance.
+  All product/category interactions funnel through the Alpine $store.pos so the
+  search box and category chips share one source of truth and one htmx call.
+{% endcomment %}
+
+{% block pos_strip %}
+<div class="px-5 py-4 border-b border-neutral-150 dark:border-neutral-dark-150 bg-neutral-0 dark:bg-neutral-dark-100">
+  <div class="flex items-center gap-2 max-w-2xl">
+    <div class="relative flex-grow">
+      <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+        <svg class="w-4 h-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+      </div>
+      <input id="pos-search" type="search" name="q" autocomplete="off"
+             class="w-full h-11 pl-10 pr-4 bg-neutral-50 dark:bg-neutral-dark-50 border border-neutral-200 dark:border-neutral-dark-200 rounded-xl text-body focus:bg-neutral-0 dark:focus:bg-neutral-dark-100 focus:ring-2 focus:ring-brand-default/20 focus:border-brand-default transition-all"
+             placeholder="Search menu by name or SKU (Press '/')"
+             @input.debounce.300ms="$store.pos.q = $event.target.value; $store.pos.reload()"
+             @keydown.enter.prevent="$store.pos.q = $event.target.value; $store.pos.reload()">
+    </div>
+    <button type="button"
+            @click="document.getElementById('pos-search').focus()"
+            aria-label="Scan barcode"
+            title="Scan barcode (focuses search for scanner input)"
+            class="shrink-0 w-11 h-11 flex items-center justify-center rounded-xl border border-neutral-200 dark:border-neutral-dark-200 bg-neutral-0 dark:bg-neutral-dark-100 text-neutral-600 dark:text-neutral-dark-600 hover:bg-neutral-50 dark:hover:bg-neutral-dark-150 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-default">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4h2v16H4V4zm4 0h1v16H8V4zm3 0h2v16h-2V4zm4 0h1v16h-1V4zm3 0h2v16h-2V4z"></path></svg>
+    </button>
+  </div>
+</div>
+{% endblock %}
+
+{% block pos_categories %}
+<div class="px-5 py-3 border-b border-neutral-150 dark:border-neutral-dark-150 bg-neutral-50 dark:bg-neutral-dark-50 flex items-center gap-3">
+  <div id="pos-category-ribbon"
+       class="flex gap-2 overflow-x-auto whitespace-nowrap scrollbar-hide flex-grow"
+       hx-get="{% url 'ordering:pos_category_ribbon' %}"
+       hx-trigger="close-category-modal from:body"
+       hx-target="#pos-category-ribbon"
+       hx-swap="innerHTML">
+    {% include "ordering/partials/category_ribbon.html" %}
+  </div>
+
+  <button type="button"
+          @click="$dispatch('open-modal', { id: 'add-category-modal' })"
+          class="btn-ghost">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+    Add Category
+  </button>
+</div>
+{% endblock %}
+
+{% block pos_body %}
+<div class="flex-1 min-h-0 flex flex-col">
+  <div class="flex-1 min-h-0 overflow-y-auto p-5 bg-neutral-50 dark:bg-neutral-dark-50">
+    <div id="pos-grid">
+      {% include "ordering/partials/product_grid.html" %}
+    </div>
+  </div>
+  {% include "ordering/partials/pos_stats.html" %}
+</div>
+{% endblock %}
+
+{% block context_panel %}
+  {% include "ordering/partials/cart_panel.html" %}
+{% endblock %}
+
+{% block pos_modals %}
+  <!-- HTMX Modal Container (table map, checkout) -->
+  <div id="pos-modal-container"></div>
+
+  <!-- Inline Add-Category modal (reuses the catalog category create flow) -->
+  {% include "catalog/partials/category_modal.html" with modal_id="add-category-modal" title="Add New Category" %}
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+<script>
+  document.addEventListener('alpine:init', () => {
+    Alpine.store('pos', {
+      q: '',
+      cat: '',
+      reload() {
+        if (!window.htmx) return;
+        htmx.ajax('GET', '{% url "ordering:pos_product_grid" %}', {
+          target: '#pos-grid',
+          swap: 'innerHTML',
+          values: { q: this.q, category_id: this.cat },
+        });
+      },
+    });
+  });
+
+  // "/" focuses the contextual menu search (Forge Rule C5).
+  document.addEventListener('keydown', (e) => {
+    const tag = (document.activeElement && document.activeElement.tagName) || '';
+    if (e.key === '/' && !/^(INPUT|TEXTAREA|SELECT)$/.test(tag)) {
+      e.preventDefault();
+      document.getElementById('pos-search') && document.getElementById('pos-search').focus();
+    }
+  });
+</script>
+{% endblock %}

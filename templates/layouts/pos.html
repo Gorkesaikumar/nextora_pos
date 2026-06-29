@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% comment %} POS layout — full 5-zone shell with Context Panel always present.
+   Compact density. Top Rail intentionally omits the global Quick Search
+   (Forge Rule C5 — POS uses contextual search). {% endcomment %}
+
+
+{% block toast_region_class %}toast-region--pos{% endblock %}
+
+{% block body %}
+  <div class="zone-shell">
+    {# Top Rail without the global search — POS uses contextual search only. #}
+    <header class="zone-top-rail top-rail" role="banner">
+      <a href="{{ home_url|default:'/' }}" class="top-rail__brand" aria-label="Nextora">
+        <span aria-hidden="true">◆</span><span>POS</span>
+      </a>
+      <div class="top-rail__context-slot">
+        {% block top_rail_context %}
+          {% if branch %}<span>{{ branch.name }}</span>{% endif %}
+          {% if order %}<span class="text-tertiary">/</span><span class="mono">{{ order.number }}</span>{% endif %}
+        {% endblock %}
+      </div>
+      <div class="top-rail__spacer"></div>
+      <div class="top-rail__cluster">
+        <span class="top-rail__status-pill top-rail__status-pill--ok">
+          <span class="status-rail__dot" aria-hidden="true"></span>Synced
+        </span>
+        <button type="button" class="top-rail__icon-btn" aria-label="Notifications" aria-haspopup="dialog">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 7a5 5 0 1 1 10 0v3l1 2H2l1-2V7Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M6 14a2 2 0 0 0 4 0" stroke="currentColor" stroke-width="1.5"/></svg>
+        </button>
+        <button type="button" class="top-rail__icon-btn" aria-label="Account menu" aria-haspopup="menu">
+          <span aria-hidden="true" style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;background:var(--forge-color-brand-subtle);color:var(--forge-color-brand-default);border-radius:50%;font-size:0.6875rem;font-weight:700">{{ user_initials|default:'NX' }}</span>
+        </button>
+      </div>
+    </header>
+
+    {% include "_chrome/module_rail.html" %}
+
+    <main id="main" class="zone-workspace pos-workspace flex flex-col" tabindex="-1">
+      {% block pos_strip %}{% endblock %}
+      {% block pos_categories %}{% endblock %}
+      {% block pos_body %}{% endblock %}
+    </main>
+
+    <aside class="zone-context-panel context-panel" aria-label="Current order">
+      {% block context_panel %}{% endblock %}
+    </aside>
+
+    {% include "_chrome/status_rail.html" %}
+  </div>
+
+  {% comment %}
+    Modals — rendered OUTSIDE the zone grid so overflow:hidden on panels
+    cannot clip the fixed-position overlay. Override in child templates.
+  {% endcomment %}
+  {% block pos_modals %}{% endblock %}
+
+  {# Mobile-only sheet trigger; the .is-open class is added by JS. #}
+  <button type="button" class="context-panel__sheet-trigger" aria-controls="context-panel">
+    Cart · {% block sheet_trigger_summary %}0 items · ₹0.00{% endblock %}
+  </button>
+{% endblock %}

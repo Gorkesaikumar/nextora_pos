@@ -1,0 +1,28 @@
+/* Pagination — numbered + prev/next + range. */
+
+.pagination {
+  display: inline-flex; align-items: center; gap: var(--forge-space-1);
+  font-size: 0.8125rem;
+}
+.pagination__range {
+  color: var(--forge-color-text-secondary);
+  margin-right: var(--forge-space-3);
+  font-variant-numeric: tabular-nums;
+}
+.pagination__btn {
+  min-width: 32px; height: 32px;
+  padding: 0 var(--forge-space-2);
+  border-radius: var(--forge-radius-sharp);
+  color: var(--forge-color-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+.pagination__btn:hover { background-color: var(--forge-color-surface-row-hover); }
+.pagination__btn[aria-current="page"] {
+  background-color: var(--forge-color-brand-default);
+  color: var(--forge-color-brand-on-brand);
+  font-weight: 600;
+}
+.pagination__btn[aria-disabled="true"] {
+  opacity: var(--forge-opacity-disabled, 0.40);
+  pointer-events: none;
+}

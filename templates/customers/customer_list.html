@@ -1,0 +1,62 @@
+{% extends "layouts/dashboard.html" %}
+
+{% block page_title %}Customers (CRM){% endblock %}
+{% block page_subtitle %}<p class="text-caption text-neutral-500 mt-1">Manage customer profiles, loyalty points, and order history.</p>{% endblock %}
+
+{% block primary_action %}
+<button type="button" class="btn-primary">
+  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+  Add Customer
+</button>
+{% endblock %}
+
+{% block filter_strip %}
+<div class="flex flex-col sm:flex-row gap-4 mb-6">
+  <!-- Contextual Search -->
+  <div class="relative flex-grow max-w-md">
+    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+      <svg class="w-4 h-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+    </div>
+    <input type="search" class="form-input pl-10 h-11" placeholder="Search by name, phone number, or email...">
+  </div>
+</div>
+{% endblock %}
+
+{% block workspace %}
+<div class="card overflow-hidden">
+  <div class="overflow-x-auto">
+    <table class="w-full text-left border-collapse">
+      <thead>
+        <tr class="bg-neutral-50 dark:bg-neutral-dark-50 border-b border-neutral-150 dark:border-neutral-dark-150 text-heading-3 text-neutral-700 dark:text-neutral-dark-700">
+          <th class="px-5 py-3 font-semibold">Customer</th>
+          <th class="px-5 py-3 font-semibold">Contact</th>
+          <th class="px-5 py-3 font-semibold">Loyalty Points</th>
+          <th class="px-5 py-3 font-semibold">Total Spend</th>
+          <th class="px-5 py-3 font-semibold text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-neutral-150 dark:divide-neutral-dark-150">
+        <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-dark-50 transition-colors">
+          <td class="px-5 py-4">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-brand-subtle text-brand-default flex items-center justify-center text-body-strong">AD</div>
+              <div class="text-body-strong text-neutral-900 dark:text-neutral-dark-900">Alice Doe</div>
+            </div>
+          </td>
+          <td class="px-5 py-4">
+            <div class="text-body text-neutral-700 dark:text-neutral-dark-700">+91 98765 43210</div>
+            <div class="text-caption text-neutral-500 mt-0.5">alice.doe@example.com</div>
+          </td>
+          <td class="px-5 py-4">
+            <span class="inline-flex items-center px-2 py-0.5 rounded-sharp text-caption-strong bg-semantic-info-subtle text-semantic-info dark:bg-semantic-info-subtle-dark dark:text-semantic-info-dark">1,250 pts</span>
+          </td>
+          <td class="px-5 py-4 text-body-strong tabular-nums text-neutral-900 dark:text-neutral-dark-900">₹14,500.00</td>
+          <td class="px-5 py-4 text-right">
+            <button type="button" class="text-brand-default hover:text-brand-hover dark:text-brand-on-dark text-body-strong">View Profile</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

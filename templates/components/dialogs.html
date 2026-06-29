@@ -1,0 +1,153 @@
+<div x-data="{
+        show: false,
+        type: 'confirm', // 'confirm', 'alert', 'prompt'
+        theme: 'info', // 'info', 'success', 'warning', 'danger'
+        title: '',
+        message: '',
+        confirmText: 'Confirm',
+        cancelText: 'Cancel',
+        promptValue: '',
+        promptPlaceholder: '',
+        onConfirm: null,
+        onCancel: null,
+        
+        openDialog(detail) {
+            this.type = detail.type || 'confirm';
+            this.theme = detail.theme || 'info';
+            this.title = detail.title || '';
+            this.message = detail.message || '';
+            this.confirmText = detail.confirmText || (this.type === 'alert' ? 'OK' : 'Confirm');
+            this.cancelText = detail.cancelText || 'Cancel';
+            this.promptValue = detail.defaultValue || '';
+            this.promptPlaceholder = detail.placeholder || '';
+            this.onConfirm = detail.onConfirm || null;
+            this.onCancel = detail.onCancel || null;
+            this.show = true;
+            
+            if (this.type === 'prompt') {
+                this.$nextTick(() => {
+                    this.$refs.promptInput.focus();
+                });
+            } else {
+                this.$nextTick(() => {
+                    this.$refs.confirmBtn.focus();
+                });
+            }
+        },
+        
+        handleConfirm() {
+            if (this.onConfirm) {
+                if (this.type === 'prompt') {
+                    this.onConfirm(this.promptValue);
+                } else {
+                    this.onConfirm();
+                }
+            }
+            this.show = false;
+        },
+        
+        handleCancel() {
+            if (this.onCancel) {
+                this.onCancel();
+            }
+            this.show = false;
+        }
+    }"
+    @open-dialog.window="openDialog($event.detail)"
+    x-show="show"
+    style="display: none;"
+    class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-neutral-900/50 backdrop-blur-sm transition-opacity duration-300"
+    x-transition:enter="ease-out duration-300"
+    x-transition:enter-start="opacity-0"
+    x-transition:enter-end="opacity-100"
+    x-transition:leave="ease-in duration-200"
+    x-transition:leave-start="opacity-100"
+    x-transition:leave-end="opacity-0"
+    role="dialog"
+    aria-modal="true"
+    :aria-labelledby="title ? 'dialog-title' : null">
+    
+    <div @click.away="type !== 'alert' ? handleCancel() : null"
+         @keydown.escape.window="type !== 'alert' ? handleCancel() : handleConfirm()"
+         class="bg-neutral-0 dark:bg-neutral-dark-100 rounded-xl shadow-overlay max-w-sm w-full overflow-hidden transition-transform duration-300 transform"
+         x-transition:enter="ease-out duration-300"
+         x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+         x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+         x-transition:leave="ease-in duration-200"
+         x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+         x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
+         
+        <div class="px-6 py-6">
+            <div class="flex items-start gap-4">
+                <!-- Icon based on theme -->
+                <div class="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full"
+                     :class="{
+                         'bg-semantic-info-subtle text-semantic-info-dark dark:bg-semantic-info-subtle-dark dark:text-semantic-info': theme === 'info',
+                         'bg-semantic-success-subtle text-semantic-success-dark dark:bg-semantic-success-subtle-dark dark:text-semantic-success': theme === 'success',
+                         'bg-semantic-warning-subtle text-semantic-warning-dark dark:bg-semantic-warning-subtle-dark dark:text-semantic-warning': theme === 'warning',
+                         'bg-semantic-danger-subtle text-semantic-danger-dark dark:bg-semantic-danger-subtle-dark dark:text-semantic-danger': theme === 'danger'
+                     }">
+                    
+                    <template x-if="theme === 'info'">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </template>
+                    <template x-if="theme === 'success'">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </template>
+                    <template x-if="theme === 'warning'">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                    </template>
+                    <template x-if="theme === 'danger'">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </template>
+                </div>
+                
+                <div class="flex-1 min-w-0 pt-0.5">
+                    <template x-if="title">
+                        <h3 id="dialog-title" class="text-heading-3 text-neutral-900 dark:text-neutral-dark-900 mb-2" x-text="title"></h3>
+                    </template>
+                    <p class="text-body text-neutral-600 dark:text-neutral-dark-600" x-text="message"></p>
+                    
+                    <template x-if="type === 'prompt'">
+                        <div class="mt-4">
+                            <input type="text" 
+                                   x-ref="promptInput"
+                                   x-model="promptValue" 
+                                   :placeholder="promptPlaceholder"
+                                   @keydown.enter="handleConfirm()"
+                                   class="w-full h-10 px-3 bg-neutral-0 dark:bg-neutral-dark-150 border border-neutral-300 dark:border-neutral-dark-300 rounded-lg text-sm text-neutral-900 dark:text-neutral-dark-900 focus:ring-2 focus:ring-brand-default focus:border-brand-default transition-all shadow-sm">
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+        
+        <div class="px-6 py-4 bg-neutral-50 dark:bg-neutral-dark-50 border-t border-neutral-150 dark:border-neutral-dark-150 flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3">
+            <template x-if="type === 'confirm' || type === 'prompt'">
+                <button type="button" 
+                        @click="handleCancel()" 
+                        class="btn btn-secondary w-full sm:w-auto"
+                        x-text="cancelText"></button>
+            </template>
+            
+            <button type="button"
+                    x-ref="confirmBtn"
+                    @click="handleConfirm()"
+                    class="btn w-full sm:w-auto"
+                    :class="{
+                        'btn-primary': theme === 'info' || theme === 'success' || (theme === 'warning' && type === 'alert'),
+                        'btn-secondary': theme === 'warning' && type !== 'alert',
+                        'btn-danger': theme === 'danger'
+                    }"
+                    x-text="confirmText"></button>
+        </div>
+    </div>
+</div>

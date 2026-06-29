@@ -1,0 +1,85 @@
+{% extends "layouts/dashboard.html" %}
+
+{% block page_title %}Billing & Subscription{% endblock %}
+{% block page_subtitle %}<p class="text-caption text-neutral-500 mt-1">Manage your active subscription plan, payment methods, and invoices.</p>{% endblock %}
+
+{% block workspace %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  
+  <!-- Current Plan -->
+  <div class="lg:col-span-2 space-y-6">
+    <div class="card p-6 border-l-4 border-l-brand-default">
+      <div class="flex justify-between items-start mb-6">
+        <div>
+          <h3 class="text-heading-2 text-neutral-900 dark:text-neutral-dark-900">Professional Plan</h3>
+          <p class="text-body text-neutral-600 dark:text-neutral-dark-600 mt-1">Next billing date: 15th July 2026</p>
+        </div>
+        <div class="text-right">
+          <div class="text-heading-1 tabular-nums text-neutral-900 dark:text-neutral-dark-900">₹2,499<span class="text-body text-neutral-500">/mo</span></div>
+        </div>
+      </div>
+      <div class="flex gap-4">
+        <button class="btn border border-neutral-300 bg-neutral-0 text-neutral-800 hover:bg-neutral-50 dark:border-neutral-dark-200 dark:bg-neutral-dark-100 dark:text-neutral-dark-800 dark:hover:bg-neutral-dark-150 px-4 py-2 transition-colors">Change Plan</button>
+        <button class="text-semantic-danger dark:text-semantic-danger-dark hover:underline text-body-strong transition-colors">Cancel Subscription</button>
+      </div>
+    </div>
+
+    <!-- Invoice History -->
+    <div class="card overflow-hidden">
+      <div class="px-6 py-4 border-b border-neutral-150 dark:border-neutral-dark-150 bg-neutral-50 dark:bg-neutral-dark-50">
+        <h3 class="text-heading-3 text-neutral-900 dark:text-neutral-dark-900">Invoice History</h3>
+      </div>
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-neutral-0 dark:bg-neutral-dark-100 border-b border-neutral-150 dark:border-neutral-dark-150 text-caption-strong text-neutral-500 dark:text-neutral-dark-500">
+            <th class="px-6 py-3">Date</th>
+            <th class="px-6 py-3">Amount</th>
+            <th class="px-6 py-3">Status</th>
+            <th class="px-6 py-3 text-right">Invoice</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-neutral-150 dark:divide-neutral-dark-150">
+          <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-dark-50 transition-colors">
+            <td class="px-6 py-4 text-body text-neutral-800 dark:text-neutral-dark-800">15 Jun 2026</td>
+            <td class="px-6 py-4 text-body-strong tabular-nums text-neutral-900 dark:text-neutral-dark-900">₹2,499.00</td>
+            <td class="px-6 py-4">
+              <span class="inline-flex items-center px-2 py-0.5 rounded-sharp text-caption-strong bg-semantic-success-subtle text-semantic-success-dark dark:bg-semantic-success-subtle-dark dark:text-semantic-success">Paid</span>
+            </td>
+            <td class="px-6 py-4 text-right">
+              <a href="#" class="text-brand-default hover:text-brand-hover dark:text-brand-on-dark text-body-strong">Download PDF</a>
+            </td>
+          </tr>
+          <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-dark-50 transition-colors">
+            <td class="px-6 py-4 text-body text-neutral-800 dark:text-neutral-dark-800">15 May 2026</td>
+            <td class="px-6 py-4 text-body-strong tabular-nums text-neutral-900 dark:text-neutral-dark-900">₹2,499.00</td>
+            <td class="px-6 py-4">
+              <span class="inline-flex items-center px-2 py-0.5 rounded-sharp text-caption-strong bg-semantic-success-subtle text-semantic-success-dark dark:bg-semantic-success-subtle-dark dark:text-semantic-success">Paid</span>
+            </td>
+            <td class="px-6 py-4 text-right">
+              <a href="#" class="text-brand-default hover:text-brand-hover dark:text-brand-on-dark text-body-strong">Download PDF</a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Payment Method -->
+  <div class="lg:col-span-1">
+    <div class="card p-6">
+      <h3 class="text-heading-3 text-neutral-900 dark:text-neutral-dark-900 mb-4">Payment Method</h3>
+      <div class="p-4 border border-neutral-200 dark:border-neutral-dark-200 rounded-card flex items-center justify-between mb-4 bg-neutral-50 dark:bg-neutral-dark-50">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-6 bg-neutral-200 dark:bg-neutral-dark-200 rounded flex items-center justify-center text-micro font-bold text-neutral-600">VISA</div>
+          <div>
+            <div class="text-body-strong text-neutral-900 dark:text-neutral-dark-900">•••• 4242</div>
+            <div class="text-caption text-neutral-500">Expires 12/28</div>
+          </div>
+        </div>
+      </div>
+      <button class="btn-primary w-full py-2">Update Payment Method</button>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

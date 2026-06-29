@@ -1,0 +1,376 @@
+{% extends "reporting/base_report.html" %}
+
+{% block report_key %}sales{% endblock %}
+{% block report_title %}Sales & Revenue Analytics{% endblock %}
+{% block report_description %}Track sales performance, payment volumes, cashier audits, and category benchmarks.{% endblock %}
+
+{% block col_init %}
+visibleCols = {
+  invoice_no: true,
+  date: true,
+  customer: true,
+  cashier: true,
+  type: true,
+  payment_method: true,
+  subtotal: true,
+  discount: true,
+  tax: true,
+  total: true,
+  status: true,
+  actions: true
+};
+{% endblock %}
+
+{% block report_filters %}
+  <div class="flex-1 min-w-[150px]">
+    <label class="block text-xs font-semibold text-neutral-500 dark:text-neutral-400 mb-1">Preset Range</label>
+    <select name="preset" class="input input-sm w-full" onchange="this.form.submit()">
+      <option value="today" {% if preset == 'today' %}selected{% endif %}>Today</option>
+      <option value="yesterday" {% if preset == 'yesterday' %}selected{% endif %}>Yesterday</option>
+      <option value="last_7_days" {% if preset == 'last_7_days' %}selected{% endif %}>Last 7 Days</option>
+      <option value="last_30_days" {% if preset == 'last_30_days' %}selected{% endif %}>Last 30 Days</option>
+      <option value="this_month" {% if preset == 'this_month' %}selected{% endif %}>This Month</option>
+      <option value="last_month" {% if preset == 'last_month' %}selected{% endif %}>Last Month</option>
+      <option value="custom" {% if preset == 'custom' %}selected{% endif %}>Custom Range</option>
+    </select>
+  </div>
+
+  <template x-if="'{{ preset }}' === 'custom'">
+    <div class="flex gap-2 flex-1 min-w-[280px]">
+      <div class="flex-1">
+        <label class="block text-xs font-semibold text-neutral-500 mb-1">Start Date</label>
+        <input type="date" name="start_date" value="{{ start_date }}" class="input input-sm w-full">
+      </div>
+      <div class="flex-1">
+        <label class="block text-xs font-semibold text-neutral-500 mb-1">End Date</label>
+        <input type="date" name="end_date" value="{{ end_date }}" class="input input-sm w-full">
+      </div>
+    </div>
+  </template>
+
+  <div class="flex-1 min-w-[150px]">
+    <label class="block text-xs font-semibold text-neutral-500 mb-1">Store / Branch</label>
+    <select name="branch" class="input input-sm w-full">
+      <option value="">All Branches</option>
+      {% for b in branches %}
+        <option value="{{ b.id }}" {% if selected_branch == b.id|stringformat:"s" %}selected{% endif %}>{{ b.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="flex-1 min-w-[150px]">
+    <label class="block text-xs font-semibold text-neutral-500 mb-1">Cashier</label>
+    <select name="cashier" class="input input-sm w-full">
+      <option value="">All Cashiers</option>
+      {% for c in cashiers %}
+        <option value="{{ c.id }}" {% if selected_cashier == c.id|stringformat:"s" %}selected{% endif %}>{{ c.email }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <!-- Advanced Dropdown Filter Toggle -->
+  <div class="flex-1 min-w-[150px]" x-data="{ open: false }">
+    <button type="button" @click="open = !open" class="btn-secondary">
+      <span>More Filters</span>
+      <i data-lucide="chevron-down" class="w-4 h-4 ml-1"></i>
+    </button>
+    <div x-show="open" class="absolute bg-white dark:bg-neutral-800 rounded-lg shadow-lg border border-neutral-200 dark:border-neutral-700 p-4 mt-2 z-50 grid grid-cols-2 gap-3 w-80" @click.away="open = false" x-cloak>
+      <div>
+        <label class="block text-xs font-semibold text-neutral-500 mb-1">Customer</label>
+        <input type="text" name="customer" value="{{ customer }}" placeholder="Guest" class="input input-sm w-full">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-neutral-500 mb-1">Order Type</label>
+        <select name="order_type" class="input input-sm w-full">
+          <option value="">All Types</option>
+          {% for val, label in order_types %}
+            <option value="{{ val }}" {% if selected_order_type == val %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-span-2">
+        <label class="block text-xs font-semibold text-neutral-500 mb-1">Payment Method</label>
+        <select name="payment_method" class="input input-sm w-full">
+          <option value="">All Methods</option>
+          {% for val, label in payment_methods %}
+            <option value="{{ val }}" {% if selected_payment_method == val %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block report_kpis %}
+  <div class="bg-white dark:bg-neutral-800 p-5 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center gap-4">
+    <div class="w-12 h-12 bg-green-50 dark:bg-green-900/20 text-green-600 rounded-lg flex items-center justify-center shrink-0">
+      <i data-lucide="indian-rupee" class="w-6 h-6"></i>
+    </div>
+    <div>
+      <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Gross Sales</span>
+      <h3 class="text-xl font-bold text-neutral-900 dark:text-white mt-0.5">₹{{ gross_revenue|floatformat:2 }}</h3>
+    </div>
+  </div>
+
+  <div class="bg-white dark:bg-neutral-800 p-5 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center gap-4">
+    <div class="w-12 h-12 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 rounded-lg flex items-center justify-center shrink-0">
+      <i data-lucide="trending-up" class="w-6 h-6"></i>
+    </div>
+    <div>
+      <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Net Sales</span>
+      <h3 class="text-xl font-bold text-neutral-900 dark:text-white mt-0.5">₹{{ net_revenue|floatformat:2 }}</h3>
+    </div>
+  </div>
+
+  <div class="bg-white dark:bg-neutral-800 p-5 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center gap-4">
+    <div class="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-lg flex items-center justify-center shrink-0">
+      <i data-lucide="shopping-bag" class="w-6 h-6"></i>
+    </div>
+    <div>
+      <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Orders</span>
+      <h3 class="text-xl font-bold text-neutral-900 dark:text-white mt-0.5">{{ total_orders }}</h3>
+    </div>
+  </div>
+
+  <div class="bg-white dark:bg-neutral-800 p-5 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center gap-4">
+    <div class="w-12 h-12 bg-purple-50 dark:bg-purple-900/20 text-purple-600 rounded-lg flex items-center justify-center shrink-0">
+      <i data-lucide="badge-dollar-sign" class="w-6 h-6"></i>
+    </div>
+    <div>
+      <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Average Order</span>
+      <h3 class="text-xl font-bold text-neutral-900 dark:text-white mt-0.5">₹{{ aov|floatformat:2 }}</h3>
+    </div>
+  </div>
+
+  <div class="bg-white dark:bg-neutral-800 p-5 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center gap-4">
+    <div class="w-12 h-12 bg-red-50 dark:bg-red-900/20 text-red-600 rounded-lg flex items-center justify-center shrink-0">
+      <i data-lucide="percent" class="w-6 h-6"></i>
+    </div>
+    <div>
+      <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Discounts</span>
+      <h3 class="text-xl font-bold text-neutral-900 dark:text-white mt-0.5">₹{{ total_discounts|floatformat:2 }}</h3>
+    </div>
+  </div>
+
+  <div class="bg-white dark:bg-neutral-800 p-5 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center gap-4">
+    <div class="w-12 h-12 bg-rose-50 dark:bg-rose-900/20 text-rose-600 rounded-lg flex items-center justify-center shrink-0">
+      <i data-lucide="undo-2" class="w-6 h-6"></i>
+    </div>
+    <div>
+      <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Refunds / Voids</span>
+      <h3 class="text-xl font-bold text-neutral-900 dark:text-white mt-0.5">₹{{ total_refunds|floatformat:2 }}</h3>
+    </div>
+  </div>
+
+  <div class="bg-white dark:bg-neutral-800 p-5 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center gap-4">
+    <div class="w-12 h-12 bg-cyan-50 dark:bg-cyan-900/20 text-cyan-600 rounded-lg flex items-center justify-center shrink-0">
+      <i data-lucide="calculator" class="w-6 h-6"></i>
+    </div>
+    <div>
+      <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Taxes</span>
+      <h3 class="text-xl font-bold text-neutral-900 dark:text-white mt-0.5">₹{{ tax_collected|floatformat:2 }}</h3>
+    </div>
+  </div>
+{% endblock %}
+
+{% block report_charts %}
+  <div class="card p-5 bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 lg:col-span-2">
+    <h3 class="text-sm font-bold text-neutral-800 dark:text-white mb-4">Daily Sales & Hourly Performance Trends</h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="h-64"><canvas id="salesTrendChart"></canvas></div>
+      <div class="h-64"><canvas id="hourlyChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card p-5 bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700">
+    <h3 class="text-sm font-bold text-neutral-800 dark:text-white mb-4">Revenues by Payment Method</h3>
+    <div class="h-64 flex items-center justify-center">
+      <canvas id="paymentMethodChart"></canvas>
+    </div>
+  </div>
+
+  <div class="card p-5 bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700">
+    <h3 class="text-sm font-bold text-neutral-800 dark:text-white mb-4">Sales by Category</h3>
+    <div class="h-64 flex items-center justify-center">
+      <canvas id="categoryChart"></canvas>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      // Sales Trend
+      new Chart(document.getElementById('salesTrendChart'), {
+        type: 'line',
+        data: {
+          labels: {{ trend_labels|safe }},
+          datasets: [{
+            label: 'Sales Vol (₹)',
+            data: {{ trend_data|safe }},
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.2
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+
+      // Hourly Sales
+      new Chart(document.getElementById('hourlyChart'), {
+        type: 'bar',
+        data: {
+          labels: {{ hourly_labels|safe }},
+          datasets: [{
+            label: 'Hourly Sales (₹)',
+            data: {{ hourly_data|safe }},
+            backgroundColor: '#3b82f6'
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+
+      // Payment method pie
+      new Chart(document.getElementById('paymentMethodChart'), {
+        type: 'doughnut',
+        data: {
+          labels: ['Cash', 'Card', 'UPI', 'Credit'],
+          datasets: [{
+            data: [
+              {{ pay_methods.cash|default:0.0 }},
+              {{ pay_methods.card|default:0.0 }},
+              {{ pay_methods.upi|default:0.0 }},
+              {{ pay_methods.credit|default:0.0 }}
+            ],
+            backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6']
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+
+      // Category pie
+      new Chart(document.getElementById('categoryChart'), {
+        type: 'polarArea',
+        data: {
+          labels: {{ cat_labels|safe }},
+          datasets: [{
+            data: {{ cat_data|safe }},
+            backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+    });
+  </script>
+{% endblock %}
+
+{% block table_header %}
+  <tr>
+    <th x-show="visibleCols.invoice_no" class="px-4 py-3">Invoice #</th>
+    <th x-show="visibleCols.date" class="px-4 py-3">Date</th>
+    <th x-show="visibleCols.customer" class="px-4 py-3">Customer</th>
+    <th x-show="visibleCols.cashier" class="px-4 py-3">Cashier ID</th>
+    <th x-show="visibleCols.type" class="px-4 py-3">Type</th>
+    <th x-show="visibleCols.payment_method" class="px-4 py-3">Payment Method</th>
+    <th x-show="visibleCols.subtotal" class="px-4 py-3 text-right">Subtotal</th>
+    <th x-show="visibleCols.discount" class="px-4 py-3 text-right">Discount</th>
+    <th x-show="visibleCols.tax" class="px-4 py-3 text-right">Tax</th>
+    <th x-show="visibleCols.total" class="px-4 py-3 text-right">
+      <a href="?sort={% if sort == 'total' %}-total{% else %}total{% endif %}&{{ request.GET.urlencode }}" class="inline-flex items-center gap-1 hover:underline">
+        Grand Total
+        <i data-lucide="arrow-up-down" class="w-3 h-3"></i>
+      </a>
+    </th>
+    <th x-show="visibleCols.status" class="px-4 py-3 text-center">Status</th>
+    <th x-show="visibleCols.actions" class="px-4 py-3 text-center">Actions</th>
+  </tr>
+{% endblock %}
+
+{% block table_body %}
+  {% for o in page_obj %}
+    <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-700/50">
+      <td x-show="visibleCols.invoice_no" class="px-4 py-3 font-medium text-neutral-900 dark:text-white">
+        {{ o.order_number|default:o.id|truncatechars:12 }}
+      </td>
+      <td x-show="visibleCols.date" class="px-4 py-3 text-xs">{{ o.opened_at|date:"Y-m-d H:i" }}</td>
+      <td x-show="visibleCols.customer" class="px-4 py-3">{{ o.customer_name|default:"Guest" }}</td>
+      <td x-show="visibleCols.cashier" class="px-4 py-3 text-xs">{{ o.created_by|default:"System"|truncatechars:12 }}</td>
+      <td x-show="visibleCols.type" class="px-4 py-3 capitalize text-xs">{{ o.get_type_display }}</td>
+      <td x-show="visibleCols.payment_method" class="px-4 py-3 text-xs">
+        {% for p in o.payments.all %}
+          <span class="inline-block bg-neutral-100 dark:bg-neutral-700 px-1.5 py-0.5 rounded text-[10px]">{{ p.get_method_display }}</span>
+        {% empty %}
+          -
+        {% endfor %}
+      </td>
+      <td x-show="visibleCols.subtotal" class="px-4 py-3 text-right">₹{{ o.subtotal|floatformat:2 }}</td>
+      <td x-show="visibleCols.discount" class="px-4 py-3 text-right text-red-500">₹{{ o.discount_amount|floatformat:2 }}</td>
+      <td x-show="visibleCols.tax" class="px-4 py-3 text-right text-blue-500">₹{{ o.tax_amount|floatformat:2 }}</td>
+      <td x-show="visibleCols.total" class="px-4 py-3 text-right font-bold text-neutral-900 dark:text-white">₹{{ o.total|floatformat:2 }}</td>
+      <td x-show="visibleCols.status" class="px-4 py-3 text-center">
+        {% if o.status == 'settled' %}
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-green-50 text-green-700 border border-green-200">Settled</span>
+        {% elif o.status == 'void' %}
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-50 text-red-700 border border-red-200">Void</span>
+        {% else %}
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-neutral-50 text-neutral-700 border border-neutral-200">{{ o.get_status_display }}</span>
+        {% endif %}
+      </td>
+      <td x-show="visibleCols.actions" class="px-4 py-3 text-center" x-data="{ 
+        async sendEmail(email) {
+          if (!email) return;
+          const resp = await fetch('{% url 'reporting:email_invoice' o.id %}', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ email })
+          });
+          const res = await resp.json();
+          alert(res.message);
+        }
+      }">
+        <div class="flex items-center justify-center gap-1.5">
+          <!-- View Printable Invoice via Iframe/Modal print -->
+          <a href="{% url 'reporting:invoice_detail' o.id %}" target="_blank" class="text-brand-default hover:text-brand-hover p-1" title="View & Print Invoice">
+            <i data-lucide="receipt" class="w-4 h-4"></i>
+          </a>
+          <button @click="
+            const email = prompt('Enter recipient email:', '{{ o.customer_email }}');
+            if(email) sendEmail(email);
+          " class="text-neutral-400 hover:text-neutral-600 p-1" title="Email Receipt">
+            <i data-lucide="mail" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </td>
+    </tr>
+  {% empty %}
+    <tr>
+      <td colspan="12" class="px-4 py-8 text-center text-neutral-500">
+        <div class="flex flex-col items-center gap-2">
+          <i data-lucide="folder-open" class="w-8 h-8 text-neutral-300"></i>
+          <span>No sales records found matching filters.</span>
+        </div>
+      </td>
+    </tr>
+  {% endfor %}
+{% endblock %}
+
+{% block table_pagination %}
+  {% if page_obj.has_other_pages %}
+    <div class="px-5 py-3 border-t border-neutral-100 dark:border-neutral-700/50 flex justify-between items-center bg-neutral-50/50">
+      <span class="text-xs text-neutral-500">
+        Showing page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+      </span>
+      <div class="flex gap-1">
+        {% if page_obj.has_previous %}
+          <a href="?page={{ page_obj.previous_page_number }}&{{ request.GET.urlencode }}" class="btn-secondary">Previous</a>
+        {% endif %}
+        {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}&{{ request.GET.urlencode }}" class="btn-secondary">Next</a>
+        {% endif %}
+      </div>
+    </div>
+  {% endif %}
+{% endblock %}

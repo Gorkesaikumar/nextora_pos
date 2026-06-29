@@ -1,0 +1,10 @@
+{% comment %} Renders a single form field with label and errors.
+   Params: field (BoundField), label (str), required (bool, optional). {% endcomment %}
+<div class="space-y-1">
+  <label for="{{ field.id_for_label }}" class="block text-sm font-semibold text-neutral-800 dark:text-neutral-200">
+    {{ label }}{% if required %} <span class="text-red-500">*</span>{% endif %}
+  </label>
+  {{ field }}
+  {% if field.help_text %}<p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">{{ field.help_text }}</p>{% endif %}
+  {% if field.errors %}<div class="text-red-500 text-xs mt-1">{{ field.errors.0 }}</div>{% endif %}
+</div>

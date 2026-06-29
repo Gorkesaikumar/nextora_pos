@@ -1,0 +1,119 @@
+{% comment %}Step 3 — Choose plan{% endcomment %}
+<div x-show="step === 3" x-transition.opacity.duration.200ms x-cloak
+     x-data="{
+       plan: '{{ form_plan.plan_code.value|default:'professional' }}',
+       interval: '{{ form_plan.interval.value|default:'monthly' }}'
+     }">
+
+  <header class="mb-7">
+    <p class="text-xs font-semibold tracking-[0.18em] uppercase text-neutral-500 mb-2">Step 3 of 4</p>
+    <h2 class="text-2xl font-bold tracking-tight text-neutral-900">Pick a plan</h2>
+    <p class="mt-1.5 text-sm text-neutral-500">All plans start with a 14-day free trial — no credit card required.</p>
+  </header>
+
+  {# Interval toggle #}
+  <div class="inline-flex rounded-xl border border-neutral-200 bg-neutral-50 p-1 mb-6" role="tablist" aria-label="Billing interval">
+    <button type="button" role="tab" :aria-selected="interval === 'monthly'" @click="interval = 'monthly'"
+            :class="interval === 'monthly' ? 'bg-white text-neutral-900 shadow-sm' : 'text-neutral-500 hover:text-neutral-700'"
+            class="px-4 py-1.5 text-xs font-semibold rounded-lg transition-all">Monthly</button>
+    <button type="button" role="tab" :aria-selected="interval === 'yearly'" @click="interval = 'yearly'"
+            :class="interval === 'yearly' ? 'bg-white text-neutral-900 shadow-sm' : 'text-neutral-500 hover:text-neutral-700'"
+            class="px-4 py-1.5 text-xs font-semibold rounded-lg transition-all">
+      Yearly
+      <span class="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 text-[10px] font-bold">Save 16%</span>
+    </button>
+  </div>
+
+  {# Hidden inputs that carry the selection to the server #}
+  <input type="hidden" name="plan-plan_code" :value="plan">
+  <input type="hidden" name="plan-interval" :value="interval">
+
+  {% if form_plan.non_field_errors %}
+    <div class="mb-4 p-3 rounded-xl border border-red-200 bg-red-50 text-sm text-red-700">{{ form_plan.non_field_errors.0 }}</div>
+  {% endif %}
+
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    {% for p in plans %}
+      <label class="relative block cursor-pointer rounded-2xl border bg-white p-5 transition-all"
+             :class="plan === '{{ p.code }}' ? 'border-neutral-900 ring-2 ring-neutral-900/10 shadow-md' : 'border-neutral-200 hover:border-neutral-400'">
+        <input type="radio" name="plan-display-radio" value="{{ p.code }}" class="sr-only"
+               :checked="plan === '{{ p.code }}'" @change="plan = '{{ p.code }}'">
+
+        {% if p.code == 'professional' %}
+          <span class="absolute -top-2.5 right-4 inline-flex items-center px-2 py-0.5 rounded-full bg-neutral-900 text-white text-[10px] font-bold tracking-wider uppercase">Most popular</span>
+        {% endif %}
+
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-base font-bold text-neutral-900">{{ p.name }}</h3>
+          <div class="w-4 h-4 rounded-full border-2"
+               :class="plan === '{{ p.code }}' ? 'border-neutral-900 bg-neutral-900' : 'border-neutral-300'">
+            <div x-show="plan === '{{ p.code }}'" class="w-full h-full rounded-full border-2 border-white"></div>
+          </div>
+        </div>
+
+        <div class="mb-3 min-h-[50px]">
+          {% if p.monthly_amount %}
+            <div x-show="interval === 'monthly'">
+              <div class="flex items-baseline gap-1">
+                <span class="text-2xl font-extrabold text-neutral-900">₹{{ p.monthly_amount|floatformat:"0" }}</span>
+                <span class="text-xs text-neutral-500">/mo</span>
+              </div>
+            </div>
+            <div x-show="interval === 'yearly'" x-cloak>
+              <div class="flex items-baseline gap-1">
+                <span class="text-2xl font-extrabold text-neutral-900">₹{{ p.yearly_amount|floatformat:"0" }}</span>
+                <span class="text-xs text-neutral-500">/yr</span>
+              </div>
+            </div>
+          {% else %}
+            <div class="flex items-baseline gap-1 pt-1">
+              <span class="text-xl font-extrabold text-neutral-900">Custom Pricing</span>
+            </div>
+          {% endif %}
+        </div>
+
+        <p class="text-xs text-neutral-500 leading-relaxed mb-4">{{ p.description }}</p>
+
+        <ul class="space-y-2 text-xs text-neutral-700">
+          <li class="flex items-start gap-2">
+            <i data-lucide="check" class="w-3.5 h-3.5 mt-0.5 text-emerald-600 shrink-0"></i>
+            <span>{% if p.max_branches %}Up to {{ p.max_branches }} branch{{ p.max_branches|pluralize }}{% else %}Unlimited branches{% endif %}</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <i data-lucide="check" class="w-3.5 h-3.5 mt-0.5 text-emerald-600 shrink-0"></i>
+            <span>{% if p.max_employees %}{{ p.max_employees }} staff seats{% else %}Unlimited staff{% endif %}</span>
+          </li>
+          {% if p.features.kds %}
+          <li class="flex items-start gap-2">
+            <i data-lucide="check" class="w-3.5 h-3.5 mt-0.5 text-emerald-600 shrink-0"></i>
+            <span>Kitchen display system</span>
+          </li>
+          {% endif %}
+          {% if p.features.reports_advanced %}
+          <li class="flex items-start gap-2">
+            <i data-lucide="check" class="w-3.5 h-3.5 mt-0.5 text-emerald-600 shrink-0"></i>
+            <span>Advanced reports &amp; analytics</span>
+          </li>
+          {% endif %}
+          {% if p.features.api_access %}
+          <li class="flex items-start gap-2">
+            <i data-lucide="check" class="w-3.5 h-3.5 mt-0.5 text-emerald-600 shrink-0"></i>
+            <span>API access</span>
+          </li>
+          {% endif %}
+          {% if p.features.dedicated_support %}
+          <li class="flex items-start gap-2">
+            <i data-lucide="check" class="w-3.5 h-3.5 mt-0.5 text-emerald-600 shrink-0"></i>
+            <span>Dedicated success manager</span>
+          </li>
+          {% endif %}
+        </ul>
+      </label>
+    {% endfor %}
+  </div>
+
+  <p class="mt-4 text-xs text-neutral-500 flex items-center gap-1.5">
+    <i data-lucide="info" class="w-3.5 h-3.5"></i>
+    You won't be charged today. We'll remind you 3 days before your trial ends.
+  </p>
+</div>

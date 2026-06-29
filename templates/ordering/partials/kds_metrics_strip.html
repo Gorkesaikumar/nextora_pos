@@ -1,0 +1,36 @@
+<div id="kds-metrics-strip" class="px-8 py-4 border-y border-neutral-200 bg-neutral-50/50 flex flex-wrap gap-8 items-center" {% if is_htmx %}hx-swap-oob="true"{% endif %}>
+  <div class="flex flex-col min-w-max">
+    <span class="text-xs font-bold text-neutral-500 uppercase tracking-wider">Active</span>
+    <span class="text-xl font-black text-neutral-900" data-metric="active" data-value="{{ metric_active }}">{{ metric_active }}</span>
+  </div>
+  <div class="w-px h-10 bg-neutral-200"></div>
+  <div class="flex flex-col min-w-max">
+    <span class="text-xs font-bold text-brand-default uppercase tracking-wider">Waiting</span>
+    <span class="text-xl font-black text-brand-default" data-metric="waiting" data-value="{{ metric_waiting }}">{{ metric_waiting }}</span>
+  </div>
+  <div class="w-px h-10 bg-neutral-200"></div>
+  <div class="flex flex-col min-w-max">
+    <span class="text-xs font-bold text-semantic-warning-dark uppercase tracking-wider">Preparing</span>
+    <span class="text-xl font-black text-semantic-warning-dark" data-metric="preparing" data-value="{{ metric_preparing }}">{{ metric_preparing }}</span>
+  </div>
+  <div class="w-px h-10 bg-neutral-200"></div>
+  <div class="flex flex-col min-w-max">
+    <span class="text-xs font-bold text-semantic-success uppercase tracking-wider">Ready</span>
+    <span class="text-xl font-black text-semantic-success" data-metric="ready" data-value="{{ metric_ready }}">{{ metric_ready }}</span>
+  </div>
+  <div class="w-px h-10 bg-neutral-200"></div>
+  <div class="flex flex-col min-w-max">
+    <span class="text-xs font-bold text-semantic-error uppercase tracking-wider">Delayed</span>
+    <span class="text-xl font-black text-semantic-error" data-metric="delayed" data-value="{{ metric_delayed }}">{{ metric_delayed }}</span>
+  </div>
+  <div class="w-px h-10 bg-neutral-200"></div>
+  <div class="flex flex-col min-w-max">
+    <span class="text-xs font-bold text-neutral-500 uppercase tracking-wider">Avg Prep Time</span>
+    <span class="text-xl font-black text-neutral-900">{{ metric_avg_prep }}</span>
+  </div>
+  <div class="w-px h-10 bg-neutral-200"></div>
+  <div class="flex flex-col min-w-max">
+    <span class="text-xs font-bold text-neutral-500 uppercase tracking-wider">Completion Rate</span>
+    <span class="text-xl font-black text-neutral-900" data-metric="completion" data-value="{{ metric_completion }}" data-suffix="%">{{ metric_completion }}%</span>
+  </div>
+</div>

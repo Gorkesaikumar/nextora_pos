@@ -1,0 +1,49 @@
+/* Modal — focus-trapped dialog. */
+
+.modal-scrim {
+  position: fixed; inset: 0;
+  background-color: rgba(0,0,0,var(--forge-opacity-scrim, 0.6));
+  display: flex; align-items: center; justify-content: center;
+  z-index: var(--forge-z-modal, 300);
+  padding: var(--forge-space-4);
+}
+.modal {
+  background-color: var(--forge-color-surface-overlay);
+  border: 1px solid var(--forge-color-border-subtle);
+  border-radius: var(--forge-radius-card);
+  box-shadow: var(--forge-shadow-overlay);
+  width: 100%; max-width: 560px;
+  display: flex; flex-direction: column;
+  max-height: 90vh;
+  animation: forge-scale-in var(--forge-duration-deliberate, 300ms) ease-out;
+}
+.modal__header {
+  display: flex; align-items: center; gap: var(--forge-space-2);
+  padding: var(--forge-space-4) var(--forge-space-5);
+  border-bottom: 1px solid var(--forge-color-border-subtle);
+}
+.modal__title { font-size: 1.125rem; font-weight: 600; letter-spacing: -0.015em; margin: 0; }
+.modal__close { margin-left: auto; color: var(--forge-color-text-tertiary); }
+.modal__body { padding: var(--forge-space-5); overflow-y: auto; }
+.modal__footer {
+  display: flex; justify-content: flex-end; gap: var(--forge-space-2);
+  padding: var(--forge-space-3) var(--forge-space-5);
+  border-top: 1px solid var(--forge-color-border-subtle);
+}
+
+.modal--sm { max-width: 400px; }
+.modal--lg { max-width: 720px; }
+.modal--xl { max-width: 960px; }
+
+@keyframes forge-scale-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .modal { animation: none; }
+}
+
+@media (max-width: 767px) {
+  .modal-scrim { padding: 0; align-items: stretch; }
+  .modal { max-width: none; max-height: 100vh; border-radius: 0; }
+}

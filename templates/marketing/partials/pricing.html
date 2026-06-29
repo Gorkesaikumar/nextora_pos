@@ -1,0 +1,127 @@
+<section id="pricing" class="py-24 bg-slate-50 text-slate-900">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center max-w-3xl mx-auto mb-16">
+      <h2 class="text-3xl font-extrabold tracking-tight sm:text-4xl text-slate-900">
+        Simple, transparent pricing
+      </h2>
+      <p class="mt-4 max-w-2xl text-xl text-slate-500 mx-auto">
+        No hidden fees. Cancel anytime.
+      </p>
+      <p class="mt-2 flex items-center justify-center text-sm text-slate-500">
+        <svg class="h-4 w-4 text-slate-400 mr-1.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" /></svg>
+        You won't be charged today. We'll remind you 3 days before your trial ends.
+      </p>
+    </div>
+
+    <div x-data="{ annual: true, selectedPlan: 'professional' }" class="flex flex-col items-center">
+      <!-- Billing Toggle -->
+      <div class="flex items-center justify-center mb-12">
+        <div class="inline-flex items-center bg-white border border-slate-200 rounded-full p-1 shadow-sm">
+          <button @click="annual = false" type="button" :class="!annual ? 'bg-white shadow-sm text-slate-900 font-semibold' : 'text-slate-500 hover:text-slate-700'" class="px-5 py-2 text-sm rounded-full transition-all">
+            Monthly
+          </button>
+          <button @click="annual = true" type="button" :class="annual ? 'bg-white shadow-sm text-slate-900 font-semibold' : 'text-slate-500 hover:text-slate-700'" class="px-5 py-2 text-sm rounded-full transition-all flex items-center gap-2">
+            Yearly
+            <span class="inline-flex items-center rounded-md bg-emerald-100 px-2 py-0.5 text-xs font-bold text-emerald-800">Save 16%</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl w-full items-start">
+        <!-- Starter -->
+        <div @click="selectedPlan = 'starter'" class="bg-white rounded-2xl border p-8 transition-all cursor-pointer relative" :class="selectedPlan === 'starter' ? 'border-slate-900 shadow-xl' : 'border-slate-200 shadow-sm hover:border-slate-300'">
+          <div class="absolute top-6 right-6">
+            <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center" :class="selectedPlan === 'starter' ? 'border-slate-900' : 'border-slate-300'">
+              <div x-show="selectedPlan === 'starter'" class="w-2.5 h-2.5 bg-slate-900 rounded-full"></div>
+            </div>
+          </div>
+          <h3 class="text-xl font-bold mb-4 text-slate-900">Starter</h3>
+          <div class="mb-6">
+            <span class="text-4xl font-extrabold text-slate-900" x-text="annual ? '₹589' : '₹699'"></span>
+            <span class="text-slate-500 text-sm">/mo</span>
+          </div>
+          <p class="text-slate-500 text-sm mb-8 h-10">Perfect for single outlet restaurants getting started</p>
+          <ul class="space-y-4 text-sm text-slate-600 mb-8">
+            <li class="flex items-start"><i data-lucide="check" class="w-5 h-5 text-emerald-500 mr-3 flex-shrink-0"></i> Up to 1 branch</li>
+            <li class="flex items-start"><i data-lucide="check" class="w-5 h-5 text-emerald-500 mr-3 flex-shrink-0"></i> 5 staff seats</li>
+            <li class="flex items-start"><i data-lucide="check" class="w-5 h-5 text-emerald-500 mr-3 flex-shrink-0"></i> Kitchen display system</li>
+          </ul>
+        </div>
+
+        <!-- Growth -->
+        <div @click="selectedPlan = 'growth'" class="bg-white rounded-2xl border p-8 transition-all cursor-pointer relative" :class="selectedPlan === 'growth' ? 'border-slate-900 shadow-xl' : 'border-slate-200 shadow-sm hover:border-slate-300'">
+          <div class="absolute top-6 right-6">
+            <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center" :class="selectedPlan === 'growth' ? 'border-slate-900' : 'border-slate-300'">
+              <div x-show="selectedPlan === 'growth'" class="w-2.5 h-2.5 bg-slate-900 rounded-full"></div>
+            </div>
+          </div>
+          <h3 class="text-xl font-bold mb-4 text-slate-900">Growth</h3>
+          <div class="mb-6">
+            <span class="text-4xl font-extrabold text-slate-900" x-text="annual ? '₹999' : '₹1199'"></span>
+            <span class="text-slate-500 text-sm">/mo</span>
+          </div>
+          <p class="text-slate-500 text-sm mb-8 h-10">Ideal for growing restaurants with multiple outlets</p>
+          <ul class="space-y-4 text-sm text-slate-600 mb-8">
+            <li class="flex items-start"><i data-lucide="check" class="w-5 h-5 text-emerald-500 mr-3 flex-shrink-0"></i> Up to 3 branches</li>
+            <li class="flex items-start"><i data-lucide="check" class="w-5 h-5 text-emerald-500 mr-3 flex-shrink-0"></i> 15 staff seats</li>
+            <li class="flex items-start"><i data-lucide="check" class="w-5 h-5 text-emerald-500 mr-3 flex-shrink-0"></i> Kitchen display system</li>
+            <li class="flex items-start"><i data-lucide="check" class="w-5 h-5 text-emerald-500 mr-3 flex-shrink-0"></i> Advanced reports & analytics</li>
+          </ul>
+        </div>
+
+        <!-- Professional -->
+        <div @click="selectedPlan = 'professional'" class="bg-white rounded-2xl border p-8 transition-all cursor-pointer relative transform md:-translate-y-2 shadow-xl" :class="selectedPlan === 'professional' ? 'border-slate-900' : 'border-slate-300 hover:border-slate-400'">
+          <div class="absolute -top-3 right-8">
+            <span class="bg-slate-900 text-white text-[10px] font-bold uppercase tracking-wider py-1 px-3 rounded-full">Most Popular</span>
+          </div>
+          <div class="absolute top-6 right-6">
+            <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center" :class="selectedPlan === 'professional' ? 'border-slate-900' : 'border-slate-300'">
+              <div x-show="selectedPlan === 'professional'" class="w-2.5 h-2.5 bg-slate-900 rounded-full"></div>
+            </div>
+          </div>
+          <h3 class="text-xl font-bold mb-4 text-slate-900">Professional</h3>
+          <div class="mb-6">
+            <span class="text-4xl font-extrabold text-slate-900" x-text="annual ? '₹1679' : '₹1999'"></span>
+            <span class="text-slate-500 text-sm">/mo</span>
+          </div>
+          <p class="text-slate-500 text-sm mb-8 h-10">Best for established restaurants that want full control</p>
+          <ul class="space-y-4 text-sm text-slate-600 mb-8">
+            <li class="flex items-start"><i data-lucide="check" class="w-5 h-5 text-emerald-500 mr-3 flex-shrink-0"></i> Up to 10 branches</li>
+            <li class="flex items-start"><i data-lucide="check" class="w-5 h-5 text-emerald-500 mr-3 flex-shrink-0"></i> 30 staff seats</li>
+            <li class="flex items-start"><i data-lucide="check" class="w-5 h-5 text-emerald-500 mr-3 flex-shrink-0"></i> Kitchen display system</li>
+            <li class="flex items-start"><i data-lucide="check" class="w-5 h-5 text-emerald-500 mr-3 flex-shrink-0"></i> Advanced reports & analytics</li>
+            <li class="flex items-start"><i data-lucide="check" class="w-5 h-5 text-emerald-500 mr-3 flex-shrink-0"></i> API access</li>
+          </ul>
+        </div>
+
+        <!-- Enterprise -->
+        <div @click="selectedPlan = 'enterprise'" class="bg-white rounded-2xl border p-8 transition-all cursor-pointer relative" :class="selectedPlan === 'enterprise' ? 'border-slate-900 shadow-xl' : 'border-slate-200 shadow-sm hover:border-slate-300'">
+          <div class="absolute top-6 right-6">
+            <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center" :class="selectedPlan === 'enterprise' ? 'border-slate-900' : 'border-slate-300'">
+              <div x-show="selectedPlan === 'enterprise'" class="w-2.5 h-2.5 bg-slate-900 rounded-full"></div>
+            </div>
+          </div>
+          <h3 class="text-xl font-bold mb-4 text-slate-900">Enterprise</h3>
+          <div class="mb-6">
+            <span class="text-3xl font-extrabold text-slate-900">Custom Pricing</span>
+          </div>
+          <p class="text-slate-500 text-sm mb-8 h-10">For large chains & enterprises with custom needs</p>
+          <ul class="space-y-4 text-sm text-slate-600 mb-8">
+            <li class="flex items-start"><i data-lucide="check" class="w-5 h-5 text-emerald-500 mr-3 flex-shrink-0"></i> Unlimited branches</li>
+            <li class="flex items-start"><i data-lucide="check" class="w-5 h-5 text-emerald-500 mr-3 flex-shrink-0"></i> Unlimited staff</li>
+            <li class="flex items-start"><i data-lucide="check" class="w-5 h-5 text-emerald-500 mr-3 flex-shrink-0"></i> Kitchen display system</li>
+            <li class="flex items-start"><i data-lucide="check" class="w-5 h-5 text-emerald-500 mr-3 flex-shrink-0"></i> Advanced reports & analytics</li>
+            <li class="flex items-start"><i data-lucide="check" class="w-5 h-5 text-emerald-500 mr-3 flex-shrink-0"></i> API access</li>
+            <li class="flex items-start"><i data-lucide="check" class="w-5 h-5 text-emerald-500 mr-3 flex-shrink-0"></i> Dedicated success manager</li>
+          </ul>
+        </div>
+      </div>
+      
+      <!-- CTA and Footer Note Removed -->
+      <div class="mt-12 w-full max-w-7xl flex flex-col items-start px-4">
+        <!-- Button removed per request -->
+      </div>
+
+    </div>
+  </div>
+</section>

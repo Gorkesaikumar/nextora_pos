@@ -1,0 +1,52 @@
+{% extends "layouts/dashboard.html" %}
+
+{% block page_title %}Categories{% endblock %}
+{% block page_subtitle %}<p class="text-caption text-neutral-500 mt-1">Organize your products into logical groups for the POS.</p>{% endblock %}
+
+{% block primary_action %}
+<button type="button" class="btn-primary">
+  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+  New Category
+</button>
+{% endblock %}
+
+{% block workspace %}
+<div class="card overflow-hidden mt-6">
+  <div class="overflow-x-auto">
+    <table class="w-full text-left border-collapse">
+      <thead>
+        <tr class="bg-neutral-50 dark:bg-neutral-dark-50 border-b border-neutral-150 dark:border-neutral-dark-150 text-heading-3 text-neutral-700 dark:text-neutral-dark-700">
+          <th class="px-5 py-3 font-semibold">Category Name</th>
+          <th class="px-5 py-3 font-semibold">Parent Category</th>
+          <th class="px-5 py-3 font-semibold">Products Count</th>
+          <th class="px-5 py-3 font-semibold text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-neutral-150 dark:divide-neutral-dark-150">
+        {% for category in categories %}
+        <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-dark-50 transition-colors">
+          <td class="px-5 py-4 text-body-strong text-neutral-900 dark:text-neutral-dark-900">{{ category.name }}</td>
+          <td class="px-5 py-4 text-body text-neutral-500">
+            {% if category.parent %}
+              {{ category.parent.name }}
+            {% else %}
+              —
+            {% endif %}
+          </td>
+          <td class="px-5 py-4 text-body tabular-nums">{{ category.products.count }}</td>
+          <td class="px-5 py-4 text-right">
+            <button type="button" class="text-brand-default hover:text-brand-hover dark:text-brand-on-dark text-body-strong">Edit</button>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="4" class="px-5 py-8 text-center text-body text-neutral-500">
+            No categories found.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

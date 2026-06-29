@@ -1,0 +1,46 @@
+/* Drawer — side/bottom sheet. Modal vs non-modal toggled by .drawer--modal. */
+
+.drawer {
+  position: fixed;
+  top: 0; bottom: 0; right: 0;
+  width: 100%; max-width: 480px;
+  background-color: var(--forge-color-surface-overlay);
+  border-left: 1px solid var(--forge-color-border-subtle);
+  box-shadow: var(--forge-shadow-overlay);
+  display: flex; flex-direction: column;
+  z-index: var(--forge-z-modal, 300);
+  transform: translateX(100%);
+  transition: transform var(--forge-duration-moderate, 220ms) ease-out;
+}
+.drawer.is-open { transform: translateX(0); }
+.drawer--lg { max-width: 720px; }
+
+.drawer__scrim {
+  position: fixed; inset: 0;
+  background-color: rgba(0,0,0,var(--forge-opacity-scrim, 0.6));
+  z-index: calc(var(--forge-z-modal, 300) - 1);
+  opacity: 0; pointer-events: none;
+  transition: opacity var(--forge-duration-standard, 150ms) ease-out;
+}
+.drawer--modal.is-open ~ .drawer__scrim,
+.drawer__scrim.is-open { opacity: 1; pointer-events: auto; }
+
+.drawer__header {
+  display: flex; align-items: center; gap: var(--forge-space-2);
+  padding: var(--forge-space-4) var(--forge-space-5);
+  border-bottom: 1px solid var(--forge-color-border-subtle);
+}
+.drawer__title { font-size: 1.125rem; font-weight: 600; letter-spacing: -0.015em; margin: 0; }
+.drawer__close { margin-left: auto; color: var(--forge-color-text-tertiary); }
+
+.drawer__body { flex: 1; overflow-y: auto; padding: var(--forge-space-4) var(--forge-space-5); }
+
+.drawer__footer {
+  display: flex; justify-content: flex-end; gap: var(--forge-space-2);
+  padding: var(--forge-space-3) var(--forge-space-5);
+  border-top: 1px solid var(--forge-color-border-subtle);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drawer { transition: none; }
+}

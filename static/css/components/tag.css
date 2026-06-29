@@ -1,0 +1,26 @@
+/* Tag — label or removable token. */
+
+.tag {
+  display: inline-flex; align-items: center; gap: var(--forge-space-1);
+  height: 22px;
+  padding: 0 var(--forge-space-2);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  border-radius: var(--forge-radius-pill);
+  background-color: var(--forge-color-surface-base);
+  color: var(--forge-color-text-primary);
+  border: 1px solid var(--forge-color-border-subtle);
+}
+.tag--brand   { background-color: var(--forge-color-brand-subtle); color: var(--forge-color-brand-default); border-color: transparent; }
+.tag--success { background-color: var(--forge-color-success-subtle); color: var(--forge-color-success-text); border-color: transparent; }
+.tag--warning { background-color: var(--forge-color-warning-subtle); color: var(--forge-color-warning-text); border-color: transparent; }
+.tag--danger  { background-color: var(--forge-color-danger-subtle); color: var(--forge-color-danger-text); border-color: transparent; }
+.tag__close {
+  width: 14px; height: 14px;
+  display: inline-flex; align-items: center; justify-content: center;
+  margin-right: -4px;
+  border-radius: 50%;
+  color: inherit;
+  opacity: var(--forge-opacity-muted, 0.72);
+}
+.tag__close:hover { opacity: 1; background-color: rgba(0,0,0,0.06); }

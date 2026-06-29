@@ -1,0 +1,39 @@
+{% comment %}Step 4 — Branch setup{% endcomment %}
+{% load marketing_extras %}
+<div x-show="step === 4" x-transition.opacity.duration.200ms x-cloak>
+
+  <header class="mb-7">
+    <p class="text-xs font-semibold tracking-[0.18em] uppercase text-neutral-500 mb-2">Step 4 of 4</p>
+    <h2 class="text-2xl font-bold tracking-tight text-neutral-900">Set up your first branch</h2>
+    <p class="mt-1.5 text-sm text-neutral-500">Most restaurants start with one location — you can add more anytime from settings.</p>
+  </header>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    {% include "marketing/register/_field.html" with name="branch-branch_name" label="Branch name" placeholder="Main outlet" required=True value=form_branch.branch_name.value errors=form_branch.branch_name.errors %}
+    {% include "marketing/register/_field.html" with name="branch-branch_code" label="Branch code" placeholder="MAIN" required=True hint="Short alphanumeric identifier shown on invoices." value=form_branch.branch_code.value errors=form_branch.branch_code.errors %}
+
+    {% choices_for form_branch "currency" as currency_choices %}
+    {% include "marketing/register/_select.html" with name="branch-currency" label="Default currency" required=True choices=currency_choices value=form_branch.currency.value|default:"INR" errors=form_branch.currency.errors %}
+
+    {% choices_for form_branch "timezone" as tz_choices %}
+    {% include "marketing/register/_select.html" with name="branch-timezone" label="Time zone" required=True choices=tz_choices value=form_branch.timezone.value|default:"Asia/Kolkata" errors=form_branch.timezone.errors %}
+
+    {% include "marketing/register/_field.html" with name="branch-gstin" label="GSTIN" placeholder="29ABCDE1234F1Z5" hint="Optional — required for GST-compliant invoicing in India." value=form_branch.gstin.value errors=form_branch.gstin.errors span="sm:col-span-2" %}
+  </div>
+
+  <div class="mt-6 pt-6 border-t border-neutral-100">
+    <label class="flex items-start gap-3 cursor-pointer">
+      <input id="id_branch-accept_terms" name="branch-accept_terms" type="checkbox" required
+             {% if form_branch.accept_terms.value %}checked{% endif %}
+             class="mt-0.5 w-4 h-4 rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900/20">
+      <span class="text-sm text-neutral-700">
+        I agree to the <a href="#" class="font-semibold text-neutral-900 hover:underline">Terms of Service</a> and <a href="#" class="font-semibold text-neutral-900 hover:underline">Privacy Policy</a>.
+      </span>
+    </label>
+    {% if form_branch.accept_terms.errors %}
+      <p class="mt-1.5 text-xs text-red-600 flex items-center gap-1">
+        <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i>{{ form_branch.accept_terms.errors.0 }}
+      </p>
+    {% endif %}
+  </div>
+</div>

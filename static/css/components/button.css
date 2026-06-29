@@ -1,0 +1,129 @@
+/* Button — primary action vocabulary. Standardized to modern New Order style. */
+
+.btn, 
+.btn--primary, .btn-primary, 
+.btn--secondary, .btn-secondary, 
+.btn--danger, .btn-danger, 
+.btn--success, .btn-success, 
+.btn--warning, .btn-warning, 
+.btn--ghost, .btn-ghost {
+  display: inline-flex; 
+  align-items: center; 
+  justify-content: center;
+  gap: 0.5rem; /* gap-2 */
+  padding: 0.5rem 1rem; /* px-4 py-2 */
+  border-radius: 0.5rem; /* rounded-lg */
+  font-size: 0.875rem; /* text-sm */
+  font-weight: 500; /* font-medium */
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-sm */
+  border: 1px solid transparent;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 150ms ease-out,
+    color 150ms ease-out,
+    border-color 150ms ease-out,
+    transform 150ms ease-out;
+  user-select: none;
+}
+.btn:active:not(:disabled),
+.btn--primary:active:not(:disabled), .btn-primary:active:not(:disabled),
+.btn--secondary:active:not(:disabled), .btn-secondary:active:not(:disabled),
+.btn--danger:active:not(:disabled), .btn-danger:active:not(:disabled),
+.btn--ghost:active:not(:disabled), .btn-ghost:active:not(:disabled) { 
+  transform: scale(0.98); 
+}
+@media (prefers-reduced-motion: reduce) {
+  .btn { transition: none; }
+  .btn:active { transform: none; }
+}
+
+/* Variants (Supporting both BEM -- and single - for compatibility) */
+.btn--primary, .btn-primary {
+  background-color: var(--forge-color-brand-default);
+  color: #FFFFFF;
+}
+.btn--primary:hover, .btn-primary:hover { background-color: var(--forge-color-brand-hover); }
+.btn--primary:active, .btn-primary:active { background-color: var(--forge-color-brand-pressed); }
+
+.btn--secondary, .btn-secondary {
+  background-color: var(--forge-color-surface-raised);
+  color: var(--forge-color-text-primary);
+  border: 1px solid var(--forge-color-border-default);
+}
+.btn--secondary:hover, .btn-secondary:hover { background-color: var(--forge-color-surface-raised); }
+.btn--secondary:active, .btn-secondary:active { background-color: var(--forge-color-surface-row-hover); }
+
+.btn--ghost, .btn-ghost {
+  background-color: transparent;
+  color: var(--forge-color-text-primary);
+  box-shadow: none;
+}
+.btn--ghost:hover, .btn-ghost:hover { background-color: var(--forge-color-surface-row-hover); }
+
+.btn--danger, .btn-danger {
+  background-color: var(--forge-color-danger-default);
+  color: #FFFFFF;
+}
+.btn--danger:hover, .btn-danger:hover { filter: brightness(0.95); }
+
+.btn--success, .btn-success {
+  background-color: var(--forge-color-success-default);
+  color: #FFFFFF;
+}
+
+.btn--warning, .btn-warning {
+  background-color: #F59E0B; /* Semantic Warning */
+  color: #FFFFFF;
+}
+.btn--warning:hover, .btn-warning:hover { background-color: #D97706; }
+
+.btn--link, .btn-link {
+  background-color: transparent;
+  color: var(--forge-color-brand-default);
+  height: auto; padding: 0; border-radius: 0; box-shadow: none;
+}
+.btn--link:hover, .btn-link:hover { text-decoration: underline; }
+
+/* Sizes. */
+.btn--sm, .btn-sm { padding: 0.25rem 0.75rem; font-size: 0.75rem; }
+.btn--lg, .btn-lg { padding: 0.75rem 1.5rem; font-size: 1rem; }
+.btn--xl, .btn-xl { padding: 1rem 2rem; font-size: 1rem; }
+
+/* Full-width modifier. */
+.btn--block, .btn-block, .w-full { width: 100%; }
+
+/* Icon-only — square, accessible name via aria-label required. */
+.btn--icon, .btn-icon {
+  width: 36px; padding: 0; height: 36px;
+}
+.btn--icon.btn--sm, .btn-icon.btn-sm { width: 28px; height: 28px; }
+.btn--icon.btn--lg, .btn-icon.btn-lg { width: 44px; height: 44px; }
+
+/* Loading state. */
+.btn[aria-busy="true"] {
+  pointer-events: none; position: relative; color: transparent;
+}
+.btn[aria-busy="true"]::after {
+  content: "";
+  position: absolute; inset: 0; margin: auto;
+  width: 14px; height: 14px;
+  border: 2px solid currentColor; border-right-color: transparent;
+  border-radius: 50%;
+  color: inherit;
+  animation: forge-spin 0.6s linear infinite;
+}
+.btn--primary[aria-busy="true"]::after, .btn-primary[aria-busy="true"]::after { color: #FFFFFF; }
+.btn--secondary[aria-busy="true"]::after, .btn-secondary[aria-busy="true"]::after,
+.btn--ghost[aria-busy="true"]::after, .btn-ghost[aria-busy="true"]::after { color: var(--forge-color-text-primary); }
+
+@keyframes forge-spin { to { transform: rotate(360deg); } }
+
+/* Disabled. */
+.btn:disabled,
+.btn[aria-disabled="true"] {
+  opacity: 0.5;
+  pointer-events: none;
+  cursor: not-allowed;
+  box-shadow: none;
+}

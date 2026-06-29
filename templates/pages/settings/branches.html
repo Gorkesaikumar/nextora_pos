@@ -1,0 +1,80 @@
+{% extends "layouts/settings.html" %}
+{# Sample Settings page — Branches list with sticky save bar pattern. #}
+
+
+{% block title %}Branches · Settings{% endblock %}
+{% block settings_title %}Branches{% endblock %}
+{% block settings_desc %}Restaurants and outlets under this tenant. The default branch is used when a device hasn't been pinned.{% endblock %}
+
+{% block settings_primary %}
+  <button type="button" class="btn-primary">+ Add branch</button>
+{% endblock %}
+
+{% block settings_nav %}
+  <a href="#" class="settings-nav__item">Tenant</a>
+  <a href="#" class="settings-nav__item" aria-current="page">Branches</a>
+  <a href="#" class="settings-nav__item">Roles &amp; permissions</a>
+  <a href="#" class="settings-nav__item">Catalog</a>
+  <a href="#" class="settings-nav__item">Inventory</a>
+  <a href="#" class="settings-nav__item">Billing</a>
+  <a href="#" class="settings-nav__item">Devices</a>
+  <a href="#" class="settings-nav__item">Integrations</a>
+  <a href="#" class="settings-nav__item">API keys</a>
+  <a href="#" class="settings-nav__item">Audit log</a>
+{% endblock %}
+
+{% block settings_body %}
+  <div class="table-wrap">
+    <div class="table-toolbar">
+      <label class="search" aria-label="Search branches">
+        <svg class="search__icon" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M11 11l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <input type="search" class="search__input" placeholder="Search code or name…">
+      </label>
+      <span class="table-toolbar__spacer"></span>
+      <span class="search__count">3 branches</span>
+    </div>
+
+    <table class="table" aria-label="Branches">
+      <thead>
+        <tr>
+          <th scope="col">Code</th>
+          <th scope="col">Name</th>
+          <th scope="col">Address</th>
+          <th scope="col">Status</th>
+          <th scope="col" class="num">Devices</th>
+          <th scope="col">Default</th>
+          <th scope="col"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="mono">BR-01</span></td>
+          <td>Andheri West</td>
+          <td>Veera Desai Rd, Mumbai 400053</td>
+          <td><span class="chip chip--success"><span class="chip__dot" aria-hidden="true"></span>Active</span></td>
+          <td class="num">8</td>
+          <td><span class="tag tag--brand">Default</span></td>
+          <td><a class="btn-ghost" href="#">Edit</a></td>
+        </tr>
+        <tr>
+          <td><span class="mono">BR-02</span></td>
+          <td>Bandra East</td>
+          <td>Linking Rd, Mumbai 400050</td>
+          <td><span class="chip chip--success"><span class="chip__dot" aria-hidden="true"></span>Active</span></td>
+          <td class="num">5</td>
+          <td>—</td>
+          <td><a class="btn-ghost" href="#">Edit</a></td>
+        </tr>
+        <tr>
+          <td><span class="mono">BR-03</span></td>
+          <td>Powai</td>
+          <td>Hiranandani Gardens, Mumbai 400076</td>
+          <td><span class="chip chip--warning"><span class="chip__dot" aria-hidden="true"></span>Setup pending</span></td>
+          <td class="num">0</td>
+          <td>—</td>
+          <td><a class="btn-ghost" href="#">Edit</a></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+{% endblock %}

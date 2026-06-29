@@ -1,0 +1,79 @@
+{% extends "layouts/dashboard.html" %}
+
+{% block page_title %}Purchase Orders{% endblock %}
+{% block page_subtitle %}<p class="text-caption text-neutral-500 mt-1">Raise orders to suppliers and receive stock against them.</p>{% endblock %}
+{% block toasts %}{% include "inventory/_toasts.html" %}{% endblock %}
+
+{% block primary_action %}
+<a href="{% url 'inventory:purchase_create' %}" class="btn-primary hover:scale-[1.02] active:scale-[0.98]">
+  <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+  New Purchase Order
+</a>
+{% endblock %}
+
+{% block filter_strip %}
+<form method="GET" action="{% url 'inventory:purchase_list' %}" class="flex flex-col sm:flex-row items-center gap-4 mb-6">
+  <div class="relative flex-grow max-w-md w-full">
+    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+      <svg class="w-5 h-5 text-neutral-450" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+    </div>
+    <input type="search" name="q" class="w-full pl-11 pr-4 h-11 bg-white dark:bg-neutral-dark-100 border border-neutral-300 dark:border-neutral-dark-300 rounded-xl text-sm shadow-sm placeholder-neutral-400 focus:bg-white focus:ring-2 focus:ring-neutral-900/15 focus:border-neutral-900 dark:focus:border-white transition-all dark:text-white" placeholder="Search PO number or supplier..." value="{{ current_q }}">
+  </div>
+  <div class="w-full sm:w-56 relative">
+    <select name="status" onchange="this.form.submit()" class="w-full h-11 pl-4 pr-10 bg-white dark:bg-neutral-dark-100 border border-neutral-300 dark:border-neutral-dark-300 rounded-xl text-sm shadow-sm focus:ring-2 focus:ring-neutral-900/15 focus:border-neutral-900 transition-all dark:text-white appearance-none cursor-pointer">
+      <option value="">All Statuses</option>
+      {% for value, label in statuses %}
+      <option value="{{ value }}" {% if current_status == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <div class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none">
+      <svg class="w-4 h-4 text-neutral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+    </div>
+  </div>
+  <button type="submit" class="hidden">Search</button>
+</form>
+{% endblock %}
+
+{% block workspace %}
+<div class="bg-white dark:bg-neutral-dark-100 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-dark-200 overflow-hidden mt-2">
+  <div class="overflow-x-auto">
+    <table class="w-full text-left border-collapse">
+      <thead>
+        <tr class="bg-neutral-50 dark:bg-neutral-dark-200 border-b border-neutral-200 dark:border-neutral-dark-300">
+          <th class="px-6 py-4 text-xs font-bold text-neutral-900 dark:text-neutral-100 uppercase tracking-wider">PO Number</th>
+          <th class="px-6 py-4 text-xs font-bold text-neutral-900 dark:text-neutral-100 uppercase tracking-wider">Supplier</th>
+          <th class="px-6 py-4 text-xs font-bold text-neutral-900 dark:text-neutral-100 uppercase tracking-wider">Warehouse</th>
+          <th class="px-6 py-4 text-xs font-bold text-neutral-900 dark:text-neutral-100 uppercase tracking-wider">Expected</th>
+          <th class="px-6 py-4 text-xs font-bold text-neutral-900 dark:text-neutral-100 uppercase tracking-wider text-right">Total</th>
+          <th class="px-6 py-4 text-xs font-bold text-neutral-900 dark:text-neutral-100 uppercase tracking-wider text-center">Status</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-neutral-100 dark:divide-neutral-dark-300">
+        {% for po in orders %}
+        <tr class="hover:bg-brand-50/50 dark:hover:bg-neutral-dark-200 transition-colors cursor-pointer" onclick="window.location='{% url 'inventory:purchase_detail' po.pk %}'">
+          <td class="px-6 py-4">
+            <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-neutral-100 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200 font-mono">{{ po.order_number }}</span>
+          </td>
+          <td class="px-6 py-4 text-sm font-semibold text-neutral-900 dark:text-white">{{ po.supplier.name }}</td>
+          <td class="px-6 py-4 text-sm text-neutral-700 dark:text-neutral-300">{{ po.warehouse.code }}</td>
+          <td class="px-6 py-4 text-sm text-neutral-700 dark:text-neutral-300">{{ po.expected_delivery_date|date:"d M Y"|default:"—" }}</td>
+          <td class="px-6 py-4 text-sm font-semibold text-neutral-900 dark:text-white text-right tabular-nums">{{ po.total_amount|floatformat:2 }}</td>
+          <td class="px-6 py-4 text-center">{% include "inventory/_po_status.html" with status=po.status %}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" class="px-6 py-12 text-center">
+            <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 mb-4">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+            </div>
+            <h3 class="text-sm font-bold text-neutral-900 dark:text-white">No purchase orders yet</h3>
+            <p class="mt-1 text-sm text-neutral-800 dark:text-neutral-350">Create a purchase order to replenish stock from a supplier.</p>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include "inventory/_pagination.html" %}
+</div>
+{% endblock %}

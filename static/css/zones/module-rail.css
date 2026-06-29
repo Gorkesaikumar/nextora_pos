@@ -1,0 +1,191 @@
+/* Module Rail (Sidebar) — primary nav, RBAC-filtered. */
+
+.module-rail {
+  display: flex;
+  flex-direction: column;
+  padding: var(--forge-space-2) var(--forge-space-1);
+  background-color: var(--forge-color-surface-sidebar);
+  border-right: 1px solid var(--forge-color-border-subtle);
+  transition: width 300ms ease-in-out;
+  width: var(--forge-zone-module-rail-width, 64px);
+}
+
+.module-rail__brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column; /* Stack logo and hamburger when collapsed */
+  gap: var(--forge-space-3);
+  padding: var(--forge-space-2) 0 var(--forge-space-3) 0;
+  color: var(--forge-color-text-primary);
+  overflow: hidden;
+}
+
+.module-rail__brand-label {
+  display: none;
+  flex-direction: column;
+  line-height: 1.25;
+  min-width: 0;
+}
+
+.module-rail__group {
+  display: flex; flex-direction: column;
+  gap: var(--forge-space-1);
+  padding: var(--forge-space-2) 0;
+  border-top: 1px solid var(--forge-color-border-subtle);
+}
+.module-rail__group:first-of-type { border-top: 0; }
+
+.module-rail__group-label {
+  display: none;          /* visible only in expanded mode */
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--forge-color-text-tertiary);
+  padding: 0 var(--forge-space-2) var(--forge-space-1);
+}
+
+.module-rail__item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center; /* Centered in collapsed mode */
+  gap: var(--forge-space-3);
+  padding: var(--forge-space-2);
+  min-height: 44px;
+  border-radius: var(--forge-radius-card);
+  color: var(--forge-color-text-secondary);
+  text-decoration: none;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  transition: background-color var(--forge-duration-fast, 80ms) ease-out, color var(--forge-duration-fast, 80ms) ease-out;
+}
+.module-rail__item:hover {
+  background-color: var(--forge-color-surface-row-hover);
+  color: var(--forge-color-text-primary);
+}
+
+/* Active item — left accent rail using brand color. */
+.module-rail__item[aria-current="page"] {
+  color: var(--forge-color-brand-default);
+  background-color: var(--forge-color-surface-row-selected);
+}
+.module-rail__item[aria-current="page"]::before {
+  content: "";
+  position: absolute;
+  left: -1px; top: 8px; bottom: 8px;
+  width: 3px;
+  border-radius: 0 var(--forge-radius-pill) var(--forge-radius-pill) 0;
+  background-color: var(--forge-color-brand-default);
+}
+
+.module-rail__item-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: inherit; /* Inherit color dynamically from parent item */
+  transition: color var(--forge-duration-fast, 80ms) ease-out;
+}
+
+.module-rail__item-label {
+  display: none;          /* visible only in expanded mode */
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.module-rail__item-badge {
+  display: none;          /* visible only in expanded mode */
+  font-size: 0.6875rem;
+  background-color: var(--forge-color-brand-default);
+  color: var(--forge-color-brand-on-brand, #fff);
+  padding: 2px 6px;
+  border-radius: var(--forge-radius-pill);
+}
+
+/* Expanded variant — toggled on html.sidebar-expanded by JS or default. */
+html.sidebar-expanded .module-rail {
+  width: var(--forge-zone-module-rail-expanded, 220px);
+}
+html.sidebar-expanded .module-rail__brand {
+  flex-direction: row;
+  justify-content: space-between;
+  padding: 0 0 var(--forge-space-3) 0;
+}
+html.sidebar-expanded .module-rail__brand-label { display: flex; }
+html.sidebar-expanded .module-rail__group-label { display: block; }
+
+html.sidebar-expanded .module-rail__item {
+  justify-content: flex-start; /* Left-align when expanded */
+  padding: var(--forge-space-2) var(--forge-space-3);
+}
+html.sidebar-expanded .module-rail__item-label,
+html.sidebar-expanded .module-rail__item-badge { display: inline-flex; }
+
+.module-rail__footer {
+  margin-top: auto;
+  display: flex; flex-direction: column; gap: var(--forge-space-1);
+  padding-top: var(--forge-space-2);
+  border-top: 1px solid var(--forge-color-border-subtle);
+}
+
+/* Locked item — soft-locked permission denied (Component Inventory §6.4). */
+.module-rail__item--locked {
+  opacity: var(--forge-opacity-muted, 0.72);
+  cursor: not-allowed;
+}
+.module-rail__item--locked::after {
+  content: "🔒";
+  font-size: 0.6875rem;
+  margin-left: auto;
+}
+
+/* Bottom tab bar below md. */
+@media (max-width: 767px) {
+  .module-rail {
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    padding: var(--forge-space-1);
+    border-right: 0;
+    border-top: 1px solid var(--forge-color-border-subtle);
+  }
+  .module-rail__brand,
+  .module-rail__group-label,
+  .module-rail__footer { display: none; }
+  .module-rail__group {
+    flex-direction: row;
+    border-top: 0;
+    padding: 0;
+    gap: var(--forge-space-1);
+    flex: 1;
+    justify-content: space-around;
+  }
+  .module-rail__item {
+    flex-direction: column;
+    min-height: 56px;
+    padding: 4px 8px;
+    gap: 2px;
+    border-radius: var(--forge-radius-sharp);
+    font-size: 0.6875rem;
+  }
+  .module-rail__item-label { display: block; }
+  .module-rail__item[aria-current="page"]::before {
+    left: 25%; right: 25%; top: -1px; bottom: auto;
+    width: auto; height: 3px;
+    border-radius: 0 0 var(--forge-radius-pill) var(--forge-radius-pill);
+  }
+}
+
+/* Hide scrollbar for module-sidebar globally */
+#module-sidebar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+#module-sidebar::-webkit-scrollbar {
+  display: none;
+}

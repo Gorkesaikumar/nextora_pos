@@ -1,0 +1,13 @@
+/* Page Footer — non-sticky, used by back-office layouts (Settings/Reports/Auth).
+ * Distinct from the Status Rail. */
+
+.page-footer {
+  padding: var(--forge-space-6) var(--forge-space-6);
+  border-top: 1px solid var(--forge-color-border-subtle);
+  color: var(--forge-color-text-tertiary);
+  font-size: 0.6875rem;
+  display: flex; align-items: center; flex-wrap: wrap;
+  gap: var(--forge-space-4);
+}
+.page-footer__spacer { flex: 1; }
+.page-footer a { color: var(--forge-color-text-secondary); }

@@ -1,0 +1,88 @@
+{% comment %}Step 1 — Account info{% endcomment %}
+<div x-show="step === 1" x-transition.opacity.duration.200ms>
+
+  <header class="mb-7">
+    <p class="text-xs font-semibold tracking-[0.18em] uppercase text-neutral-500 mb-2">Step 1 of 4</p>
+    <h2 class="text-2xl font-bold tracking-tight text-neutral-900">Tell us who you are</h2>
+    <p class="mt-1.5 text-sm text-neutral-500">You'll use this email to sign in. Your password keeps the workspace secure.</p>
+  </header>
+
+  {% if form_account.non_field_errors %}
+    <div class="mb-5 flex items-start gap-3 p-3.5 rounded-xl border border-red-200 bg-red-50">
+      <i data-lucide="alert-triangle" class="w-4 h-4 mt-0.5 text-red-600 shrink-0"></i>
+      <p class="text-sm text-red-700 font-medium">{{ form_account.non_field_errors.0 }}</p>
+    </div>
+  {% endif %}
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    {% include "marketing/register/_field.html" with name="account-first_name" label="First name" placeholder="John" required=True autocomplete="given-name" value=form_account.first_name.value errors=form_account.first_name.errors %}
+    {% include "marketing/register/_field.html" with name="account-last_name" label="Last name" placeholder="Doe" required=True autocomplete="family-name" value=form_account.last_name.value errors=form_account.last_name.errors %}
+
+    {% include "marketing/register/_field.html" with name="account-email" label="Business email" type="email" placeholder="you@restaurant.com" required=True autocomplete="email" value=form_account.email.value errors=form_account.email.errors %}
+    {% include "marketing/register/_field.html" with name="account-phone" label="Phone number" type="tel" placeholder="+91 98765 43210" required=True autocomplete="tel" value=form_account.phone.value errors=form_account.phone.errors %}
+
+    <div x-data="{ show: false }">
+      <label for="id_account-password" class="block text-sm font-semibold text-neutral-800 mb-1.5">Password <span class="text-red-500">*</span></label>
+      <div class="relative">
+        <input id="id_account-password" name="account-password" :type="show ? 'text' : 'password'"
+               value="{{ form_account.password.value|default:'' }}"
+               required autocomplete="new-password" minlength="12"
+               x-on:input="$dispatch('password-strength', $event.target.value)"
+               {% if form_account.password.errors %}aria-invalid="true" aria-describedby="err_account-password"{% endif %}
+               class="block w-full pl-3.5 pr-10 py-2.5 text-sm bg-white border rounded-xl text-neutral-900 placeholder-neutral-400 shadow-sm focus:outline-none transition-all
+                      {% if form_account.password.errors %}border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-500/10{% else %}border-neutral-200 focus:border-neutral-900 focus:ring-2 focus:ring-neutral-900/10{% endif %}"
+               placeholder="Min. 12 characters">
+        <button type="button" @click="show = !show" class="absolute inset-y-0 right-0 pr-3 flex items-center text-neutral-400 hover:text-neutral-700">
+          <i data-lucide="eye" class="w-4 h-4" x-show="!show"></i>
+          <i data-lucide="eye-off" class="w-4 h-4" x-show="show" x-cloak></i>
+        </button>
+      </div>
+      {% if form_account.password.errors %}
+        <p id="err_account-password" class="mt-1.5 text-xs text-red-600 flex items-center gap-1">
+          <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i>{{ form_account.password.errors.0 }}
+        </p>
+      {% endif %}
+
+      {# Strength meter #}
+      <div class="mt-2" x-data="{ score: 0, label: '' }" x-on:password-strength.window="
+              const v = $event.detail || '';
+              let s = 0;
+              if (v.length >= 12) s++;
+              if (/[A-Z]/.test(v) && /[a-z]/.test(v)) s++;
+              if (/[0-9]/.test(v)) s++;
+              if (/[^A-Za-z0-9]/.test(v)) s++;
+              score = s;
+              label = ['Too short','Weak','Fair','Good','Strong'][Math.min(s, 4)];">
+        <div class="flex gap-1">
+          <template x-for="i in 4">
+            <div class="h-1 flex-1 rounded-full transition-colors"
+                 :class="i <= score ? (score >= 3 ? 'bg-emerald-500' : score == 2 ? 'bg-amber-500' : 'bg-red-500') : 'bg-neutral-200'"></div>
+          </template>
+        </div>
+        <p class="mt-1.5 text-[11px] text-neutral-500" x-text="label || '12+ chars, mix of case, numbers and symbols.'"></p>
+      </div>
+    </div>
+
+    <div x-data="{ show: false }">
+      <label for="id_account-confirm_password" class="block text-sm font-semibold text-neutral-800 mb-1.5">Confirm password <span class="text-red-500">*</span></label>
+      <div class="relative">
+        <input id="id_account-confirm_password" name="account-confirm_password" :type="show ? 'text' : 'password'"
+               value="{{ form_account.confirm_password.value|default:'' }}"
+               required autocomplete="new-password" minlength="12"
+               {% if form_account.confirm_password.errors %}aria-invalid="true" aria-describedby="err_account-confirm_password"{% endif %}
+               class="block w-full pl-3.5 pr-10 py-2.5 text-sm bg-white border rounded-xl text-neutral-900 placeholder-neutral-400 shadow-sm focus:outline-none transition-all
+                      {% if form_account.confirm_password.errors %}border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-500/10{% else %}border-neutral-200 focus:border-neutral-900 focus:ring-2 focus:ring-neutral-900/10{% endif %}"
+               placeholder="Repeat password">
+        <button type="button" @click="show = !show" class="absolute inset-y-0 right-0 pr-3 flex items-center text-neutral-400 hover:text-neutral-700">
+          <i data-lucide="eye" class="w-4 h-4" x-show="!show"></i>
+          <i data-lucide="eye-off" class="w-4 h-4" x-show="show" x-cloak></i>
+        </button>
+      </div>
+      {% if form_account.confirm_password.errors %}
+        <p id="err_account-confirm_password" class="mt-1.5 text-xs text-red-600 flex items-center gap-1">
+          <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i>{{ form_account.confirm_password.errors.0 }}
+        </p>
+      {% endif %}
+    </div>
+  </div>
+</div>

@@ -1,0 +1,26 @@
+/* Skeleton — placeholder that matches final layout. Reserve size to prevent CLS. */
+
+.skel {
+  background: var(--forge-skeleton-gradient,
+    linear-gradient(90deg,
+      var(--forge-color-surface-base) 0%,
+      var(--forge-color-surface-row-hover) 50%,
+      var(--forge-color-surface-base) 100%));
+  background-size: 200% 100%;
+  animation: forge-skel-shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--forge-radius-sharp);
+}
+.skel--text  { height: 0.8em; width: 100%; }
+.skel--line  { height: 12px; }
+.skel--block { height: 80px; }
+.skel--row   { height: 44px; }
+.skel--avatar{ width: 36px; height: 36px; border-radius: 50%; }
+.skel--chip  { width: 60px; height: 22px; border-radius: var(--forge-radius-pill); }
+
+@keyframes forge-skel-shimmer {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skel { animation: none; background: var(--forge-color-surface-base); }
+}

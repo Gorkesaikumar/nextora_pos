@@ -1,0 +1,22 @@
+/* Breadcrumb — last crumb plain text, not a link. */
+
+.breadcrumb {
+  display: inline-flex; align-items: center;
+  gap: var(--forge-space-1);
+  font-size: 0.8125rem;
+}
+.breadcrumb__item {
+  color: var(--forge-color-text-secondary);
+}
+.breadcrumb__item:hover { color: var(--forge-color-text-primary); }
+.breadcrumb__sep {
+  color: var(--forge-color-text-tertiary);
+  margin: 0 var(--forge-space-1);
+  user-select: none;
+}
+.breadcrumb__item[aria-current="page"] {
+  color: var(--forge-color-text-primary);
+  font-weight: 600;
+  cursor: default;
+  pointer-events: none;
+}

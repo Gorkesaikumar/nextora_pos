@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{# Auth layout — no operational chrome at all. #}
+
+
+{% block body %}
+  <main id="main" class="auth-shell" tabindex="-1">
+    <div class="auth-card">
+      <div class="auth-card__brand">
+        <span aria-hidden="true">◆</span>&nbsp;Nextora
+      </div>
+
+      <div>
+        <h1 class="auth-card__title">{% block auth_title %}Sign in{% endblock %}</h1>
+        {% block auth_subtitle %}{% endblock %}
+      </div>
+
+      {% block auth_body %}{% endblock %}
+
+      <div class="auth-card__footer">
+        <span>{% block auth_footer_left %}English (IN){% endblock %}</span>
+        <span>{% block auth_footer_right %}v{{ app_version|default:'1.0.0' }}{% endblock %}</span>
+      </div>
+    </div>
+  </main>
+{% endblock %}

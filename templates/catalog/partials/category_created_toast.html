@@ -1,0 +1,18 @@
+<div id="toast-region" hx-swap-oob="beforeend">
+  <div x-data="{ show: true, init() { setTimeout(() => this.show = false, 4000) } }"
+       x-show="show"
+       class="flex items-center gap-3 p-4 mb-3 rounded-card shadow-[0_4px_12px_rgba(0,0,0,0.1)] border bg-semantic-success-subtle border-semantic-success text-semantic-success-dark transition-all duration-300"
+       x-transition:leave="transition ease-in duration-100"
+       x-transition:leave-start="opacity-100"
+       x-transition:leave-end="opacity-0">
+    <div class="flex-shrink-0">
+      <svg class="h-5 w-5 text-semantic-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    </div>
+    <div class="flex-1 text-body-strong">Category "{{ category.name }}" created successfully!</div>
+    <button @click="show = false" class="flex-shrink-0 ml-4 focus:outline-none opacity-50 hover:opacity-100 transition-opacity">
+      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+    </button>
+  </div>
+</div>

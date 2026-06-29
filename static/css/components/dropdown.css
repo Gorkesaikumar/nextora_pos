@@ -1,0 +1,43 @@
+/* Dropdown / Menu — overlay surface, the only shadow tier. */
+
+.dropdown {
+  position: absolute;
+  min-width: 200px;
+  background-color: var(--forge-color-surface-overlay);
+  border: 1px solid var(--forge-color-border-subtle);
+  border-radius: var(--forge-radius-card);
+  box-shadow: var(--forge-shadow-overlay);
+  padding: var(--forge-space-1);
+  z-index: var(--forge-z-dropdown, 100);
+}
+.dropdown__group { padding: var(--forge-space-1) 0; border-top: 1px solid var(--forge-color-border-subtle); }
+.dropdown__group:first-child { border-top: 0; }
+.dropdown__group-label {
+  padding: var(--forge-space-1) var(--forge-space-2);
+  font-size: 0.6875rem; color: var(--forge-color-text-tertiary);
+  text-transform: uppercase; letter-spacing: 0.06em;
+}
+.dropdown__item {
+  display: flex; align-items: center; gap: var(--forge-space-2);
+  padding: var(--forge-space-2);
+  border-radius: var(--forge-radius-sharp);
+  color: var(--forge-color-text-primary);
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+.dropdown__item:hover, .dropdown__item:focus-visible {
+  background-color: var(--forge-color-surface-row-hover);
+  outline: none;
+}
+.dropdown__item--danger { color: var(--forge-color-danger-text); }
+.dropdown__item-shortcut {
+  margin-left: auto;
+  font-family: var(--forge-type-family-mono);
+  font-size: 0.6875rem;
+  color: var(--forge-color-text-tertiary);
+}
+.dropdown__divider {
+  height: 1px;
+  background-color: var(--forge-color-border-subtle);
+  margin: var(--forge-space-1) 0;
+}

@@ -1,0 +1,31 @@
+/* Status Chip — entity status. Color paired with dot/icon and label.
+ * Use semantic--subtle backgrounds; reserve full intents for buttons. */
+
+.chip {
+  display: inline-flex; align-items: center; gap: var(--forge-space-1);
+  padding: 2px var(--forge-space-2);
+  border-radius: var(--forge-radius-sharp);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  background-color: var(--forge-color-surface-base);
+  color: var(--forge-color-text-primary);
+  white-space: nowrap;
+}
+.chip__dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background-color: currentColor;
+  flex-shrink: 0;
+}
+.chip--success { background-color: var(--forge-color-success-subtle); color: var(--forge-color-success-text); }
+.chip--warning { background-color: var(--forge-color-warning-subtle); color: var(--forge-color-warning-text); }
+.chip--danger  { background-color: var(--forge-color-danger-subtle);  color: var(--forge-color-danger-text); }
+.chip--info    { background-color: var(--forge-color-info-subtle);    color: var(--forge-color-info-text); }
+.chip--neutral { background-color: var(--forge-color-surface-base);   color: var(--forge-color-text-secondary); }
+
+/* Outline variant. */
+.chip--outline {
+  background-color: transparent;
+  border: 1px solid currentColor;
+}

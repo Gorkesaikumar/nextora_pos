@@ -1,0 +1,72 @@
+/* Tabs — horizontal & vertical. */
+
+.tabs {
+  display: flex; align-items: center;
+  gap: var(--forge-space-1);
+  border-bottom: 1px solid var(--forge-color-border-subtle);
+}
+.tab {
+  position: relative;
+  padding: var(--forge-space-2) var(--forge-space-3);
+  font-size: 0.8125rem; font-weight: 600;
+  color: var(--forge-color-text-secondary);
+  border-radius: var(--forge-radius-sharp) var(--forge-radius-sharp) 0 0;
+  cursor: pointer;
+}
+.tab:hover { color: var(--forge-color-text-primary); }
+.tab[aria-selected="true"] { color: var(--forge-color-brand-default); }
+.tab[aria-selected="true"]::after {
+  content: "";
+  position: absolute; left: var(--forge-space-3); right: var(--forge-space-3);
+  bottom: -1px; height: 2px;
+  background-color: var(--forge-color-brand-default);
+  border-radius: var(--forge-radius-pill);
+}
+.tab__count {
+  display: inline-flex; align-items: center;
+  margin-left: var(--forge-space-1);
+  padding: 0 var(--forge-space-2);
+  background-color: var(--forge-color-surface-base);
+  border-radius: var(--forge-radius-pill);
+  font-size: 0.6875rem;
+  font-weight: 600;
+}
+
+/* Pill / segmented variant. */
+.tabs--pill {
+  border-bottom: 0;
+  padding: 4px;
+  background-color: var(--forge-color-surface-base);
+  border-radius: var(--forge-radius-pill);
+  gap: 2px;
+  width: max-content;
+}
+.tabs--pill .tab {
+  padding: var(--forge-space-2) var(--forge-space-4);
+  border-radius: var(--forge-radius-pill);
+}
+.tabs--pill .tab[aria-selected="true"] {
+  background-color: var(--forge-color-surface-raised);
+  color: var(--forge-color-text-primary);
+}
+.tabs--pill .tab[aria-selected="true"]::after { display: none; }
+
+/* Vertical (Settings master). */
+.tabs--vertical {
+  flex-direction: column;
+  align-items: stretch;
+  border-bottom: 0;
+  border-right: 1px solid var(--forge-color-border-subtle);
+  padding-right: var(--forge-space-2);
+}
+.tabs--vertical .tab {
+  text-align: left;
+  border-radius: var(--forge-radius-sharp);
+}
+.tabs--vertical .tab[aria-selected="true"] {
+  background-color: var(--forge-color-surface-row-selected);
+}
+.tabs--vertical .tab[aria-selected="true"]::after {
+  left: auto; right: -2px; top: var(--forge-space-2); bottom: var(--forge-space-2);
+  width: 2px; height: auto;
+}

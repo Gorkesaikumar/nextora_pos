@@ -1,0 +1,40 @@
+/* Print — A4 documents (reports, statements). Strip zone chrome. */
+
+.print-page {
+  background-color: #FFFFFF;
+  color: #141414;
+  width: 210mm;
+  min-height: 297mm;
+  margin: 16px auto;
+  padding: 20mm 16mm;
+  box-shadow: var(--forge-shadow-overlay);
+  font-size: 12pt;
+}
+.print-page--landscape { width: 297mm; min-height: 210mm; }
+
+.print-header,
+.print-footer {
+  display: flex; justify-content: space-between; align-items: flex-end;
+  gap: var(--forge-space-4);
+  border-bottom: 1px solid #cbcbcb;
+  padding-bottom: 8mm; margin-bottom: 8mm;
+}
+.print-footer { border-bottom: 0; border-top: 1px solid #cbcbcb; padding: 8mm 0 0; margin: 8mm 0 0; font-size: 10pt; color: #5C5C5C; }
+
+.print-title { font-size: 16pt; font-weight: 700; letter-spacing: -0.02em; }
+.print-meta  { font-size: 10pt; color: #5C5C5C; }
+
+.print-section { margin-bottom: 10mm; }
+.print-section h2 { font-size: 13pt; margin: 0 0 4mm; font-weight: 600; }
+
+.print-table { width: 100%; border-collapse: collapse; font-size: 10pt; }
+.print-table th, .print-table td { border-bottom: 1px solid #E0E0E0; padding: 6px 8px; text-align: left; }
+.print-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+.print-table tr { page-break-inside: avoid; }
+
+@media print {
+  body, html { background: white !important; }
+  .print-page { box-shadow: none; margin: 0; }
+  @page { margin: 16mm; size: A4; }
+  .no-print { display: none !important; }
+}

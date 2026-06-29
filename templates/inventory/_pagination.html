@@ -1,0 +1,24 @@
+{% comment %} Shared list pagination footer. Expects ListView's page_obj / paginator. {% endcomment %}
+<div class="px-6 py-4 border-t border-neutral-200 dark:border-neutral-dark-300 flex items-center justify-between bg-neutral-50 dark:bg-neutral-dark-200">
+  <div class="text-sm text-neutral-900 dark:text-neutral-200 font-semibold">
+    {% if page_obj %}
+      Showing <span class="font-bold text-neutral-950 dark:text-white">{{ page_obj.start_index }}–{{ page_obj.end_index }}</span> of <span class="font-bold text-neutral-950 dark:text-white">{{ paginator.count }}</span>
+    {% else %}
+      <span class="font-bold text-neutral-950 dark:text-white">{{ object_list|length }}</span> result{{ object_list|length|pluralize }}
+    {% endif %}
+  </div>
+  {% if page_obj.has_other_pages %}
+  <div class="flex gap-2">
+    {% if page_obj.has_previous %}
+      <a href="?{% if request.GET.q %}q={{ request.GET.q|urlencode }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status|urlencode }}&{% endif %}{% if request.GET.low %}low={{ request.GET.low }}&{% endif %}page={{ page_obj.previous_page_number }}" class="px-4 py-2 text-sm font-medium rounded-lg border border-neutral-200 bg-white text-neutral-800 shadow-sm hover:bg-neutral-50 dark:bg-neutral-dark-100 dark:border-neutral-dark-300 dark:text-neutral-200">Previous</a>
+    {% else %}
+      <span class="px-4 py-2 text-sm font-medium rounded-lg border border-neutral-200 bg-neutral-50 text-neutral-400 dark:bg-neutral-dark-200 dark:border-neutral-dark-300 cursor-not-allowed">Previous</span>
+    {% endif %}
+    {% if page_obj.has_next %}
+      <a href="?{% if request.GET.q %}q={{ request.GET.q|urlencode }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status|urlencode }}&{% endif %}{% if request.GET.low %}low={{ request.GET.low }}&{% endif %}page={{ page_obj.next_page_number }}" class="px-4 py-2 text-sm font-medium rounded-lg border border-neutral-200 bg-white text-neutral-800 shadow-sm hover:bg-neutral-50 dark:bg-neutral-dark-100 dark:border-neutral-dark-300 dark:text-neutral-200">Next</a>
+    {% else %}
+      <span class="px-4 py-2 text-sm font-medium rounded-lg border border-neutral-200 bg-neutral-50 text-neutral-400 dark:bg-neutral-dark-200 dark:border-neutral-dark-300 cursor-not-allowed">Next</span>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>

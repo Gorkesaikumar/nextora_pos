@@ -1,0 +1,22 @@
+{% comment %}
+  Category filter chips. State lives in the Alpine $store.pos so the search box
+  and the chips stay in sync; each chip drives one htmx.ajax into #pos-grid.
+  Re-rendered on its own after a category is created (close-category-modal).
+{% endcomment %}
+<button type="button"
+        @click="$store.pos.cat = ''; $store.pos.reload()"
+        :class="$store.pos.cat === '' ? 'btn-primary' : 'btn-secondary'"
+        class="btn">
+  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+  All Items
+</button>
+
+{% for category in categories %}
+<button type="button"
+        @click="$store.pos.cat = '{{ category.id }}'; $store.pos.reload()"
+        :class="$store.pos.cat === '{{ category.id }}' ? 'btn-primary' : 'btn-secondary'"
+        class="btn">
+  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 11h18M5 11a7 7 0 0114 0M12 18v2m-7-2h14a1 1 0 001-1 1 1 0 00-1-1H5a1 1 0 00-1 1 1 1 0 001 1z"></path></svg>
+  {{ category.name }}
+</button>
+{% endfor %}

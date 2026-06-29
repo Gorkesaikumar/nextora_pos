@@ -1,0 +1,19 @@
+{% extends "components/modal.html" %}
+
+{% block modal_body %}
+  <form id="category-modal-form" 
+        hx-post="{% url 'catalog:category_create_ajax' %}" 
+        hx-target="#category-form-fields" 
+        hx-swap="innerHTML"
+        @close-category-modal.window="open = false">
+    {% csrf_token %}
+    <div id="category-form-fields">
+      {% include "catalog/partials/category_form_inner.html" %}
+    </div>
+  </form>
+{% endblock %}
+
+{% block modal_footer %}
+  <button @click="open = false" type="button" class="btn btn-secondary">Cancel</button>
+  <button type="submit" form="category-modal-form" class="btn btn-primary">Add Category</button>
+{% endblock %}

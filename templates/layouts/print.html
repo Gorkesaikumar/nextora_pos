@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{# Print layout — A4 documents (reports, statements). No operational chrome. #}
+
+
+{% block body %}
+  <article id="main" class="print-page{% if landscape %} print-page--landscape{% endif %}" tabindex="-1">
+    <header class="print-header">
+      <div>
+        <div class="print-title">{% block doc_title %}Document{% endblock %}</div>
+        <div class="print-meta">
+          {% if tenant %}{{ tenant.legal_name|default:tenant.name }} · {% endif %}
+          {% if branch %}{{ branch.name }} · {% endif %}
+          Generated {{ generated_at|default:'2026-06-27 18:00' }}
+        </div>
+      </div>
+      <div class="print-meta" style="text-align:right">
+        Prepared by {{ prepared_by|default:'—' }}<br>
+        Page <span class="page-num">1</span> of <span class="page-count">1</span>
+      </div>
+    </header>
+
+    {% block doc_body %}{% endblock %}
+
+    <footer class="print-footer">
+      <div>
+        {% block doc_filters %}{% endblock %}
+      </div>
+      <div style="text-align:right">
+        {% if correlation_id %}<span class="mono">{{ correlation_id }}</span><br>{% endif %}
+        Confidential — for internal use only
+      </div>
+    </footer>
+  </article>
+{% endblock %}

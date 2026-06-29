@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{# Reports layout — sticky filter bar + tabs + workspace. #}
+
+
+{% block body %}
+  <div class="zone-shell zone-shell--no-context zone-shell--no-status-rail">
+    {% include "_chrome/top_rail.html" %}
+    {% include "_chrome/module_rail.html" %}
+
+    <main id="main" class="zone-workspace" tabindex="-1">
+      <div class="reports-filters" role="search" aria-label="Report filters">
+        {% block reports_filters %}
+          <label class="search" aria-label="Date range">
+            <input type="text" class="search__input" placeholder="Last 30 days">
+          </label>
+          <select class="select" aria-label="Branch" style="width:auto;min-width:160px">
+            <option>All branches</option>
+            <option>Andheri West</option>
+            <option>Bandra East</option>
+          </select>
+          <select class="select" aria-label="Channel" style="width:auto;min-width:140px">
+            <option>All channels</option>
+            <option>Dine-in</option>
+            <option>Takeaway</option>
+            <option>Delivery</option>
+          </select>
+          <button type="button" class="btn-ghost">Compare vs</button>
+          <span class="reports-filters__spacer"></span>
+          <span class="reports-filters__freshness">As of {{ freshness|default:'2 min ago' }}</span>
+          <button type="button" class="btn-secondary">Export</button>
+        {% endblock %}
+      </div>
+
+      <div class="workspace__header">
+        <div>
+          <h1 class="workspace__title">{% block page_title %}Reports{% endblock %}</h1>
+          {% block reports_subtitle %}{% endblock %}
+        </div>
+        <div class="workspace__header-spacer"></div>
+        <div class="workspace__primary">{% block primary_action %}{% endblock %}</div>
+      </div>
+
+      <div class="workspace__body">
+        {% block reports_tabs %}
+          <div class="tabs" role="tablist" aria-label="Report sections" style="margin-bottom:var(--forge-space-4)">
+            <button class="tab" role="tab" aria-selected="true">Sales</button>
+            <button class="tab" role="tab" aria-selected="false">Items</button>
+            <button class="tab" role="tab" aria-selected="false">Tax</button>
+            <button class="tab" role="tab" aria-selected="false">Payments</button>
+            <button class="tab" role="tab" aria-selected="false">Discounts</button>
+            <button class="tab" role="tab" aria-selected="false">Shifts</button>
+            <button class="tab" role="tab" aria-selected="false">Audit</button>
+          </div>
+        {% endblock %}
+
+        {% block reports_body %}{% endblock %}
+      </div>
+
+      {% include "_chrome/page_footer.html" %}
+    </main>
+  </div>
+{% endblock %}

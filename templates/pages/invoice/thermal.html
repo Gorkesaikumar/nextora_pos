@@ -1,0 +1,45 @@
+{% extends "layouts/invoice.html" %}
+{# Thermal receipt — 80mm preview. Driver renders bytes; this is the visual. #}
+
+
+{% block title %}Receipt {{ invoice.number|default:'INV-260627-0142' }}{% endblock %}
+
+{% block invoice_body %}
+<section class="thermal" aria-label="Thermal receipt preview">
+  <div class="thermal__center thermal__strong">{{ tenant.name|default:'Nextora Bistro' }}</div>
+  <div class="thermal__center">{{ branch.name|default:'Andheri West' }}</div>
+  <div class="thermal__center">{{ branch.address|default:'Veera Desai Rd, Mumbai 400053' }}</div>
+  <div class="thermal__center">GSTIN: {{ tenant.gstin|default:'27ABCDE1234F1Z5' }}</div>
+  <hr class="thermal__hr">
+
+  <div class="thermal__row"><span>Invoice</span><span class="right">{{ invoice.number|default:'INV-260627-0142' }}</span></div>
+  <div class="thermal__row"><span>Date</span><span class="right">{{ invoice.issued_at|default:'27-Jun-2026 18:42' }}</span></div>
+  <div class="thermal__row"><span>Cashier</span><span class="right">{{ cashier|default:'Asha' }}</span></div>
+  <div class="thermal__row"><span>Order</span><span class="right">{{ order.number|default:'ORD-2611-0143' }} · T7</span></div>
+  <hr class="thermal__hr">
+
+  <div class="thermal__row"><span>2 × Paneer Tikka</span><span class="right">520.00</span></div>
+  <div class="thermal__row"><span style="padding-left:2mm" class="text-tertiary">+ Extra spicy, No onion</span><span></span></div>
+  <div class="thermal__row"><span>1 × Butter Chicken</span><span class="right">340.00</span></div>
+  <div class="thermal__row"><span>3 × Garlic Naan</span><span class="right">210.00</span></div>
+  <hr class="thermal__hr">
+
+  <div class="thermal__row"><span>Subtotal</span><span class="right">1,070.00</span></div>
+  <div class="thermal__row"><span>Discount</span><span class="right">-50.00</span></div>
+  <div class="thermal__row"><span>CGST 2.5%</span><span class="right">25.50</span></div>
+  <div class="thermal__row"><span>SGST 2.5%</span><span class="right">25.50</span></div>
+  <div class="thermal__row"><span>Round-off</span><span class="right">0.00</span></div>
+  <hr class="thermal__hr">
+
+  <div class="thermal__row thermal__total"><span>TOTAL</span><span class="right">₹1,071.00</span></div>
+  <hr class="thermal__hr">
+
+  <div class="thermal__row"><span>UPI · {{ upi_ref|default:'8421***12' }}</span><span class="right">1,071.00</span></div>
+  <hr class="thermal__hr">
+
+  <div class="thermal__center">Rupees One Thousand Seventy One Only</div>
+  <div class="thermal__center" style="margin-top:3mm">Thank you · Visit again</div>
+  <div class="thermal__qr" role="img" aria-label="QR code linking to the digital invoice">QR</div>
+  <div class="thermal__center" style="margin-top:2mm;font-size:8pt">nextora.app/i/{{ invoice.number|default:'INV-260627-0142'|slice:'-8:' }}</div>
+</section>
+{% endblock %}

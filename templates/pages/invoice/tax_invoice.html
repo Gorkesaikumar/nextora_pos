@@ -1,0 +1,133 @@
+{% extends "layouts/invoice.html" %}
+{% comment %} A4 GST Tax Invoice — uses the print page model from layouts/invoice.css.
+   IGST vs CGST/SGST is decided by place-of-supply (seller state ≠ buyer state). {% endcomment %}
+
+
+{% block title %}Tax Invoice {{ invoice.number|default:'INV-260627-0142' }}{% endblock %}
+
+{% block invoice_body %}
+<article class="print-page invoice">
+  <span class="invoice__copy-mark">Original for Recipient</span>
+
+  <header class="print-header">
+    <div>
+      <div class="invoice__heading">TAX INVOICE</div>
+      <div class="print-meta">
+        Invoice <strong class="mono">{{ invoice.number|default:'INV-260627-0142' }}</strong>
+        · Date {{ invoice.issued_at|default:'27-Jun-2026' }}
+      </div>
+    </div>
+    <div class="print-meta" style="text-align:right">
+      Place of supply: {{ pos.state_name|default:'Maharashtra (27)' }}<br>
+      Due: {{ invoice.due_at|default:'Immediate' }}
+    </div>
+  </header>
+
+  <section class="invoice__parties">
+    <div class="invoice__party">
+      <div class="invoice__party-title">Seller</div>
+      <div><strong>{{ tenant.legal_name|default:'Nextora Hospitality Pvt Ltd' }}</strong></div>
+      <div>{{ branch.address|default:'Veera Desai Rd, Mumbai 400053' }}</div>
+      <div>GSTIN: <span class="mono">{{ tenant.gstin|default:'27ABCDE1234F1Z5' }}</span></div>
+      <div>PAN: <span class="mono">{{ tenant.pan|default:'ABCDE1234F' }}</span></div>
+      <div>State: 27 — Maharashtra</div>
+    </div>
+    <div class="invoice__party">
+      <div class="invoice__party-title">Buyer</div>
+      <div><strong>{{ customer.legal_name|default:'Acme Catering Pvt Ltd' }}</strong></div>
+      <div>{{ customer.address|default:'Plot 14, Powai, Mumbai 400076' }}</div>
+      <div>GSTIN: <span class="mono">{{ customer.gstin|default:'27AAACA1234L1Z1' }}</span></div>
+      <div>State: 27 — Maharashtra</div>
+    </div>
+  </section>
+
+  <section>
+    <table class="print-table" aria-label="Invoice line items">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Description</th>
+          <th>HSN</th>
+          <th class="num">Qty</th>
+          <th>Unit</th>
+          <th class="num">Rate</th>
+          <th class="num">Discount</th>
+          <th class="num">Taxable</th>
+          <th class="num">CGST 2.5%</th>
+          <th class="num">SGST 2.5%</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td>Paneer Tikka</td>
+          <td class="mono">2106</td>
+          <td class="num">2</td>
+          <td>plate</td>
+          <td class="num">260.00</td>
+          <td class="num">0.00</td>
+          <td class="num">520.00</td>
+          <td class="num">13.00</td>
+          <td class="num">13.00</td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td>Butter Chicken</td>
+          <td class="mono">2106</td>
+          <td class="num">1</td>
+          <td>plate</td>
+          <td class="num">340.00</td>
+          <td class="num">0.00</td>
+          <td class="num">340.00</td>
+          <td class="num">8.50</td>
+          <td class="num">8.50</td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td>Garlic Naan</td>
+          <td class="mono">1905</td>
+          <td class="num">3</td>
+          <td>piece</td>
+          <td class="num">70.00</td>
+          <td class="num">50.00</td>
+          <td class="num">160.00</td>
+          <td class="num">4.00</td>
+          <td class="num">4.00</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <div class="invoice__totals">
+      <span class="label">Taxable value</span>  <span class="value">₹1,020.00</span>
+      <span class="label">CGST 2.5%</span>      <span class="value">₹25.50</span>
+      <span class="label">SGST 2.5%</span>      <span class="value">₹25.50</span>
+      <span class="label">Round-off</span>      <span class="value">₹0.00</span>
+      <span class="grand-label">Grand total</span><span class="grand-value">₹1,071.00</span>
+    </div>
+    <div class="invoice__amount-in-words">
+      In words: <em>Rupees One Thousand Seventy One Only.</em>
+    </div>
+  </section>
+
+  <section style="margin-top:8mm;display:grid;grid-template-columns:1fr 1fr;gap:6mm">
+    <div>
+      <div class="invoice__party-title">Bank / payment</div>
+      <div>{{ bank.name|default:'HDFC Bank' }} · A/C <span class="mono">{{ bank.account|default:'5012XXXX1234' }}</span></div>
+      <div>IFSC <span class="mono">{{ bank.ifsc|default:'HDFC0001234' }}</span></div>
+      <div>UPI: <span class="mono">{{ bank.upi|default:'nextora@hdfcbank' }}</span></div>
+    </div>
+    <div>
+      <div class="invoice__party-title">Terms</div>
+      <div>1. Payable on receipt unless otherwise stated.</div>
+      <div>2. Goods/services once delivered are non-returnable.</div>
+      <div>3. Disputes subject to {{ jurisdiction|default:'Mumbai' }} jurisdiction.</div>
+    </div>
+  </section>
+
+  <div class="invoice__signature">
+    <div class="invoice__signature-block">For {{ tenant.legal_name|default:'Nextora Hospitality Pvt Ltd' }}<br>Authorized signatory</div>
+  </div>
+</article>
+{% endblock %}

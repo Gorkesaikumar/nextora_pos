@@ -1,0 +1,114 @@
+{% extends "layouts/dashboard.html" %}
+
+{% block page_title %}New Stock Adjustment{% endblock %}
+{% block page_subtitle %}<p class="text-caption text-neutral-500 mt-1">Record manual corrections, physical counts, or damaged stock.</p>{% endblock %}
+{% block toasts %}{% include "inventory/_toasts.html" %}{% endblock %}
+
+{% block primary_action %}
+<a href="{% url 'inventory:adjustment_list' %}" class="inline-flex items-center text-sm font-semibold text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white transition-colors">
+  <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+  Back to Adjustments
+</a>
+{% endblock %}
+
+{% block workspace %}
+<form method="POST" class="max-w-5xl space-y-6 pb-6">
+  {% csrf_token %}
+  {% if form.non_field_errors %}
+  <div class="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded-xl text-sm">{{ form.non_field_errors.0 }}</div>
+  {% endif %}
+
+  <div class="bg-white dark:bg-neutral-dark-100 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-dark-200 overflow-hidden">
+    <div class="px-6 py-4 border-b border-neutral-200 dark:border-neutral-dark-300 bg-neutral-50 dark:bg-neutral-dark-200">
+      <h3 class="text-base font-bold text-neutral-900 dark:text-white">Adjustment Details</h3>
+    </div>
+    <div class="p-6 space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {% include "inventory/_field.html" with field=form.warehouse label="Warehouse" required=True %}
+        {% include "inventory/_field.html" with field=form.reason label="Reason" required=True %}
+      </div>
+      {% include "inventory/_field.html" with field=form.notes label="Notes" %}
+    </div>
+  </div>
+
+  <div class="bg-white dark:bg-neutral-dark-100 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-dark-200 overflow-hidden">
+    <div class="px-6 py-4 border-b border-neutral-200 dark:border-neutral-dark-300 bg-neutral-50 dark:bg-neutral-dark-200 flex items-center justify-between">
+      <div>
+        <h3 class="text-base font-bold text-neutral-900 dark:text-white">Adjusted Items</h3>
+        <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">Add items and specify the new physical count quantity.</p>
+      </div>
+      <button type="button" id="add-line" class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg border border-neutral-300 dark:border-neutral-dark-300 text-neutral-800 dark:text-neutral-200 hover:bg-neutral-50 dark:hover:bg-neutral-dark-200 transition-colors">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+        Add Line
+      </button>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-neutral-50 dark:bg-neutral-dark-200 border-b border-neutral-200 dark:border-neutral-dark-300">
+            <th class="px-4 py-3 text-xs font-bold text-neutral-700 dark:text-neutral-300 uppercase tracking-wider">Item</th>
+            <th class="px-4 py-3 text-xs font-bold text-neutral-700 dark:text-neutral-300 uppercase tracking-wider w-40">New Quantity</th>
+            <th class="px-4 py-3 w-12"></th>
+          </tr>
+        </thead>
+        <tbody id="line-body" class="divide-y divide-neutral-100 dark:divide-neutral-dark-300"></tbody>
+      </table>
+    </div>
+    <p id="no-lines" class="px-6 py-6 text-sm text-neutral-500 text-center">No lines added yet — click <span class="font-semibold">Add Line</span> to begin.</p>
+  </div>
+
+  <div class="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-neutral-200 dark:border-neutral-dark-300 pt-6 mt-6">
+    <label class="flex items-center gap-2 text-sm font-semibold text-neutral-800 dark:text-neutral-200 cursor-pointer">
+        <input type="checkbox" name="apply_now" value="1" class="rounded border-neutral-300 text-brand-default focus:ring-brand-default">
+        Approve and apply immediately
+    </label>
+    <div class="flex items-center gap-3">
+        <a href="{% url 'inventory:adjustment_list' %}" class="px-5 py-2.5 text-sm font-semibold text-neutral-700 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white transition-colors">Cancel</a>
+        <button type="submit" class="btn-primary text-sm">Save Adjustment</button>
+    </div>
+  </div>
+</form>
+
+<template id="line-template">
+  <tr class="line-row">
+    <td class="px-4 py-3">
+      <select name="line_item" required class="w-full h-10 pl-3 pr-8 bg-white border border-neutral-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-default focus:border-brand-default transition-all dark:bg-neutral-dark-100 dark:border-neutral-dark-300 dark:text-white appearance-none cursor-pointer">
+        <option value="">Select item…</option>
+        {% for item in line_items %}
+        <option value="{{ item.id }}">{{ item.product_name }} ({{ item.product_sku }})</option>
+        {% endfor %}
+      </select>
+    </td>
+    <td class="px-4 py-3"><input type="number" name="line_quantity" step="0.001" min="0" placeholder="0" class="w-full h-10 px-3 bg-white border border-neutral-300 rounded-lg text-sm tabular-nums focus:ring-2 focus:ring-brand-default focus:border-brand-default transition-all dark:bg-neutral-dark-100 dark:border-neutral-dark-300 dark:text-white"></td>
+    <td class="px-4 py-3 text-center">
+      <button type="button" class="remove-line inline-flex items-center justify-center p-1.5 rounded-lg text-semantic-danger hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" title="Remove line">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
+    </td>
+  </tr>
+</template>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  (function () {
+    const body = document.getElementById('line-body');
+    const tpl = document.getElementById('line-template');
+    const empty = document.getElementById('no-lines');
+
+    function syncEmpty() {
+      empty.style.display = body.children.length ? 'none' : 'block';
+    }
+    function addLine() {
+      body.appendChild(tpl.content.cloneNode(true));
+      syncEmpty();
+    }
+    document.getElementById('add-line').addEventListener('click', addLine);
+    body.addEventListener('click', function (e) {
+      const btn = e.target.closest('.remove-line');
+      if (btn) { btn.closest('.line-row').remove(); syncEmpty(); }
+    });
+    addLine(); // start with one row
+  })();
+</script>
+{% endblock %}

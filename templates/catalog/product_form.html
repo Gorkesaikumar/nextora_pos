@@ -1,0 +1,158 @@
+{% extends "layouts/dashboard.html" %}
+
+{% block page_title %}{{ action }} Product{% endblock %}
+{% block page_subtitle %}<p class="text-caption text-neutral-500 mt-1">{% if action == 'Create' %}Add a new product to your catalog.{% else %}Edit existing product details.{% endif %}</p>{% endblock %}
+
+{% block primary_action %}
+<a href="{% url 'catalog:product_list' %}" class="inline-flex items-center text-sm font-semibold text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white transition-colors">
+  <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+  Back to Products
+</a>
+{% endblock %}
+
+{% block workspace %}
+<form id="product-form" method="POST" novalidate class="max-w-5xl space-y-6 pb-6" x-data="{ isSubmitting: false }" @submit="isSubmitting = true" @invalid.capture="isSubmitting = false">
+  {% csrf_token %}
+  
+  {% if form.errors %}
+  <div class="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded-xl mb-6 text-sm flex items-center gap-2">
+    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+    <span>Please correct the errors highlighted below.</span>
+  </div>
+  {% endif %}
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Left Column (Span 2): Product Details -->
+    <div class="lg:col-span-2 space-y-6">
+      <!-- Basic Info Card -->
+      <div class="bg-white dark:bg-neutral-dark-100 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-dark-200 overflow-hidden">
+        <div class="px-6 py-4 border-b border-neutral-200 dark:border-neutral-dark-300 bg-neutral-50 dark:bg-neutral-dark-200">
+          <h3 class="text-base font-bold text-neutral-900 dark:text-white">Basic Information</h3>
+          <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">Identity and primary details of the product.</p>
+        </div>
+        <div class="p-6 space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="space-y-1">
+              <label for="{{ form.name.id_for_label }}" class="block text-sm font-semibold text-neutral-800 dark:text-neutral-200">Name <span class="text-red-500">*</span></label>
+              {{ form.name }}
+              {% if form.name.errors %}<div class="text-red-500 text-xs mt-1">{{ form.name.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="space-y-1">
+              <label for="{{ form.sku.id_for_label }}" class="block text-sm font-semibold text-neutral-800 dark:text-neutral-200">SKU <span class="text-red-500">*</span></label>
+              {{ form.sku }}
+              {% if form.sku.errors %}<div class="text-red-500 text-xs mt-1">{{ form.sku.errors.0 }}</div>{% endif %}
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="space-y-1">
+              <label for="{{ form.category.id_for_label }}" class="block text-sm font-semibold text-neutral-800 dark:text-neutral-200">Category <span class="text-red-500">*</span></label>
+              <div class="flex gap-2 relative">
+                <div class="relative flex-grow">
+                  {{ form.category }}
+                  <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                    <svg class="w-4 h-4 text-neutral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                  </div>
+                </div>
+                <button type="button" @click="$dispatch('open-modal', { id: 'add-category-modal' })" class="flex-shrink-0 inline-flex items-center justify-center w-11 h-11 bg-neutral-900 dark:bg-neutral-800 text-white rounded-xl hover:bg-neutral-800 dark:hover:bg-neutral-700 transition-colors shadow-sm" title="Add New Category">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+                </button>
+              </div>
+              {% if form.category.errors %}<div class="text-red-500 text-xs mt-1">{{ form.category.errors.0 }}</div>{% endif %}
+              {% if not form.category.field.queryset.exists %}
+                <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">No categories yet — click <span class="font-semibold">+</span> to create your first one.</p>
+              {% endif %}
+            </div>
+
+            <div class="space-y-1">
+              <label for="{{ form.type.id_for_label }}" class="block text-sm font-semibold text-neutral-800 dark:text-neutral-200">Product Type <span class="text-red-500">*</span></label>
+              <div class="relative">
+                {{ form.type }}
+                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                  <svg class="w-4 h-4 text-neutral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                </div>
+              </div>
+              {% if form.type.errors %}<div class="text-red-500 text-xs mt-1">{{ form.type.errors.0 }}</div>{% endif %}
+            </div>
+          </div>
+
+          <div class="space-y-1">
+            <label for="{{ form.description.id_for_label }}" class="block text-sm font-semibold text-neutral-800 dark:text-neutral-200">Description</label>
+            {{ form.description }}
+            {% if form.description.errors %}<div class="text-red-500 text-xs mt-1">{{ form.description.errors.0 }}</div>{% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column (Span 1): Pricing and Settings -->
+    <div class="space-y-6">
+      <!-- Pricing Card -->
+      <div class="bg-white dark:bg-neutral-dark-100 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-dark-200 overflow-hidden">
+        <div class="px-6 py-4 border-b border-neutral-200 dark:border-neutral-dark-300 bg-neutral-50 dark:bg-neutral-dark-200">
+          <h3 class="text-base font-bold text-neutral-900 dark:text-white">Pricing & Currency</h3>
+          <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">Set product price and standard currency.</p>
+        </div>
+        <div class="p-6 space-y-4">
+          <div class="space-y-1">
+            <label for="{{ form.base_price.id_for_label }}" class="block text-sm font-semibold text-neutral-800 dark:text-neutral-200">Base Price <span class="text-red-500">*</span></label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-neutral-500 dark:text-neutral-400 font-semibold text-sm">₹</div>
+              {{ form.base_price }}
+            </div>
+            {% if form.base_price.errors %}<div class="text-red-500 text-xs mt-1">{{ form.base_price.errors.0 }}</div>{% endif %}
+          </div>
+          
+          <div class="space-y-1">
+            <label for="{{ form.currency.id_for_label }}" class="block text-sm font-semibold text-neutral-800 dark:text-neutral-200">Currency</label>
+            {{ form.currency }}
+            {% if form.currency.errors %}<div class="text-red-500 text-xs mt-1">{{ form.currency.errors.0 }}</div>{% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings Card -->
+      <div class="bg-white dark:bg-neutral-dark-100 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-dark-200 overflow-hidden">
+        <div class="px-6 py-4 border-b border-neutral-200 dark:border-neutral-dark-300 bg-neutral-50 dark:bg-neutral-dark-200">
+          <h3 class="text-base font-bold text-neutral-900 dark:text-white">Configuration</h3>
+          <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">Status and tracking preferences.</p>
+        </div>
+        <div class="p-6 space-y-4">
+          <div class="flex items-center gap-3">
+            {{ form.is_active }}
+            <label for="{{ form.is_active.id_for_label }}" class="text-sm font-semibold text-neutral-800 dark:text-neutral-200 cursor-pointer">Product is Active</label>
+          </div>
+          
+          <div class="flex items-center gap-3">
+            {{ form.track_inventory }}
+            <label for="{{ form.track_inventory.id_for_label }}" class="text-sm font-semibold text-neutral-800 dark:text-neutral-200 cursor-pointer">Track Inventory</label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action Buttons (Side-by-Side) -->
+  <div class="flex items-center justify-end gap-3 mt-8">
+    <a href="{% url 'catalog:product_list' %}" class="px-5 py-2.5 rounded-xl border border-neutral-300 text-neutral-700 bg-white hover:bg-neutral-50 font-bold shadow-sm transition-all text-sm dark:bg-neutral-dark-200 dark:border-neutral-dark-300 dark:text-neutral-200 dark:hover:bg-neutral-dark-300">
+      Cancel
+    </a>
+    <button type="submit" 
+            :disabled="isSubmitting"
+            :class="{ 'opacity-50 cursor-not-allowed': isSubmitting }"
+            class="btn-primary text-sm">
+      <template x-if="isSubmitting">
+        <svg class="animate-spin h-4 w-4 text-black mr-2" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+      </template>
+      <svg x-show="!isSubmitting" class="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+      <span x-text="isSubmitting ? 'Saving...' : 'Save Product'">Save Product</span>
+    </button>
+  </div>
+</form>
+
+<!-- Include Category Modal -->
+{% include "catalog/partials/category_modal.html" with modal_id="add-category-modal" title="Add New Category" %}
+{% endblock %}

@@ -1,0 +1,69 @@
+{% comment %}
+  POS product grid — grouped by category, premium quick-key cards.
+  Preserved behaviour: each card adds its product to the active cart via
+  hx-post → #pos-cart-panel (outerHTML swap). The visual "+" is part of the
+  same add button (no nested <button>); the favourite heart is a separate,
+  client-side-only affordance.
+{% endcomment %}
+{% regroup products by category as category_groups %}
+{% if products %}
+  <div class="space-y-7">
+    {% for group in category_groups %}
+    <section>
+      <div class="flex items-center gap-2 mb-3">
+        <svg class="w-3.5 h-3.5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5a1.99 1.99 0 011.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.99 1.99 0 013 12V7a4 4 0 014-4z"></path></svg>
+        <h2 class="text-caption-strong uppercase tracking-wider text-neutral-500 dark:text-neutral-dark-500">{{ group.grouper.name|default:"Uncategorised" }}</h2>
+        <div class="flex-grow h-px bg-neutral-150 dark:bg-neutral-dark-150"></div>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+        {% for product in group.list %}
+        <article x-data="{ fav: false }"
+                 class="group relative rounded-card border border-neutral-200 dark:border-neutral-dark-200 bg-neutral-0 dark:bg-neutral-dark-100 overflow-hidden shadow-sm hover:shadow-md hover:border-brand-default/40 dark:hover:border-brand-default/40 transition-all flex flex-col justify-between">
+
+          <!-- Favourite (client-side visual only) -->
+          <button type="button"
+                  @click="fav = !fav"
+                  :aria-pressed="fav"
+                  aria-label="Toggle favourite for {{ product.name }}"
+                  class="absolute top-2 right-2 z-20 w-8 h-8 flex items-center justify-center rounded-full bg-neutral-50 dark:bg-neutral-dark-50 shadow-sm text-neutral-400 hover:text-semantic-danger focus:outline-none focus:ring-2 focus:ring-brand-default transition-colors">
+            <svg class="w-4 h-4" :fill="fav ? 'currentColor' : 'none'" :class="fav && 'text-semantic-danger'" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+          </button>
+
+          <!-- Add-to-cart hit area (the whole card) -->
+          <button type="button"
+                  class="flex flex-col flex-1 w-full text-left focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brand-default active:scale-[0.99] transition-transform p-3"
+                  aria-label="Add {{ product.name }} to order — ₹{{ product.base_price|floatformat:2 }}"
+                  hx-post="{% url 'ordering:pos_add_to_cart' product.id %}"
+                  hx-target="#pos-cart-panel"
+                  hx-swap="outerHTML">
+            
+            <div class="pr-8 mb-2 flex-1">
+              <div class="mb-1.5">
+                <span class="inline-block bg-semantic-success text-white px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold shadow-sm">{{ product.sku }}</span>
+              </div>
+              <div class="text-body-strong text-neutral-900 dark:text-neutral-dark-900 leading-tight mb-0.5 line-clamp-1">{{ product.name }}</div>
+              <div class="text-caption text-neutral-500 dark:text-neutral-dark-500 line-clamp-1">{{ product.description|default:product.category.name }}</div>
+            </div>
+
+            <div class="flex items-center justify-between mt-auto pt-3 border-t border-neutral-100 dark:border-neutral-dark-200">
+              <span class="text-body-strong tabular-nums text-brand-default dark:text-brand-on-dark">₹{{ product.base_price|floatformat:2 }}</span>
+              <span aria-hidden="true"
+                    class="w-7 h-7 flex items-center justify-center rounded-md bg-brand-subtle text-brand-default group-hover:bg-brand-default group-hover:text-white group-active:scale-95 transition-all">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+              </span>
+            </div>
+          </button>
+        </article>
+        {% endfor %}
+      </div>
+    </section>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="flex flex-col items-center justify-center h-64 text-neutral-500">
+    <svg class="w-12 h-12 mb-4 text-neutral-300 dark:text-neutral-dark-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+    <p class="text-body-strong">No products found</p>
+    <p class="text-caption mt-1">Try adjusting your filters or search query.</p>
+  </div>
+{% endif %}
