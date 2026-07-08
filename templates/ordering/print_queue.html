@@ -1,32 +1,24 @@
-{% extends "base.html" %}
+{% extends "layouts/dashboard.html" %}
 
 {% block title %}Enterprise Print Queue - Nextora POS{% endblock %}
+{% block page_title %}Print Queue & Thermal Logs{% endblock %}
+{% block page_subtitle %}Monitor thermal printing operations, auto-retries, and manual reprints across all stations.{% endblock %}
 
-{% block content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" x-data="{
+{% block primary_action %}
+    <button @click="window.location.reload()" class="btn-secondary">
+        <i data-lucide="refresh-cw" class="w-4 h-4 mr-1.5"></i>
+        Refresh Queue
+    </button>
+{% endblock %}
+
+{% block workspace %}
+<div class="px-8 py-4" x-data="{
     pollQueue() {
         setInterval(() => {
             window.location.reload();
         }, 15000);
     }
 }" x-init="pollQueue()">
-
-    <div class="sm:flex sm:items-center sm:justify-between mb-8">
-        <div>
-            <h1 class="text-3xl font-bold text-gray-900">Print Queue</h1>
-            <p class="mt-2 text-sm text-gray-600">
-                Monitor thermal printing operations, auto-retries, and manual reprints.
-            </p>
-        </div>
-        <div class="mt-4 sm:mt-0">
-            <button @click="window.location.reload()" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                <svg class="-ml-1 mr-2 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                Refresh Queue
-            </button>
-        </div>
-    </div>
 
     <!-- Messages -->
     {% if messages %}

@@ -57,7 +57,16 @@
           <td class="px-6 py-4">
             <div class="text-sm font-semibold text-neutral-900 dark:text-white">{{ product.name }}</div>
             {% if product.description %}
-            <div class="text-xs text-neutral-600 dark:text-neutral-300 mt-1 truncate max-w-xs">{{ product.description }}</div>
+            <div class="text-xs text-neutral-600 dark:text-neutral-300 mt-0.5 truncate max-w-xs">{{ product.description }}</div>
+            {% endif %}
+            {% if product.modifier_groups.all %}
+            <div class="flex flex-wrap gap-1 mt-1.5">
+              {% for mg in product.modifier_groups.all %}
+              <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-brand-subtle text-brand-default dark:bg-brand-default/15 dark:text-brand-on-dark">
+                + {{ mg.name }}
+              </span>
+              {% endfor %}
+            </div>
             {% endif %}
           </td>
           <td class="px-6 py-4">

@@ -5,13 +5,14 @@
     <title>{{ title }}</title>
     <style>
         @page {
-            size: A4 landscape;
+            size: a4 landscape;
             margin: 15mm;
-            @bottom-right {
-                content: "Page " counter(page) " of " counter(pages);
-                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-                font-size: 10px;
-                color: #888;
+            @frame footer_frame {
+                -pdf-frame-content: footer_content;
+                bottom: 1cm;
+                height: 1cm;
+                margin-left: 15mm;
+                margin-right: 15mm;
             }
         }
         body {
@@ -60,6 +61,10 @@
     </style>
 </head>
 <body>
+
+<div id="footer_content" style="text-align: right; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 10px; color: #888;">
+    Page <pdf:pagenumber> of <pdf:pagecount>
+</div>
 
 <div class="header">
     <h1>{{ title }}</h1>

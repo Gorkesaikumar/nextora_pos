@@ -70,7 +70,7 @@
 {% endblock %}
 
 {% block workspace %}
-<div class="px-8 pb-8" hx-get="{% url 'billing:invoices' %}?q={{ query }}&start_date={{ start_date }}&end_date={{ end_date }}&branch_id={{ selected_branch }}&status={{ selected_status }}&sort={{ sort }}" hx-trigger="every 15s" hx-swap="outerHTML" hx-select="#invoice-table-wrapper" id="invoice-table-wrapper">
+<div class="px-8 pb-8" hx-get="{% if tenant_id %}{% url 'billing:invoices_tenant' tenant_id %}{% else %}{% url 'billing:invoices' %}{% endif %}?q={{ query }}&start_date={{ start_date }}&end_date={{ end_date }}&branch_id={{ selected_branch }}&status={{ selected_status }}&sort={{ sort }}" hx-trigger="every 15s" hx-swap="outerHTML" hx-select="#invoice-table-wrapper" id="invoice-table-wrapper">
   <div class="bg-white rounded-card shadow-sm border border-neutral-200 overflow-visible">
     <div class="overflow-x-auto overflow-y-visible" style="min-height: 400px;">
       <table class="w-full text-left border-collapse">
@@ -146,38 +146,38 @@
               {% endif %}
             </td>
             <td class="px-4 py-3 whitespace-nowrap text-right sticky right-0 bg-white group-hover:bg-brand-subtle/10" x-data="{ open: false }">
-              <div class="relative inline-block text-left">
+                <div class="relative inline-block text-left">
                 <button @click="open = !open" @click.outside="open = false" type="button" class="inline-flex items-center justify-center w-8 h-8 rounded-md text-neutral-500 hover:bg-neutral-100 transition-colors focus:outline-none">
                   <i data-lucide="more-vertical" class="w-4 h-4"></i>
                 </button>
-                <div x-show="open" x-transition.opacity class="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-neutral-100 focus:outline-none z-50 overflow-hidden" style="display: none;">
+                <div x-show="open" x-transition.opacity class="absolute right-0 mt-2 w-52 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-neutral-100 focus:outline-none z-50 overflow-hidden" style="display: none;">
                   <div class="py-1">
-                    <a href="{% url 'reporting:invoice_detail' invoice.order.id %}" class="group flex items-center px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 hover:text-brand-default">
+                    <a href="{% url 'billing:invoice_detail_tenant' tenant_id invoice.order.id %}" target="_blank" class="group flex items-center px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 hover:text-brand-default">
                       <i data-lucide="eye" class="mr-3 w-4 h-4 text-neutral-400 group-hover:text-brand-default"></i> View
                     </a>
-                    <a href="#" class="group flex items-center px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 hover:text-brand-default">
+                    <a href="{% url 'billing:invoice_detail_tenant' tenant_id invoice.order.id %}" target="_blank" onclick="setTimeout(()=>{this.closest('tr').querySelector('[\\@click]').dispatchEvent(new Event('click'))},200)" class="group flex items-center px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 hover:text-brand-default" onmousedown="event.preventDefault(); let w=window.open('{% url 'billing:invoice_detail_tenant' tenant_id invoice.order.id %}','_blank'); setTimeout(()=>w && w.print(),800); return false;">
                       <i data-lucide="printer" class="mr-3 w-4 h-4 text-neutral-400 group-hover:text-brand-default"></i> Print
                     </a>
-                    <a href="#" class="group flex items-center px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 hover:text-brand-default">
+                    <a href="{% url 'billing:invoice_detail_tenant' tenant_id invoice.order.id %}" target="_blank" class="group flex items-center px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 hover:text-brand-default">
                       <i data-lucide="copy" class="mr-3 w-4 h-4 text-neutral-400 group-hover:text-brand-default"></i> Reprint
                     </a>
-                    <a href="#" class="group flex items-center px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 hover:text-brand-default">
+                    <a href="{% url 'billing:invoice_pdf_tenant' tenant_id invoice.order.id %}" class="group flex items-center px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 hover:text-brand-default">
                       <i data-lucide="download" class="mr-3 w-4 h-4 text-neutral-400 group-hover:text-brand-default"></i> Download PDF
                     </a>
                   </div>
                   <div class="py-1">
-                    <button type="button" hx-get="{% url 'billing:whatsapp_modal' invoice.order.id %}" hx-target="#modal-container" hx-swap="innerHTML" @click="open = false" class="w-full text-left group flex items-center px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 hover:text-semantic-success-dark">
+                    <button type="button" hx-get="{% url 'billing:whatsapp_modal_tenant' tenant_id invoice.order.id %}" hx-target="#modal-container" hx-swap="innerHTML" @click="open = false" class="w-full text-left group flex items-center px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 hover:text-semantic-success-dark">
                       <i data-lucide="message-circle" class="mr-3 w-4 h-4 text-neutral-400 group-hover:text-semantic-success-dark"></i> Send WhatsApp
                     </button>
-                    <button type="button" hx-get="{% url 'reporting:email_modal' invoice.order.id %}" hx-target="#modal-container" hx-swap="innerHTML" @click="open = false" class="w-full text-left group flex items-center px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 hover:text-brand-default">
+                    <button type="button" hx-get="{% url 'billing:email_modal_tenant' tenant_id invoice.order.id %}" hx-target="#modal-container" hx-swap="innerHTML" @click="open = false" class="w-full text-left group flex items-center px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 hover:text-brand-default">
                       <i data-lucide="mail" class="mr-3 w-4 h-4 text-neutral-400 group-hover:text-brand-default"></i> Send Email
                     </button>
                   </div>
                   <div class="py-1">
-                    <a href="#" class="group flex items-center px-4 py-2 text-sm text-semantic-danger hover:bg-semantic-danger-subtle">
+                    <a href="{% url 'billing:refunds_tenant' tenant_id %}?order={{ invoice.order.id }}" class="group flex items-center px-4 py-2 text-sm text-semantic-danger hover:bg-semantic-danger-subtle">
                       <i data-lucide="undo-2" class="mr-3 w-4 h-4"></i> Refund
                     </a>
-                    <button type="button" hx-get="{% url 'billing:invoice_history_modal' invoice.order.id %}" hx-target="#modal-container" hx-swap="innerHTML" @click="open = false" class="w-full text-left group flex items-center px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 hover:text-brand-default">
+                    <button type="button" hx-get="{% url 'billing:invoice_history_modal_tenant' tenant_id invoice.order.id %}" hx-target="#modal-container" hx-swap="innerHTML" @click="open = false" class="w-full text-left group flex items-center px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 hover:text-brand-default">
                       <i data-lucide="history" class="mr-3 w-4 h-4 text-neutral-400 group-hover:text-brand-default"></i> View History
                     </button>
                   </div>

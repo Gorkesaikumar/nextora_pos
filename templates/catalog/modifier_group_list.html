@@ -1,0 +1,103 @@
+{% extends "layouts/dashboard.html" %}
+
+{% block page_title %}Menu Modifiers{% endblock %}
+{% block page_subtitle %}<p class="text-caption text-neutral-500 mt-1">Manage customizable add-ons, toppings, crusts, and cooking preferences for POS items.</p>{% endblock %}
+
+{% block primary_action %}
+<div class="flex items-center gap-3">
+  <a href="{% url 'catalog:modifier_analytics' %}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-neutral-300 dark:border-neutral-dark-300 text-sm font-semibold text-neutral-700 dark:text-neutral-dark-700 hover:bg-neutral-100 dark:hover:bg-neutral-dark-150 transition-colors">
+    <svg class="w-4 h-4 text-brand-default" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+    <span>Modifier Analytics</span>
+  </a>
+  <a href="{% url 'catalog:modifier_group_create' %}" class="btn-primary inline-flex items-center gap-2">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+    <span>New Modifier Group</span>
+  </a>
+</div>
+{% endblock %}
+
+{% block workspace %}
+<div class="card overflow-hidden mt-6">
+  <div class="overflow-x-auto">
+    <table class="w-full text-left border-collapse">
+      <thead>
+        <tr class="bg-neutral-50 dark:bg-neutral-dark-50 border-b border-neutral-150 dark:border-neutral-dark-150 text-heading-3 text-neutral-700 dark:text-neutral-dark-700">
+          <th class="px-5 py-3.5 font-semibold">Group Name</th>
+          <th class="px-5 py-3.5 font-semibold">Rules & Selection</th>
+          <th class="px-5 py-3.5 font-semibold">Options (Modifiers)</th>
+          <th class="px-5 py-3.5 font-semibold">Status</th>
+          <th class="px-5 py-3.5 font-semibold text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-neutral-150 dark:divide-neutral-dark-150">
+        {% for group in modifier_groups %}
+        <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-dark-50 transition-colors">
+          <td class="px-5 py-4">
+            <div class="text-body-strong text-neutral-900 dark:text-neutral-dark-900">{{ group.name }}</div>
+            {% if group.description %}
+            <div class="text-caption text-neutral-500 mt-0.5">{{ group.description }}</div>
+            {% endif %}
+          </td>
+          <td class="px-5 py-4 text-body text-neutral-600 dark:text-neutral-dark-600">
+            {% if group.is_required %}
+            <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">Required</span>
+            {% else %}
+            <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold bg-neutral-100 text-neutral-700 dark:bg-neutral-dark-150 dark:text-neutral-dark-700">Optional</span>
+            {% endif %}
+            <span class="text-xs text-neutral-500 ml-1.5">(Min: {{ group.min_select }}, Max: {{ group.max_select }})</span>
+          </td>
+          <td class="px-5 py-4">
+            <div class="flex flex-wrap gap-1.5 items-center">
+              {% for mod in group.modifiers.all %}
+              <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-brand-subtle text-brand-default dark:bg-brand-default/15 dark:text-brand-on-dark">
+                <span>{{ mod.name }}</span>
+                {% if mod.price_delta > 0 %}
+                <span class="opacity-75">+₹{{ mod.price_delta|floatformat:2 }}</span>
+                {% endif %}
+                {% if mod.is_default %}
+                <span class="text-[10px] bg-brand-default text-white px-1 rounded">Default</span>
+                {% endif %}
+              </span>
+              {% empty %}
+              <span class="text-caption text-neutral-400 italic">No options defined</span>
+              {% endfor %}
+            </div>
+          </td>
+          <td class="px-5 py-4">
+            {% if group.is_active %}
+            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold bg-semantic-success/15 text-semantic-success">
+              <span class="w-1.5 h-1.5 rounded-full bg-semantic-success"></span>
+              Active
+            </span>
+            {% else %}
+            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold bg-neutral-200 text-neutral-600 dark:bg-neutral-dark-200 dark:text-neutral-400">
+              Inactive
+            </span>
+            {% endif %}
+          </td>
+          <td class="px-5 py-4 text-right">
+            <div class="flex items-center justify-end gap-3">
+              <a href="{% url 'catalog:modifier_option_manage' group.id %}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-dark-150 dark:hover:bg-neutral-dark-200 text-xs font-semibold text-neutral-800 dark:text-neutral-dark-800 transition-colors">
+                <span>Options ({{ group.modifiers.count }})</span>
+              </a>
+              <a href="{% url 'catalog:modifier_group_update' group.id %}" class="text-brand-default hover:underline text-sm font-semibold">Edit</a>
+              <form method="POST" action="{% url 'catalog:modifier_group_delete' group.id %}" class="inline" x-data @submit.prevent="NPos.delete('Delete modifier group {{ group.name|escapejs }}?').then(ok => { if(ok) $el.submit() })">
+                {% csrf_token %}
+                <button type="submit" class="text-semantic-danger hover:underline text-sm font-semibold">Delete</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" class="px-5 py-12 text-center text-body text-neutral-500">
+            <p class="text-body-strong text-neutral-700 dark:text-neutral-dark-700 mb-1">No modifier groups created yet.</p>
+            <p class="text-caption">Click "New Modifier Group" above to create add-on options like extra toppings or crust styles.</p>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -24,6 +24,7 @@ from contexts.catalog.events import (
 )
 from contexts.catalog.exceptions import ProductNotFound
 from contexts.catalog.models import Category, KitchenStation, Printer, Product
+from contexts.catalog.models.modifier import ProductModifierGroup
 from contexts.catalog.repositories import CategoryRepository, ProductRepository
 from contexts.catalog.validation import (
     validate_new_product,
@@ -50,11 +51,65 @@ def _json_safe(value: Any) -> Any:
     return value
 
 
+def _set_modifier_groups(product: Product, mod_groups) -> None:
+    """Assign modifier groups to a product via the through table.
+
+    Django's default M2M ``.set()`` issues a raw INSERT that skips
+    ``TenantAwareModel.save()``, so ``tenant_id`` is never stamped and the DB
+    raises a NOT NULL constraint.  We manually manage the through-model rows
+    instead.
+    """
+    from shared.tenancy.context import bypass_tenant
+
+    tenant_id = product.tenant_id
+    group_ids = {g.pk if hasattr(g, "pk") else g for g in mod_groups}
+
+    with bypass_tenant():
+        # Soft-delete links that are no longer selected.
+        ProductModifierGroup.objects.filter(
+            product=product
+        ).exclude(group_id__in=group_ids).update(is_deleted=True)
+
+        # Find which groups are already linked (active or soft-deleted).
+        existing_map = {
+            str(row["group_id"]): row["is_deleted"]
+            for row in ProductModifierGroup.objects.filter(
+                product=product, group_id__in=group_ids
+            ).values("group_id", "is_deleted")
+        }
+
+        new_links = []
+        restore_ids = []
+        for gid in group_ids:
+            key = str(gid)
+            if key not in existing_map:
+                new_links.append(
+                    ProductModifierGroup(
+                        product=product,
+                        group_id=gid,
+                        tenant_id=tenant_id,
+                        is_deleted=False,
+                    )
+                )
+            elif existing_map[key]:  # was soft-deleted, restore it
+                restore_ids.append(gid)
+
+        if new_links:
+            ProductModifierGroup.objects.bulk_create(new_links)
+        if restore_ids:
+            ProductModifierGroup.objects.filter(
+                product=product, group_id__in=restore_ids
+            ).update(is_deleted=False)
+
+
 @transaction.atomic
 def create_product(data: dict[str, Any]) -> Product:
+    mod_groups = data.pop("modifier_groups", None)
     validate_new_product(data, repo=_products)
 
     product = _products.add(Product(**data))
+    if mod_groups is not None:
+        _set_modifier_groups(product, mod_groups)
 
     record_audit(
         "product.created",
@@ -72,12 +127,15 @@ def update_product(product_id: uuid.UUID, changes: dict[str, Any]) -> Product:
     if product is None:
         raise ProductNotFound(str(product_id))
 
+    mod_groups = changes.pop("modifier_groups", None)
     validate_product_changes(product_id, changes, repo=_products)
 
     before = _snapshot(product)
     for field, value in changes.items():
         setattr(product, field, value)
     _products.save(product)
+    if mod_groups is not None:
+        _set_modifier_groups(product, mod_groups)
 
     after = _snapshot(product)
     diff = {k: {"from": before[k], "to": after[k]}

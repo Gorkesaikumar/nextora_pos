@@ -16,7 +16,7 @@ class DiningTableForm(forms.ModelForm):
         waiter_choices = [('', '--- Unassigned ---')]
         waiters = EmployeeProfile.objects.filter(is_active=True)
         for w in waiters:
-            name = w.user.get_full_name() or w.user.email
+            name = w.user.full_name or w.user.email
             waiter_choices.append((str(w.id), name))
         self.fields['assigned_waiter_id'].choices = waiter_choices
         
@@ -84,7 +84,7 @@ class BranchForm(forms.ModelForm):
         manager_choices = [('', '--- Unassigned ---')]
         employees = EmployeeProfile.objects.filter(is_active=True).select_related('user')
         for emp in employees:
-            name = emp.user.get_full_name() or emp.user.email
+            name = emp.user.full_name or emp.user.email
             manager_choices.append((str(emp.user.id), name))
         self.fields['manager_id'].choices = manager_choices
         if self.instance and self.instance.manager_id:

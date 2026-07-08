@@ -4,7 +4,7 @@ from rest_framework.routers import DefaultRouter
 from .views import InvoiceViewSet, SubscriptionViewSet
 from .webhooks import razorpay_webhook
 
-app_name = "billing"
+app_name = "saas_billing"
 
 router = DefaultRouter()
 router.register("subscriptions", SubscriptionViewSet, basename="subscription")

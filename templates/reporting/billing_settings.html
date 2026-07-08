@@ -1,0 +1,62 @@
+{% extends "layouts/dashboard.html" %}
+{% load static %}
+
+{% block page_title %}Billing Settings{% endblock %}
+{% block page_subtitle %}Manage global invoice configurations, taxes, and communication templates{% endblock %}
+
+{% block workspace %}
+<div class="px-8 pb-8 max-w-4xl">
+  <form method="POST" action="{% if tenant_id %}{% url 'billing:settings_tenant' tenant_id %}{% else %}{% url 'billing:settings' %}{% endif %}" class="space-y-6">
+    {% csrf_token %}
+    
+    <!-- Invoice Prefix & Taxes -->
+    <div class="bg-white border border-neutral-200 rounded-card shadow-sm overflow-hidden">
+      <div class="px-6 py-4 border-b border-neutral-200 bg-neutral-50 flex items-center gap-3">
+        <div class="w-8 h-8 rounded bg-brand-subtle flex items-center justify-center text-brand-default">
+          <i data-lucide="file-text" class="w-4 h-4"></i>
+        </div>
+        <h3 class="font-bold text-neutral-900">Invoice Identity</h3>
+      </div>
+      <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label class="block text-sm font-semibold text-neutral-700 mb-1">Invoice Number Prefix</label>
+          <input type="text" name="invoice_prefix" value="{{ config.invoice_prefix }}" placeholder="e.g. INV, TAX, B2B" class="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-brand-default font-mono uppercase">
+          <p class="text-xs text-neutral-500 mt-1">Prefixed to the auto-generated sequence (e.g. INV-2026-0001)</p>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-neutral-700 mb-1">Company GST Number</label>
+          <input type="text" name="gst_number" value="{{ config.gst_number }}" placeholder="22AAAAA0000A1Z5" class="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-brand-default font-mono uppercase">
+          <p class="text-xs text-neutral-500 mt-1">Printed on all tax invoices as required by law</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Receipt Footer -->
+    <div class="bg-white border border-neutral-200 rounded-card shadow-sm overflow-hidden">
+      <div class="px-6 py-4 border-b border-neutral-200 bg-neutral-50 flex items-center gap-3">
+        <div class="w-8 h-8 rounded bg-neutral-200 flex items-center justify-center text-neutral-600">
+          <i data-lucide="printer" class="w-4 h-4"></i>
+        </div>
+        <h3 class="font-bold text-neutral-900">Receipt Footer</h3>
+      </div>
+      <div class="p-6">
+        <label class="block text-sm font-semibold text-neutral-700 mb-1">Custom Footer Text</label>
+        <textarea name="invoice_footer" rows="3" placeholder="Thank you for dining with us! Visit again." class="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-brand-default resize-none">{{ config.invoice_footer }}</textarea>
+        <p class="text-xs text-neutral-500 mt-1">Printed at the very bottom of Thermal Receipts and PDF Invoices.</p>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex items-center justify-end gap-3 pt-4 border-t border-neutral-200">
+      <button type="reset" class="px-5 py-2.5 bg-neutral-100 text-neutral-700 rounded-md text-sm font-semibold hover:bg-neutral-200 transition-colors">
+        Discard Changes
+      </button>
+      <button type="submit" class="px-5 py-2.5 bg-brand-default text-white rounded-md text-sm font-semibold hover:bg-brand-dark transition-colors flex items-center gap-2 shadow-sm">
+        <i data-lucide="save" class="w-4 h-4"></i>
+        Save Settings
+      </button>
+    </div>
+
+  </form>
+</div>
+{% endblock %}

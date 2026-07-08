@@ -95,6 +95,8 @@ def has_permission(
         return False
     if not getattr(user, "is_active", False):
         return False
+    if getattr(user, "is_superuser", False):
+        return True
 
     target_loc = str(location_id) if location_id else None
     for grant in _get_grants(user.id, tenant_id):

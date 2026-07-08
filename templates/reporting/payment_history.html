@@ -57,7 +57,7 @@
 {% endblock %}
 
 {% block workspace %}
-<div class="px-8 pb-8" hx-get="{% url 'billing:payments' %}?q={{ query }}&start_date={{ start_date }}&end_date={{ end_date }}&method={{ selected_method }}" hx-trigger="every 15s" hx-swap="outerHTML" hx-select="#payment-table-wrapper" id="payment-table-wrapper">
+<div class="px-8 pb-8" hx-get="{% if tenant_id %}{% url 'billing:payments_tenant' tenant_id %}{% else %}{% url 'billing:payments' %}{% endif %}?q={{ query }}&start_date={{ start_date }}&end_date={{ end_date }}&method={{ selected_method }}" hx-trigger="every 15s" hx-swap="outerHTML" hx-select="#payment-table-wrapper" id="payment-table-wrapper">
   <div class="bg-white rounded-card shadow-sm border border-neutral-200 overflow-visible">
     <div class="overflow-x-auto overflow-y-visible" style="min-height: 400px;">
       <table class="w-full text-left border-collapse">

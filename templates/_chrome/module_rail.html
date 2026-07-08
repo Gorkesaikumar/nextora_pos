@@ -63,3 +63,84 @@
     </a>
   </div>
 </nav>
+
+<script>
+  (function() {
+    const STORAGE_KEY = 'nextora_sidebar_scroll_top';
+
+    function restoreSidebarScroll() {
+      const sidebar = document.getElementById('module-sidebar');
+      if (!sidebar) return;
+
+      let restored = false;
+      try {
+        const savedScroll = sessionStorage.getItem(STORAGE_KEY);
+        if (savedScroll !== null && !isNaN(savedScroll)) {
+          const scrollTopVal = parseInt(savedScroll, 10);
+          if (scrollTopVal > 0) {
+            sidebar.scrollTop = scrollTopVal;
+            restored = true;
+          }
+        }
+      } catch (e) {}
+
+      // Ensure active menu item remains visible inside the scroll viewport
+      const activeItem = sidebar.querySelector('[aria-current="page"]');
+      if (activeItem) {
+        const sidebarRect = sidebar.getBoundingClientRect();
+        const itemRect = activeItem.getBoundingClientRect();
+
+        const isAbove = itemRect.top < sidebarRect.top;
+        const isBelow = itemRect.bottom > sidebarRect.bottom;
+
+        if (isAbove || isBelow) {
+          const targetScroll = sidebar.scrollTop + (itemRect.top - sidebarRect.top) - (sidebarRect.height / 2) + (itemRect.height / 2);
+          sidebar.scrollTop = Math.max(0, targetScroll);
+          try {
+            sessionStorage.setItem(STORAGE_KEY, String(sidebar.scrollTop));
+          } catch (e) {}
+        }
+      }
+    }
+
+    function setupSidebarScrollPersistence() {
+      const sidebar = document.getElementById('module-sidebar');
+      if (!sidebar || sidebar._scrollPersistInitialized) return;
+      sidebar._scrollPersistInitialized = true;
+
+      let scrollTimeout = null;
+      sidebar.addEventListener('scroll', function() {
+        if (scrollTimeout) return;
+        scrollTimeout = setTimeout(function() {
+          scrollTimeout = null;
+          try {
+            sessionStorage.setItem(STORAGE_KEY, String(sidebar.scrollTop));
+          } catch (e) {}
+        }, 100);
+      }, { passive: true });
+
+      sidebar.addEventListener('click', function(e) {
+        const link = e.target.closest('a');
+        if (link) {
+          try {
+            sessionStorage.setItem(STORAGE_KEY, String(sidebar.scrollTop));
+          } catch (e) {}
+        }
+      });
+    }
+
+    // Synchronous execution immediately after DOM parsing of #module-sidebar (zero UI flicker)
+    restoreSidebarScroll();
+    setupSidebarScrollPersistence();
+
+    document.addEventListener('DOMContentLoaded', function() {
+      restoreSidebarScroll();
+      setupSidebarScrollPersistence();
+    });
+
+    document.body.addEventListener('htmx:afterSwap', function() {
+      restoreSidebarScroll();
+      setupSidebarScrollPersistence();
+    });
+  })();
+</script>

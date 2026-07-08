@@ -1,0 +1,28 @@
+<div class="fixed inset-0 bg-neutral-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+  <div class="bg-white dark:bg-neutral-900 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border border-neutral-200 dark:border-neutral-800 animate-slide-up">
+    <!-- Header -->
+    <div class="p-6 pb-4 flex items-start gap-4">
+      <div class="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center shrink-0">
+        <svg class="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+      </div>
+      <div>
+        <h3 class="text-lg font-bold text-neutral-900 dark:text-white">Payment Failed</h3>
+        <p class="text-sm text-neutral-600 dark:text-neutral-400 mt-1">{{ error_message }}</p>
+      </div>
+    </div>
+    <!-- Footer actions -->
+    <div class="px-6 pb-6 pt-2 flex items-center justify-end gap-3">
+      <button onclick="document.getElementById('pos-modal-container').innerHTML = '';" 
+              class="w-full h-11 px-5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-sm transition-colors">
+        Dismiss
+      </button>
+    </div>
+  </div>
+</div>
+<script>
+  if (window.NPos) {
+    window.NPos.toast('Payment error: {{ error_message|escapejs }}', 'error');
+  }
+</script>

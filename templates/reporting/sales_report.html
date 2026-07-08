@@ -354,7 +354,9 @@ visibleCols = {
               body: JSON.stringify({ email })
             });
             const res = await resp.json();
-            alert(res.message);
+            if (window.NPos) {
+              window.NPos.toast(res.message || 'Invoice sent successfully', 'success');
+            }
           }
         }">
           <div class="flex items-center justify-center gap-1.5">
@@ -363,8 +365,9 @@ visibleCols = {
               <i data-lucide="receipt" class="w-4 h-4"></i>
             </a>
             <button @click="
-              const email = prompt('Enter recipient email:', '{{ o.customer_email }}');
-              if(email) sendEmail(email);
+              window.NposPromptEmail('{{ o.customer_email }}').then(email => {
+                if (email) sendEmail(email);
+              });
             " class="text-neutral-400 hover:text-neutral-600 p-1" title="Email Receipt">
               <i data-lucide="mail" class="w-4 h-4"></i>
             </button>

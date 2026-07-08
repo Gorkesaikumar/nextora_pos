@@ -139,8 +139,13 @@ class CustomerReceiptTemplate(BasePrintTemplate):
                 item_left = f"{qty_str} x {item.name_snapshot[:width - 22]}"
                 rows.append(_line(f"{item_left} @ {unit_pr}", line_tot, width))
 
-            if getattr(item, "modifiers_total", Decimal("0.00")) > 0:
-                rows.append(f"    + Modifiers: {item.modifiers_total:.2f}"[:width])
+            for mod in item.modifiers.all():
+                mod_qty = f" ({int(mod.qty)}x)" if mod.qty > 1 else ""
+                mod_price = f" (+{mod.price_delta:.2f})" if mod.price_delta > 0 else ""
+                rows.append(f"    + {mod.name_snapshot}{mod_qty}{mod_price}"[:width])
+
+            if item.notes:
+                rows.append(f"    *** NOTE: {item.notes} ***"[:width])
 
         rows.append(_rule(width))
         rows.append(_line("Subtotal", f"{order.subtotal:.2f}", width))

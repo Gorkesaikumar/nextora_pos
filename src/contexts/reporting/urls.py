@@ -26,6 +26,7 @@ urlpatterns = [
     path("invoice/<uuid:order_id>/", InvoiceDetailView.as_view(), name="invoice_detail"),
     path("<uuid:tenant_id>/invoice/<uuid:order_id>/", InvoiceDetailView.as_view(), name="invoice_detail_tenant"),
     path("invoice/<uuid:order_id>/email/modal/", EmailShareModalView.as_view(), name="email_modal"),
+    path("<uuid:tenant_id>/invoice/<uuid:order_id>/email/modal/", EmailShareModalView.as_view(), name="email_modal_tenant"),
     path("invoice/<uuid:order_id>/email/", EmailInvoiceView.as_view(), name="email_invoice"),
     path("<uuid:tenant_id>/invoice/<uuid:order_id>/email/", EmailInvoiceView.as_view(), name="email_invoice_tenant"),
 ]

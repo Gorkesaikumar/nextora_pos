@@ -34,7 +34,7 @@
 <!-- Load Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<div class="px-8 pb-8" hx-get="{% url 'billing:dashboard' %}?branch_id={{ selected_branch }}" hx-trigger="every 15s" hx-swap="outerHTML" id="billing-dashboard-container">
+<div class="px-8 pb-8" hx-get="{% if tenant_id %}{% url 'billing:dashboard_tenant' tenant_id %}{% else %}{% url 'billing:dashboard' %}{% endif %}?branch_id={{ selected_branch }}" hx-trigger="every 15s" hx-swap="outerHTML" id="billing-dashboard-container">
   
   <!-- KPI Grid -->
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-8">

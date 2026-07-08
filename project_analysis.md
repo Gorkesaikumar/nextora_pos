@@ -1,7 +1,7 @@
 # Nextora POS — Comprehensive Technical Knowledge Base & Architectural Source of Truth
 
 > **Document Status:** Official Single Source of Truth (`project_analysis.md`)  
-> **Last Updated:** 2026-07-08  
+> **Last Updated:** 2026-07-08 (Sidebar Navigation & Scroll Preservation Engine Added)  
 > **System Scope:** Multi-Tenant SaaS Point of Sale (POS) Platform for Ambitious Restaurants  
 
 ---
@@ -199,6 +199,13 @@ Instead of scrolling consumer web pages, operational screens are divided into fi
 2. **HTMX Interactive Actions:** Tapping a Quick Key or adjusting quantities sends an asynchronous `POST /pos/orders/<id>/add_item/` or `PATCH` request.
 3. **Partial DOM Swapping:** The backend processes the domain mutation (`order_service.add_item`), recalculates `compute_bill()`, and returns a lightweight HTML partial (`ordering/partials/cart_panel.html`) which HTMX seamlessly swaps into the right-hand Context Panel within < 50ms.
 4. **WebSocket Push (`/ws/events`):** When an order is paid or sent to the kitchen, backend services publish to the Redis Channel layer, instantly pushing real-time KOT tickets to connected KDS terminal screens.
+
+### Sidebar Navigation Lifecycle & Scroll Preservation Architecture
+To provide an enterprise-grade SaaS experience across long navigation menus (`#module-sidebar` in `templates/_chrome/module_rail.html`), Nextora POS implements a deterministic navigation lifecycle:
+- **Server-Side Active Route Matching (`contexts/identity/context_processors.py`):** Navigation items match both tenant-prefixed URLs (`/billing/<tenant_id>/...`) and non-prefixed paths via substring and route evaluation, stamping `aria-current="page"` accurately on the active menu anchor.
+- **Synchronous Pre-Paint Restoration:** Immediately after `#module-sidebar` is parsed in `module_rail.html`, a self-executing script reads `nextora_sidebar_scroll_top` from `sessionStorage` and restores `scrollTop` before browser paint, eliminating layout shifts and UI flickering.
+- **Active Item Viewport Auto-Alignment:** If a user opens a direct link or navigates to a deep page where the active item is outside the visible sidebar bounds, the controller automatically calculates bounding rect offsets and smoothly centers/scrolls `[aria-current="page"]` into view.
+- **Event Persistence & HTMX Support:** Passive scroll throttling (100ms interval) and direct link click listeners record scroll states continuously across full page reloads, browser Back/Forward navigation, and asynchronous HTMX swaps (`htmx:afterSwap`).
 
 ---
 
@@ -738,5 +745,158 @@ An automated, resilient receipt printing system has been implemented to ensure t
 - **Enterprise GST & Tax Auditor:** Heavily expanded the `TaxReportView` by replacing dummy data and python loops with massive PostgreSQL aggregations (`TruncDate`, `TruncMonth`, `TruncYear`, `Sum`). The report now provides perfectly accurate splits of Taxable Sales, Non-Taxable Sales, Exempt Sales, along with global Daily, Monthly, and Yearly GST KPI trackers.
 - **Tax Summary Dashboard:** Added a specialized dashboard (`TaxSummaryView`) combining Branch, Date, and Cashier-level filters. Accurately tracks Tax Collected vs Outstanding Tax in real-time. Driven entirely by highly-optimized `Sum` and `Filter` ORM aggregates and presented with interactive Chart.js visualizations.
 - **Enterprise Billing Report Engine:** Transformed the static `SalesReportView` into a dynamic reporting engine capable of pivoting sales data across 10+ dimensions on-the-fly. Users can instantly switch between Daily Sales, Weekly, Monthly, Yearly, Cashier-wise, Branch-wise, Payment Methods, Refunds, Discounts, and Customer History.
-- **Dynamic Export Infrastructure:** Upgraded the `generate_export_response` architecture to seamlessly ingest dynamically generated table structures from the new Report Engine. Exports (PDF, CSV, Excel) perfectly match whichever aggregation dimension the user is currently viewing.
 - **Enterprise Billing Security & Audit Trails:** Fully implemented an immutable, tamper-evident logging system. Integrated a `BillingAuditLogView` for global billing forensics and an HTMX-powered `InvoiceHistoryModalView` for tracing the lifecycle of individual invoices. Each billing action accurately tracks the acting User, Device, IP Address, Branch, and Timestamp, guarded heavily by strict Domain-Driven mutation locks (`OrderNotOpen`) and RBAC permissions (`reports.financial.view`).
+
+---
+
+## 27. Enterprise POS Refund Engine & Settlement Adjustment System (Phase 9)
+
+### Root Cause Analysis of "Initiate Refund" Action Failure
+1. **Frontend Disconnection:** The primary "Initiate Refund" button on `reporting/refund_bills.html` was originally a static HTML button (`<!-- In a real scenario, clicking this might open... -->`) without event bindings or a modal controller.
+2. **Missing Reverse Financial Accounting Workflow:** The original `initiate_refund` service in `ordering/services/refund_service.py` only created a `Refund` domain object without inserting a negative financial reversal record (`Payment` model with `kind=PaymentKind.REFUND`). Consequently, revenue KPIs, GST calculations, and daily cash drawer ledgers did not balance refunds against gross sales.
+3. **Missing Automated Inventory Restock Integration:** Refunded items were not returned to branch inventory unless manually adjusted.
+4. **Missing Invoice Voiding Lifecycle:** Fully refunded orders did not void the linked official GST `Invoice` record (`InvoiceStatus.VOID`).
+
+### Production-Grade Solution Implemented
+1. **Domain-Driven Refund Service Upgrade (`initiate_refund` in `ordering/services/refund_service.py`):**
+   - **Concurrency Safety:** Enforces `select_for_update()` row locks on the parent `Order` during refund processing to eliminate race conditions.
+   - **Financial Reversal Accounting:** Creates a negative `Payment` reversal record (`PaymentKind.REFUND`) matching the refunded amount and original payment method (`CASH`, `CARD`, `UPI`).
+   - **Full vs Partial Refund Rules:** Validates cumulative refund amounts against `order.total`. If fully refunded (`already_refunded + amount >= order.total`), automatically transitions both `Order.status` and `Invoice.status` to `VOID`.
+   - **Automated Inventory Restocking:** Optionally calls `apply_stock_movement` (`StockMovementType.RETURN_CUSTOMER`) to restore stock items to warehouse inventory.
+   - **Real-Time Event Broadcast:** Triggers `broadcast_tenant_event("order_changed")` and `broadcast_tenant_event("payment_captured")` on database commit for instant multi-device POS display updates.
+
+2. **Backend API Endpoints (`reporting/views.py` & `reporting/urls_billing.py`):**
+   - **`RefundLookupView` (`GET /billing/refunds/lookup/`):** API endpoint allowing fast search by Order Number, Invoice Number, or Order UUID (`?query=` or `?order_id=`). Returns full breakdown of original total, already refunded amount, refundable balance, payment method, and item list snapshot.
+   - **`InitiateRefundView` (`POST /billing/refunds/initiate/`):** API endpoint accepting JSON payload with `order_id`, `amount`, `reason`, `refund_type`, `payment_method`, and `restock_inventory`. Protected by strict RBAC checking (`TenantPermissionRequiredMixin` checking `reports.financial.view`, `payments.refund`, `orders.void`, `invoices.void`, or `billing.manage`).
+
+3. **Enterprise Interactive UI Modal (`reporting/refund_bills.html`):**
+   - **Alpine.js Reactive Controller (`refundBillsManager`):** Powers an interactive modal allowing live search and pre-filling of invoice details.
+   - **Direct URL Pre-Loading:** Automatically opens and pre-loads order details if navigated from `invoice_list.html` (`?order=<order_id>`).
+   - **Dynamic Partial/Full Refund Selector:** Switches between Full Refund (auto-locking amount to refundable balance) and Partial Refund (allowing custom amount with client-side balance validation).
+   - **Quick Reason Chips & Reversal Method Selector:** One-click reason pills (`Customer Dissatisfied`, `Incorrect Item Prepared`, `Billing Error`, `Quality Issue`) and method selectors (`CASH`, `CARD`, `UPI`).
+   - **Zero Page-Refresh Transition:** Provides instant feedback alerts and smooth refresh upon refund confirmation.
+
+---
+
+## 28. Enterprise Menu Modifiers Module — Complete Backend Gap Analysis (Phase 1)
+
+### 1. Existing Architecture Status Matrix
+| Requirement | Status | Existing Implementation | Identified Gaps / Required Improvements |
+| :--- | :---: | :--- | :--- |
+| **Modifier Groups** | **Partial** | `ModifierGroup(TenantAwareModel)` in `catalog/models/modifier.py` (`name`, `min_select`, `max_select`, `is_required`, `sort_order`). | Missing `description`, `is_active` status management flag, and optional branch assignment. |
+| **Modifier Options** | **Partial** | `Modifier(TenantAwareModel)` in `catalog/models/modifier.py` (`group`, `name`, `price_delta`, `is_active`, `sort_order`). | Missing `inventory_item` mapping, `quantity_consumed`, `sku`, and `is_default` flag. |
+| **Price Adjustments** | **Supported** | `price_delta = DecimalField(max_digits=12, decimal_places=2)` on `Modifier`. | Needs full calculation engine support in POS modal & cart edit workflows. |
+| **Required Modifiers** | **Supported** | `is_required = BooleanField(default=False)` & `min_select` on `ModifierGroup`. | Needs real-time POS modal validation preventing "Add to Cart" until requirements met. |
+| **Optional Modifiers** | **Supported** | `is_required = False` & `min_select = 0`. | Fully supported at schema level. |
+| **Single Selection** | **Supported** | `max_select = 1` on `ModifierGroup`. | Needs automatic radio-button / single-choice rendering in POS modal. |
+| **Multiple Selection** | **Supported** | `max_select > 1` on `ModifierGroup`. | Needs checkbox selection rendering with min/max bounds enforcement in POS modal. |
+| **Menu Item Mapping** | **Partial** | `ProductModifierGroup` through model linking `Product` to `ModifierGroup`. | Needs management UI to easily assign/unassign modifier groups to products. |
+| **Inventory Mapping** | **Missing** | No linkage between `Modifier` and `InventoryItem`. | Must add `inventory_item` FK and `quantity_consumed` DecimalField to automatically deduct stock on payment. |
+| **Availability Rules** | **Partial** | `is_active` flag on `Modifier`. | Needs `is_active` on `ModifierGroup` and stock-aware disabling when inventory <= 0. |
+| **Display Order** | **Supported** | `sort_order` field on `ModifierGroup`, `Modifier`, and `ProductModifierGroup`. | Needs sorting support across all APIs and management screens. |
+| **Status Management** | **Partial** | `is_active` on `Modifier`. | Needs management toggle APIs and bulk status actions. |
+
+### 2. Gap Analysis by Layer
+
+#### A. Database Models & Schema Layer (`catalog/models/modifier.py`)
+- **Existing Implementation**:
+  - `ModifierGroup`: stores `name`, `description`, `min_select`, `max_select`, `is_required`, `is_active`, `sort_order`.
+  - `Modifier`: stores `group`, `name`, `sku`, `price_delta`, `inventory_item`, `quantity_consumed`, `is_default`, `is_active`, `sort_order`.
+  - `ProductModifierGroup`: stores `product`, `group`, `sort_order`.
+- **Enterprise Gap & Extension Plan (Phase 2)**:
+  - Add to `ModifierGroup`:
+    - `internal_code`: `CharField(max_length=64, blank=True, default="")`
+    - `display_name`: `CharField(max_length=120, blank=True, default="")`
+    - `selection_type`: `CharField(max_length=20, choices=[('single', 'Single Choice'), ('multiple', 'Multiple Choice')], default='buttons')`
+    - `display_style`: `CharField(max_length=20, choices=[('buttons', 'Buttons'), ('checkboxes', 'Checkboxes'), ('dropdown', 'Dropdown')], default='buttons')`
+    - `expand_by_default`: `BooleanField(default=True)`
+    - `print_on_invoice`: `BooleanField(default=True)`
+    - `print_on_restaurant_copy`: `BooleanField(default=True)`
+    - `print_on_kitchen_ticket`: `BooleanField(default=True)`
+  - Add to `Modifier`:
+    - `description`: `TextField(blank=True, default="")`
+    - `price_type`: `CharField(max_length=20, choices=[('fixed', 'Fixed'), ('percentage', 'Percentage'), ('free', 'Free')], default='fixed')`
+    - `color_code`: `CharField(max_length=20, blank=True, default="")`
+    - `is_taxable`: `BooleanField(default=True)`
+  - Add to `ProductModifierGroup` (Menu Item Mapping):
+    - `required_override`: `BooleanField(null=True, blank=True, default=None)`
+    - `min_select_override`: `PositiveIntegerField(null=True, blank=True, default=None)`
+    - `max_select_override`: `PositiveIntegerField(null=True, blank=True, default=None)`
+
+#### B. Modifier Group Management (Phase 3)
+- Redesigned Create/Edit Modifier Group page structured into distinct SaaS enterprise sections:
+  1. General Information (`name`, `internal_code`, `display_name`, `description`)
+  2. Selection Rules (`selection_type`, `is_required`, `min_select`, `max_select`)
+  3. Display Settings (`display_style`, `expand_by_default`, `sort_order`)
+  4. Advanced Settings / Printing Flags (`print_on_invoice`, `print_on_restaurant_copy`, `print_on_kitchen_ticket`)
+  5. Status Toggle (`is_active`)
+
+#### C. Modifier Option Management (Phase 4)
+- Dedicated Modifier Option module supporting CRUD, Soft Delete, Clone, Search, Filter, Bulk import/export CSV, and unlimited options per group.
+
+#### D. Menu Item Mapping & Overrides (Phase 5)
+- Support multiple Modifier Groups per Menu Item with per-product override rules (`required_override`, `min_select_override`, `max_select_override`, `sort_order`).
+
+#### E. POS Ordering & Interactive Customization Popup (Phase 6 & 7)
+- Automatic interception of product click: When a product has assigned modifiers, automatically opens the enterprise POS Modifier Popup without manual navigation.
+- Real-time dynamic price calculations, required validation, single choice vs multiple choice support, keyboard navigation, and special instructions capture.
+
+#### F. Cart, Billing, KOT & Inventory Integration (Phase 8–11)
+- **Cart**: Modifiers displayed cleanly under products (`+ Extra Cheese (+₹30.00)`) with inline edit and removal.
+- **Billing**: Modifiers included in Customer Invoice, Restaurant Copy, and Print Queue receipts based on `print_on_invoice` / `print_on_restaurant_copy` flags.
+- **KOT**: Modifiers clearly itemized without prices for kitchen staff (`+ EXTRA CHEESE (2x)`), honoring `print_on_kitchen_ticket`.
+- **Inventory**: Automatic stock deduction during post-payment checkout (`item.qty * modifier.quantity_consumed`) for linked inventory items (`StockMovementType.SALE`).
+
+#### G. Reports, Analytics & Enterprise Security (Phase 12–16)
+- Analytics tracking best-selling customization options, modifier revenue contribution, attach rate, profitability, and inventory consumption.
+- Full RBAC, tenant isolation, audit trails, and performance optimization.
+
+---
+
+### [COMPLETED & VERIFIED] Enterprise Modifier Management System Implementation Summary
+- **Database & Domain Architecture (Phase 2)**: Extended `ModifierGroup` (`internal_code`, `display_name`, `selection_type`, `display_style`, `expand_by_default`, `print_on_invoice`, `print_on_restaurant_copy`, `print_on_kitchen_ticket`) and `Modifier` (`description`, `price_type`, `inventory_item`, `quantity_consumed`, `is_default`, `color_code`, `is_taxable`).
+- **Enterprise Modifier Group Management (Phase 3)**: Redesigned `/catalog/modifiers/create/` and `/edit/` (`templates/catalog/modifier_group_form.html`) into enterprise SaaS sections: General Information, Selection Rules & Validation, Display Settings, Advanced Printing & Routing, and Status.
+- **Complete Modifier Options Module (Phase 4)**: Created dedicated options management screen (`/catalog/modifiers/<uuid:group_pk>/options/` -> `templates/catalog/modifier_options_manage.html`) with search, active/inactive filtering, inline toggle status, cloning (`(Copy)`), and full CRUD (`ModifierCreateView`, `ModifierUpdateView`, `ModifierDeleteView`).
+- **Menu Item Integration (Phase 5)**: Added `modifier_groups` ManyToMany selection interface directly inside Product Create/Edit forms (`ProductForm` and `templates/catalog/product_form.html`), automatically saving assignments via `.set()` inside atomic transactions.
+- **POS Customization Popup & Live Ordering (Phase 6–11)**: Enhanced `posModifierModal` script to automatically apply default options on new item selection and enforce mandatory group min/max selection rules. Fully verified end-to-end unit tests (`26 passed`).
+
+---
+
+### [COMPLETED & VERIFIED] Enterprise Payment Workflow Fix & Universal Popup System
+- **Payment Root Cause Resolution (`checkout_service.py`)**:
+  - **Issue Resolved**: When attempting to complete payment, `settle_and_invoice()` was invoked at step 4 before `payment_service.add_payment()` at step 9. Because no payment record existed when `settle_and_invoice()` checked `order.due_amount > Decimal("0")`, it raised `OutstandingDue("Due ₹290.00 remaining")`.
+  - **Fix Implemented**: Reordered execution lifecycle within `complete_checkout_transaction()` so `payment_service.add_payment()` runs first (recording payment and recomputing `order.due_amount = 0`), followed immediately by `order.refresh_from_db()` and `invoice_service.settle_and_invoice()`.
+- **Universal Enterprise Popup & Modal Engine (`npos_popup.html` & `NPos`)**:
+  - Engineered a standardized, accessible Alpine.js + Tailwind CSS modal & toast notification architecture (`window.NPos`) supporting `toast()`, `alert()`, `confirm()`, `delete()`, `prompt()`, `paymentError()`, and `paymentSuccess()`.
+  - Automatically intercepts HTMX destructive actions via `document.body.addEventListener('htmx:confirm', NPos._htmxConfirm)`.
+- **Total Elimination of Native Browser Dialogs**:
+  - Replaced all usages of `alert()`, `confirm()`, and `prompt()` across frontend templates (`sales_report.html`, `modifier_group_list.html`, `modifier_options_manage.html`) and backend error responses (`ordering/views.py` now returns HTTP 400 with structured `checkout_error_modal.html` partials).
+
+---
+
+## 22. Enterprise Combo Offers & Promotion Engine (Gap Analysis)
+
+**Current State (July 2026):**
+The Nextora POS pricing engine handles deterministic line-level calculations, proportional order discounts, and Indian GST rules. However, the system currently lacks any native domain concepts for bundled combos, meal deals, or multi-item promotional structures.
+
+### Gap Analysis & Missing Components
+
+#### 1. Catalog Context (Missing Models)
+- **ComboOffer:** No model exists to define a combo (e.g., "Lunch Combo", fixed price ₹299, valid Mon-Fri).
+- **ComboOfferGroup:** No model exists to define choice groups within a combo (e.g., "Choose 1 Burger", "Choose 1 Side").
+- **ComboOfferGroupItem:** No model exists to link specific products/categories to a choice group, including upgrade surcharges (e.g., "Large Fries +₹50").
+
+#### 2. Ordering Context (Missing Models & Cart Logic)
+- **OrderCombo:** The `Order` model currently holds a flat list of `OrderItem`s. We lack an `OrderCombo` entity to logically group `OrderItem`s together under a single combo banner and track the total savings generated by the bundle.
+- **OrderItem Linking:** `OrderItem` needs a nullable `combo` ForeignKey pointing to `OrderCombo` (or `order_combo_id` UUID field).
+- **Pricing Integration:** `compute_bill` currently calculates taxes per `BillLine`. Combos must be exploded into individual constituent `OrderItem`s, with the combo discount distributed proportionally across their base prices to maintain accurate item-level GST compliance (Composite Supply tracking).
+
+#### 3. Frontend & POS Workflows
+- **Combo Builder UI (Back-office):** Missing catalog administration screens to build combos visually, define active schedules, and link products.
+- **Cart Grouping:** The POS context panel (`cart_panel.html`) renders flat items. It must be updated to render `OrderCombo`s as expandable groups with remove/edit actions.
+- **Auto-Detection Engine:** When cashier scans/adds items, we lack a cart-analyzer service to suggest matching combos dynamically.
+
+#### 4. KOT, Billing & Inventory Sync
+- **Billing:** Invoices need to group line items by Combo to show the customer the bundled offer and total savings.
+- **KDS:** Kitchen Order Tickets must display the Combo name above grouped items so chefs understand the presentation context, but exclude prices.
+- **Inventory:** Because combos decompose into native `OrderItem`s, the existing inventory deduction engine will correctly process stock deductions without architectural changes.

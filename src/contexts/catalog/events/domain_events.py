@@ -44,3 +44,18 @@ class ProductPriceChanged(DomainEvent):
 class ProductDeleted(DomainEvent):
     product_id: uuid.UUID | None = None
     sku: str = ""
+
+
+@dataclass(frozen=True)
+class ModifierGroupUpdated(DomainEvent):
+    modifier_group_id: uuid.UUID | None = None
+    name: str = ""
+    is_active: bool = True
+
+
+@dataclass(frozen=True)
+class ModifierUpdated(DomainEvent):
+    modifier_id: uuid.UUID | None = None
+    name: str = ""
+    price_delta: str = "0.00"
+    is_active: bool = True

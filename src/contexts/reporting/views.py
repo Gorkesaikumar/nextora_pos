@@ -1,5 +1,5 @@
 from decimal import Decimal
-from datetime import datetime, timedelta, time
+from datetime import datetime, date, timedelta, time
 import csv
 import io
 
@@ -13,6 +13,7 @@ from django.db.models.functions import TruncDate, TruncWeek, TruncMonth, TruncYe
 from django.utils import timezone
 from django.http import HttpResponse, Http404
 
+from shared.tenancy.context import bypass_tenant, get_current_tenant
 from contexts.identity.permissions.mixins import TenantPermissionRequiredMixin
 from contexts.identity.services.authorization import has_permission
 from contexts.identity.models import User
@@ -89,16 +90,21 @@ def get_date_range(preset, start_date_str=None, end_date_str=None):
 def generate_export_response(header, rows, file_format='csv', filename='report'):
     if file_format == 'pdf':
         from django.template.loader import render_to_string
-        from weasyprint import HTML
+        from xhtml2pdf import pisa
         
         html_string = render_to_string('reporting/export_pdf.html', {
             'header': header,
             'rows': rows,
             'title': filename.replace('_', ' ').title()
         })
-        pdf_file = HTML(string=html_string).write_pdf()
         
-        response = HttpResponse(pdf_file, content_type='application/pdf')
+        output = io.BytesIO()
+        pisa_status = pisa.CreatePDF(html_string, dest=output)
+        
+        if pisa_status.err:
+            return HttpResponse('PDF Generation Error', status=500)
+            
+        response = HttpResponse(output.getvalue(), content_type='application/pdf')
         response['Content-Disposition'] = f'attachment; filename="{filename}.pdf"'
         return response
     elif file_format == 'excel':
@@ -339,6 +345,7 @@ class BillingDashboardView(TenantPermissionRequiredMixin, LoginRequiredMixin, Te
             'chart_pm_labels': chart_pm_labels,
             'chart_pm_data': chart_pm_data,
             'chart_gst_data': chart_gst_data,
+            'tenant_id': getattr(self.request, 'tenant_id', None),
         })
         return context
 
@@ -938,8 +945,26 @@ class InvoiceDetailView(TenantPermissionRequiredMixin, LoginRequiredMixin, Templ
             'discount': order.discount_amount,
             'tax': order.tax_amount,
             'total': order.total,
+            'tenant_id': getattr(self.request, 'tenant_id', None),
         })
         return context
+
+
+class InvoiceDownloadPDFView(TenantPermissionRequiredMixin, LoginRequiredMixin, View):
+    """Download a PDF copy of an invoice using WeasyPrint."""
+    permission_required = "invoices.view"
+
+    def get(self, request, order_id, **kwargs):
+        from contexts.reporting.services.pdf_generator import generate_invoice_pdf
+        try:
+            filename, pdf_bytes = generate_invoice_pdf(str(order_id))
+        except Exception as e:
+            from django.http import HttpResponseServerError
+            return HttpResponseServerError(f"Could not generate PDF: {e}")
+
+        response = HttpResponse(pdf_bytes, content_type="application/pdf")
+        response["Content-Disposition"] = f'attachment; filename="{filename}"'
+        return response
 
 
 class TaxSummaryView(TenantPermissionRequiredMixin, LoginRequiredMixin, TemplateView):
@@ -959,7 +984,7 @@ class TaxSummaryView(TenantPermissionRequiredMixin, LoginRequiredMixin, Template
         orders = Order.objects.filter(
             opened_at__gte=start_dt,
             opened_at__lte=end_dt
-        ).exclude(status=OrderStatus.VOIDED)
+        ).exclude(status=OrderStatus.VOID)
         
         if branch_id:
             orders = orders.filter(location_id=branch_id)
@@ -1000,6 +1025,22 @@ class TaxSummaryView(TenantPermissionRequiredMixin, LoginRequiredMixin, Template
         from contexts.identity.models import User
         cashier_ids = orders.values_list('created_by', flat=True).distinct()
         cashiers = User.objects.filter(id__in=cashier_ids)
+
+        export_format = request.GET.get('export')
+        if export_format:
+            record_audit("reports.tax_summary.export", entity_type="report", changes={"format": export_format, "preset": preset})
+            header = ['Metric', 'Value (INR)']
+            rows = [
+                ['Total GST', f"{total_tax:.2f}"],
+                ['CGST', f"{cgst:.2f}"],
+                ['SGST', f"{sgst:.2f}"],
+                ['IGST', f"{igst:.2f}"],
+                ['Taxable Sales', f"{taxable_sales:.2f}"],
+                ['Exempt Sales', f"{exempt_sales:.2f}"],
+                ['Tax Collected', f"{tax_collected:.2f}"],
+                ['Outstanding Tax', f"{outstanding_tax:.2f}"],
+            ]
+            return generate_export_response(header, rows, export_format, 'tax_summary_report')
 
         context = self.get_context_data(**kwargs)
         context.update({
@@ -1158,7 +1199,7 @@ class InvoiceListView(TenantPermissionRequiredMixin, LoginRequiredMixin, Templat
             qs = qs.order_by(sort)
 
         branches = Branch.objects.filter(is_active=True)
-        user_map = {str(u.id): u.get_full_name() or u.email for u in User.objects.all()}
+        user_map = {str(u.id): u.full_name or u.email for u in User.objects.all()}
         branch_map = {str(b.id): b.name for b in branches}
         
         paginator = Paginator(qs, 25)
@@ -1185,6 +1226,7 @@ class InvoiceListView(TenantPermissionRequiredMixin, LoginRequiredMixin, Templat
             'sort': sort,
             'branches': branches,
             'statuses': InvoiceStatus.choices,
+            'tenant_id': getattr(self.request, 'tenant_id', None),
         })
         return context
 
@@ -1202,7 +1244,7 @@ class PaymentHistoryView(TenantPermissionRequiredMixin, LoginRequiredMixin, Temp
     def export_data(self, export_format):
         qs = self.get_queryset()
         branches = Branch.objects.filter(is_active=True)
-        user_map = {str(u.id): u.get_full_name() or u.email for u in User.objects.all()}
+        user_map = {str(u.id): u.full_name or u.email for u in User.objects.all()}
         branch_map = {str(b.id): b.name for b in branches}
         
         record_audit("reports.financial.export", entity_type="report", changes={"format": export_format})
@@ -1269,7 +1311,7 @@ class PaymentHistoryView(TenantPermissionRequiredMixin, LoginRequiredMixin, Temp
         page_obj = paginator.get_page(page_number)
         
         branches = Branch.objects.filter(is_active=True)
-        user_map = {str(u.id): u.get_full_name() or u.email for u in User.objects.all()}
+        user_map = {str(u.id): u.full_name or u.email for u in User.objects.all()}
         branch_map = {str(b.id): b.name for b in branches}
 
         for p in page_obj:
@@ -1292,6 +1334,7 @@ class PaymentHistoryView(TenantPermissionRequiredMixin, LoginRequiredMixin, Temp
             'selected_method': self.request.GET.get('method', ''),
             'total_today': total_today,
             'methods': PaymentMethod.choices,
+            'tenant_id': getattr(self.request, 'tenant_id', None),
         })
         return context
 
@@ -1400,7 +1443,7 @@ class InvoiceHistoryModalView(TenantPermissionRequiredMixin, LoginRequiredMixin,
         
         annotated_logs = []
         for log in logs:
-            log.actor_name = users.get(str(log.actor_id)).get_full_name() if str(log.actor_id) in users else "System"
+            log.actor_name = users.get(str(log.actor_id)).full_name if str(log.actor_id) in users else "System"
             annotated_logs.append(log)
             
         context.update({
@@ -1449,7 +1492,7 @@ class BillingAuditLogView(TenantPermissionRequiredMixin, LoginRequiredMixin, Tem
         users = {str(u.id): u for u in User.objects.filter(id__in=user_ids)}
         
         for log in page_obj:
-            log.actor_name = users.get(str(log.actor_id)).get_full_name() if str(log.actor_id) in users else "System"
+            log.actor_name = users.get(str(log.actor_id)).full_name if str(log.actor_id) in users else "System"
             
         context.update({
             'page_obj': page_obj,
@@ -1464,3 +1507,262 @@ class BillingAuditLogView(TenantPermissionRequiredMixin, LoginRequiredMixin, Tem
         })
         return context
 
+from django.views.generic import TemplateView, View, ListView
+
+from contexts.reporting.services.gst_filing_service import GSTFilingService
+from contexts.ordering.models import Refund
+from contexts.tenants.models import TenantConfiguration
+
+class GSTFilingView(TenantPermissionRequiredMixin, TemplateView):
+    """
+    Enterprise dashboard for generating GST filing extracts (GSTR-1, GSTR-3B).
+    """
+    permission_required = "reports.financial.view"
+    template_name = "reporting/gst_filing.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        start_date_str = self.request.GET.get("start_date", timezone.now().date().isoformat())
+        end_date_str = self.request.GET.get("end_date", timezone.now().date().isoformat())
+        
+        start_date = date.fromisoformat(start_date_str)
+        end_date = date.fromisoformat(end_date_str)
+        
+        context["start_date"] = start_date_str
+        context["end_date"] = end_date_str
+        
+        context["hsn_summary"] = GSTFilingService.get_hsn_summary(start_date, end_date)
+        context["b2b_b2c"] = GSTFilingService.get_b2b_b2c_summary(start_date, end_date)
+        context["tenant_id"] = getattr(self.request, 'tenant_id', None)
+        
+        return context
+
+class RefundBillsView(TenantPermissionRequiredMixin, ListView):
+    """
+    Dashboard for monitoring and processing refunds.
+    """
+    permission_required = "reports.financial.view"
+    template_name = "reporting/refund_bills.html"
+    context_object_name = "refunds"
+    paginate_by = 25
+    
+    def get_queryset(self):
+        qs = Refund.objects.all().select_related("order")
+        
+        status = self.request.GET.get("status")
+        if status:
+            qs = qs.filter(status=status)
+            
+        return qs.order_by("-created_at")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["tenant_id"] = getattr(self.request, 'tenant_id', None)
+        context["target_order_id"] = self.request.GET.get("order", "")
+        return context
+
+
+class RefundLookupView(TenantPermissionRequiredMixin, View):
+    """
+    API endpoint to look up order/invoice details for refund initiation.
+    """
+    permission_required = "reports.financial.view"
+
+    def has_permission(self):
+        if getattr(self.request.user, "is_superuser", False):
+            return True
+        tenant_id = getattr(self.request, "tenant_id", None)
+        location_id = getattr(self.request, "branch_id", None)
+        for perm in ["reports.financial.view", "payments.refund", "orders.void", "invoices.void", "billing.manage"]:
+            if has_permission(self.request.user, perm, tenant_id, location_id):
+                return True
+        return False
+
+    def get(self, request, *args, **kwargs):
+        from django.http import JsonResponse
+        from contexts.ordering.models import Order, RefundStatus
+        from contexts.ordering.domain.enums import PaymentKind
+
+        query = request.GET.get("query", "").strip()
+        order_id = request.GET.get("order_id", "").strip()
+
+        order = None
+        def _lookup():
+            if order_id:
+                try:
+                    return Order.objects.filter(id=order_id).first()
+                except Exception:
+                    return None
+            elif query:
+                return (
+                    Order.objects.filter(order_number__iexact=query).first()
+                    or Order.objects.filter(invoice__number__iexact=query).first()
+                    or Order.objects.filter(order_number__icontains=query).first()
+                )
+            return None
+
+        order = _lookup()
+        if not order and get_current_tenant() is None:
+            with bypass_tenant():
+                order = _lookup()
+
+        if not order:
+            return JsonResponse({"success": False, "error": "Order or invoice not found."}, status=404)
+
+        already_refunded = sum(r.amount for r in order.refunds.filter(status=RefundStatus.COMPLETED))
+        refundable_balance = max(Decimal("0.00"), order.total - already_refunded)
+
+        orig_pm = order.payments.filter(kind=PaymentKind.PAYMENT).first()
+        payment_method = orig_pm.method if orig_pm else "CASH"
+
+        inv_number = order.invoice.number if hasattr(order, "invoice") and order.invoice else None
+
+        items = [
+            {
+                "name": item.name_snapshot,
+                "qty": float(item.qty),
+                "price": float(item.unit_price)
+            }
+            for item in order.items.all()
+        ]
+
+        return JsonResponse({
+            "success": True,
+            "order": {
+                "id": str(order.id),
+                "order_number": order.order_number,
+                "invoice_number": inv_number or "",
+                "customer_name": order.customer_name or "Walk-in Customer",
+                "date": order.created_at.strftime("%b %d, %Y %I:%M %p"),
+                "status": order.status,
+                "total": float(order.total),
+                "already_refunded": float(already_refunded),
+                "refundable_balance": float(refundable_balance),
+                "payment_method": payment_method,
+                "items": items
+            }
+        })
+
+
+class InitiateRefundView(TenantPermissionRequiredMixin, View):
+    """
+    POST API endpoint to initiate and execute an order/invoice refund.
+    """
+    permission_required = "reports.financial.view"
+
+    def has_permission(self):
+        if getattr(self.request.user, "is_superuser", False):
+            return True
+        tenant_id = getattr(self.request, "tenant_id", None)
+        location_id = getattr(self.request, "branch_id", None)
+        for perm in ["reports.financial.view", "payments.refund", "orders.void", "invoices.void", "billing.manage"]:
+            if has_permission(self.request.user, perm, tenant_id, location_id):
+                return True
+        return False
+
+    def post(self, request, *args, **kwargs):
+        import json
+        from django.http import JsonResponse
+        from contexts.ordering.services.refund_service import initiate_refund
+
+        data = {}
+        if request.content_type and "application/json" in request.content_type:
+            try:
+                data = json.loads(request.body)
+            except Exception:
+                return JsonResponse({"success": False, "error": "Invalid JSON payload."}, status=400)
+        else:
+            data = request.POST
+
+        order_id_str = data.get("order_id")
+        amount_str = data.get("amount")
+        reason = data.get("reason", "").strip()
+        refund_type = data.get("refund_type", "FULL")
+        payment_method = data.get("payment_method") or None
+        restock_str = str(data.get("restock_inventory", "true")).lower()
+        restock_inventory = restock_str in ("1", "true", "yes", "on")
+
+        if not order_id_str or not amount_str or not reason:
+            return JsonResponse({
+                "success": False,
+                "error": "Order ID, Refund Amount, and Refund Reason are required."
+            }, status=400)
+
+        try:
+            import uuid
+            order_id = uuid.UUID(order_id_str)
+            amount = Decimal(str(amount_str))
+        except Exception:
+            return JsonResponse({"success": False, "error": "Invalid Order ID or Amount format."}, status=400)
+
+        try:
+            refund = initiate_refund(
+                order_id=order_id,
+                amount=amount,
+                reason=reason,
+                refund_type=refund_type,
+                payment_method=payment_method,
+                restock_inventory=restock_inventory,
+                requested_by=request.user.id
+            )
+            return JsonResponse({
+                "success": True,
+                "refund_id": str(refund.id),
+                "message": f"Refund of ₹{refund.amount:.2f} processed successfully."
+            })
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)}, status=400)
+
+
+class WhatsAppHistoryView(TenantPermissionRequiredMixin, TemplateView):
+    """
+    Global dashboard for WhatsApp message history.
+    """
+    permission_required = "reports.financial.view"
+    template_name = "reporting/whatsapp_history.html"
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # We fetch audit logs corresponding to whatsapp shares
+        from contexts.audit.models import AuditLog
+        logs = AuditLog.objects.filter(
+            action="invoice.whatsapp_shared"
+        ).order_by("-occurred_at")[:50]
+        
+        context["history"] = logs
+        context["tenant_id"] = getattr(self.request, 'tenant_id', None)
+        return context
+
+class BillingSettingsView(TenantPermissionRequiredMixin, TemplateView):
+    """
+    Dashboard for configuring billing-specific tenant settings.
+    """
+    permission_required = "reports.financial.view"
+    template_name = "reporting/billing_settings.html"
+
+    def _get_or_create_config(self):
+        config = TenantConfiguration.objects.first()
+        if not config:
+            tenant_id = getattr(self.request, "tenant_id", None)
+            config = TenantConfiguration.objects.create(tenant_id=tenant_id)
+        return config
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["config"] = self._get_or_create_config()
+        context["tenant_id"] = getattr(self.request, 'tenant_id', None)
+        return context
+
+    def post(self, request, *args, **kwargs):
+        config = self._get_or_create_config()
+        
+        config.invoice_prefix = request.POST.get("invoice_prefix", "INV")
+        config.invoice_footer = request.POST.get("invoice_footer", "")
+        config.gst_number = request.POST.get("gst_number", "")
+        config.save()
+        
+        tenant_id = getattr(self.request, 'tenant_id', None)
+        if tenant_id:
+            return redirect("billing:settings_tenant", tenant_id=tenant_id)
+        return redirect("billing:settings")

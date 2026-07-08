@@ -83,6 +83,33 @@
           </div>
         </div>
       </div>
+
+      <!-- Menu Modifiers Card -->
+      <div class="bg-white dark:bg-neutral-dark-100 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-dark-200 overflow-hidden">
+        <div class="px-6 py-4 border-b border-neutral-200 dark:border-neutral-dark-300 bg-neutral-50 dark:bg-neutral-dark-200 flex items-center justify-between">
+          <div>
+            <h3 class="text-base font-bold text-neutral-900 dark:text-white">Assigned Modifier Groups</h3>
+            <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">Select customizable add-ons, crusts, or cooking preferences available when ordering this item.</p>
+          </div>
+          <a href="{% url 'catalog:modifier_group_list' %}" target="_blank" class="text-xs text-brand-default font-semibold hover:underline">Manage Modifiers ↗</a>
+        </div>
+        <div class="p-6">
+          {% if form.modifier_groups.field.queryset.exists %}
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {% for checkbox in form.modifier_groups %}
+            <label class="flex items-start gap-3 p-3 rounded-xl border border-neutral-200 dark:border-neutral-dark-200 hover:bg-neutral-50 dark:hover:bg-neutral-dark-200/50 cursor-pointer transition-colors">
+              <div class="pt-0.5">{{ checkbox.tag }}</div>
+              <div class="space-y-0.5">
+                <div class="text-sm font-semibold text-neutral-900 dark:text-white">{{ checkbox.choice_label }}</div>
+              </div>
+            </label>
+            {% endfor %}
+          </div>
+          {% else %}
+          <p class="text-xs text-neutral-500 italic">No modifier groups created yet. Click "Manage Modifiers" above to create customization groups.</p>
+          {% endif %}
+        </div>
+      </div>
     </div>
 
     <!-- Right Column (Span 1): Pricing and Settings -->

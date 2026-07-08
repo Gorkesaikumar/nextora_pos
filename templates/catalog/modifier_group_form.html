@@ -1,0 +1,162 @@
+{% extends "layouts/dashboard.html" %}
+
+{% block page_title %}{% if object %}Edit Modifier Group{% else %}Create Modifier Group{% endif %}{% endblock %}
+{% block page_subtitle %}<p class="text-caption text-neutral-500 mt-1">Configure enterprise selection rules, display behavior, KOT printing flags, and customer customization limits.</p>{% endblock %}
+
+{% block primary_action %}
+<a href="{% url 'catalog:modifier_group_list' %}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-neutral-300 dark:border-neutral-dark-300 text-sm font-semibold text-neutral-700 dark:text-neutral-dark-700 hover:bg-neutral-100 dark:hover:bg-neutral-dark-150 transition-colors">
+  <span>Back to Modifiers</span>
+</a>
+{% endblock %}
+
+{% block workspace %}
+<div class="max-w-4xl mt-6">
+  <form method="POST" class="space-y-8">
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+    <div class="p-4 rounded-xl bg-semantic-danger/10 border border-semantic-danger/20 text-semantic-danger text-sm">
+      {{ form.non_field_errors.0 }}
+    </div>
+    {% endif %}
+    
+    <!-- SECTION 1: GENERAL INFORMATION -->
+    <div class="card p-6 space-y-5">
+      <div class="flex items-center justify-between border-b border-neutral-100 dark:border-neutral-dark-200 pb-3">
+        <div>
+          <h3 class="text-heading-3 font-semibold text-neutral-900 dark:text-neutral-dark-900">General Information</h3>
+          <p class="text-xs text-neutral-500">Internal naming and optional customer-facing overrides</p>
+        </div>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div>
+          <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-dark-700 mb-1.5">Group Name *</label>
+          {{ form.name }}
+          {% if form.name.errors %}
+          <p class="text-xs text-semantic-danger mt-1">{{ form.name.errors.0 }}</p>
+          {% endif %}
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-dark-700 mb-1.5">Internal Code (SKU/Ref)</label>
+          {{ form.internal_code }}
+          {% if form.internal_code.errors %}
+          <p class="text-xs text-semantic-danger mt-1">{{ form.internal_code.errors.0 }}</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-dark-700 mb-1.5">Customer Display Name Override</label>
+        {{ form.display_name }}
+        <p class="text-xs text-neutral-400 mt-1">If blank, Group Name is displayed to customers and cashiers.</p>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-dark-700 mb-1.5">Customer-Facing Description / Hint</label>
+        {{ form.description }}
+      </div>
+    </div>
+
+    <!-- SECTION 2: SELECTION RULES -->
+    <div class="card p-6 space-y-5">
+      <div class="border-b border-neutral-100 dark:border-neutral-dark-200 pb-3">
+        <h3 class="text-heading-3 font-semibold text-neutral-900 dark:text-neutral-dark-900">Selection Rules & Validation</h3>
+        <p class="text-xs text-neutral-500">Configure minimum/maximum limits and single vs multi-choice constraints</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div>
+          <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-dark-700 mb-1.5">Selection Type</label>
+          {{ form.selection_type }}
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-dark-700 mb-1.5">Minimum Selection</label>
+          {{ form.min_select }}
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-dark-700 mb-1.5">Maximum Selection</label>
+          {{ form.max_select }}
+          {% if form.max_select.errors %}
+          <p class="text-xs text-semantic-danger mt-1">{{ form.max_select.errors.0 }}</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="pt-2">
+        <label class="inline-flex items-center gap-2 cursor-pointer">
+          {{ form.is_required }}
+          <span class="text-sm font-medium text-neutral-800 dark:text-neutral-dark-800">Required Group (Mandatory selection before item can be added to order)</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- SECTION 3: DISPLAY SETTINGS -->
+    <div class="card p-6 space-y-5">
+      <div class="border-b border-neutral-100 dark:border-neutral-dark-200 pb-3">
+        <h3 class="text-heading-3 font-semibold text-neutral-900 dark:text-neutral-dark-900">Display Settings</h3>
+        <p class="text-xs text-neutral-500">How this modifier group renders on POS terminals and order interfaces</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div>
+          <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-dark-700 mb-1.5">UI Display Style</label>
+          {{ form.display_style }}
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-dark-700 mb-1.5">Sort Order</label>
+          {{ form.sort_order }}
+        </div>
+      </div>
+
+      <div class="pt-2">
+        <label class="inline-flex items-center gap-2 cursor-pointer">
+          {{ form.expand_by_default }}
+          <span class="text-sm font-medium text-neutral-800 dark:text-neutral-dark-800">Expand Group by Default inside POS Customization Popup</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- SECTION 4: ADVANCED SETTINGS & PRINTING -->
+    <div class="card p-6 space-y-5">
+      <div class="border-b border-neutral-100 dark:border-neutral-dark-200 pb-3">
+        <h3 class="text-heading-3 font-semibold text-neutral-900 dark:text-neutral-dark-900">Advanced Settings — Printing & Routing</h3>
+        <p class="text-xs text-neutral-500">Control itemized printing across customer receipts, tax invoices, and Kitchen Order Tickets (KOT)</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-1">
+        <label class="inline-flex items-center gap-2 cursor-pointer">
+          {{ form.print_on_invoice }}
+          <span class="text-sm font-medium text-neutral-800 dark:text-neutral-dark-800">Print on Customer Invoice</span>
+        </label>
+        <label class="inline-flex items-center gap-2 cursor-pointer">
+          {{ form.print_on_restaurant_copy }}
+          <span class="text-sm font-medium text-neutral-800 dark:text-neutral-dark-800">Print on Restaurant Copy</span>
+        </label>
+        <label class="inline-flex items-center gap-2 cursor-pointer">
+          {{ form.print_on_kitchen_ticket }}
+          <span class="text-sm font-medium text-neutral-800 dark:text-neutral-dark-800">Print on Kitchen Ticket (KOT)</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- SECTION 5: STATUS -->
+    <div class="card p-6 flex items-center justify-between">
+      <div>
+        <h4 class="text-sm font-semibold text-neutral-900 dark:text-neutral-dark-900">Active Status</h4>
+        <p class="text-xs text-neutral-500">Active modifier groups are available for menu item mapping and POS orders.</p>
+      </div>
+      <label class="inline-flex items-center gap-2 cursor-pointer">
+        {{ form.is_active }}
+        <span class="text-sm font-semibold text-neutral-800 dark:text-neutral-dark-800">Active</span>
+      </label>
+    </div>
+
+    <div class="flex justify-end gap-3 pt-2">
+      <a href="{% url 'catalog:modifier_group_list' %}" class="px-5 py-2.5 rounded-xl border border-neutral-300 dark:border-neutral-dark-300 text-sm font-semibold text-neutral-700 dark:text-neutral-dark-700 hover:bg-neutral-100 transition-colors">Cancel</a>
+      <button type="submit" class="btn-primary">Save Modifier Group</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

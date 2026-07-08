@@ -1,0 +1,265 @@
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-sm"
+     x-data="posModifierModal({
+       productName: '{{ product.name|escapejs }}',
+       basePrice: {{ product.base_price }},
+       isEdit: {% if is_edit %}true{% else %}false{% endif %},
+       requiredGroups: [
+         {% for group in groups %}
+           {% if group.is_required %}
+           { id: '{{ group.id }}', name: '{{ group.name|escapejs }}', min: {{ group.min_select }} },
+           {% endif %}
+         {% endfor %}
+       ],
+       modifierPrices: {
+         {% for group in groups %}
+           {% for mod in group.modifiers.all %}
+             '{{ mod.id }}': {{ mod.price_delta }},
+           {% endfor %}
+         {% endfor %}
+       },
+       defaultModifiers: [
+         {% for group in groups %}
+           {% for mod in group.modifiers.all %}
+             {% if mod.is_default %}'{{ mod.id }}',{% endif %}
+           {% endfor %}
+         {% endfor %}
+       ],
+       initialSelected: [
+         {% for mid in selected_modifier_ids %}'{{ mid }}',{% endfor %}
+       ],
+       initialNotes: '{{ item.notes|default:""|escapejs }}',
+       initialQty: {{ item.qty|default:1 }}
+     })"
+     @keydown.escape.window="$el.remove()">
+
+  <div class="bg-neutral-0 dark:bg-neutral-dark-100 rounded-2xl shadow-2xl border border-neutral-200 dark:border-neutral-dark-200 w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-fade-in">
+
+    <!-- Header -->
+    <div class="px-6 py-5 border-b border-neutral-200 dark:border-neutral-dark-200 flex items-start justify-between bg-neutral-50/60 dark:bg-neutral-dark-150/60">
+      <div>
+        <div class="flex items-center gap-2 mb-1">
+          <span class="px-2 py-0.5 text-xs font-mono font-semibold rounded bg-brand-subtle text-brand-default">{{ product.sku }}</span>
+          {% if is_edit %}
+          <span class="px-2 py-0.5 text-xs font-semibold rounded bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">Editing Modifiers</span>
+          {% endif %}
+        </div>
+        <h2 class="text-heading-2 text-neutral-900 dark:text-neutral-dark-900">{{ product.name }}</h2>
+        <p class="text-caption text-neutral-500 dark:text-neutral-dark-500 mt-0.5">{{ product.description|default:"Customize options and add-ons below" }}</p>
+      </div>
+      <button type="button"
+              @click="$el.closest('.fixed').remove()"
+              class="p-2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 rounded-lg transition-colors">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
+    </div>
+
+    <!-- Form Container -->
+    <form class="flex-grow overflow-y-auto px-6 py-5 space-y-6"
+          {% if is_edit %}
+          hx-post="{% url 'ordering:pos_edit_modifier_modal' item.id %}"
+          {% else %}
+          hx-post="{% url 'ordering:pos_add_with_modifiers' product.id %}"
+          {% endif %}
+          hx-target="#pos-cart-panel"
+          hx-swap="outerHTML"
+          @htmx:after-request="$el.closest('.fixed').remove()">
+
+      {% csrf_token %}
+
+      <!-- Modifier Groups -->
+      {% for group in groups %}
+      <div class="p-4 rounded-xl border border-neutral-200 dark:border-neutral-dark-200 bg-neutral-0 dark:bg-neutral-dark-100 shadow-xs space-y-3">
+        <div class="flex items-center justify-between border-b border-neutral-100 dark:border-neutral-dark-200 pb-2.5">
+          <div>
+            <h3 class="text-body-strong text-neutral-900 dark:text-neutral-dark-900">{{ group.name }}</h3>
+            {% if group.description %}
+            <p class="text-xs text-neutral-500 dark:text-neutral-dark-500">{{ group.description }}</p>
+            {% endif %}
+          </div>
+          <div class="flex items-center gap-2">
+            {% if group.is_required %}
+            <span class="px-2 py-0.5 rounded text-xs font-semibold bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-red-300">Required</span>
+            {% else %}
+            <span class="px-2 py-0.5 rounded text-xs font-medium bg-neutral-100 text-neutral-600 dark:bg-neutral-dark-200 dark:text-neutral-dark-600">Optional</span>
+            {% endif %}
+            <span class="text-xs text-neutral-400">
+              {% if group.max_select == 1 %}Single choice{% else %}Up to {{ group.max_select }}{% endif %}
+            </span>
+          </div>
+        </div>
+
+        <!-- Options Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+          {% for mod in group.modifiers.all %}
+          {% if mod.is_active and not mod.is_deleted %}
+          <label class="flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all select-none"
+                 :class="isSelected('{{ mod.id }}') ? 'border-brand-default bg-brand-subtle/30 dark:bg-brand-default/10' : 'border-neutral-200 dark:border-neutral-dark-200 hover:border-neutral-300 dark:hover:border-neutral-dark-300'">
+            <div class="flex items-center gap-3">
+              <input type="{% if group.max_select == 1 %}radio{% else %}checkbox{% endif %}"
+                     name="modifier_ids"
+                     value="{{ mod.id }}"
+                     class="w-4 h-4 rounded text-brand-default focus:ring-brand-default border-neutral-300"
+                     @change="toggleOption('{{ group.id }}', '{{ mod.id }}', {{ group.max_select }})"
+                     :checked="isSelected('{{ mod.id }}')">
+              <div>
+                <div class="text-body-strong text-neutral-800 dark:text-neutral-dark-800">{{ mod.name }}</div>
+                {% if mod.sku %}
+                <div class="text-[10px] text-neutral-400 font-mono">{{ mod.sku }}</div>
+                {% endif %}
+              </div>
+            </div>
+            <div class="text-body-strong tabular-nums"
+                 :class="isSelected('{{ mod.id }}') ? 'text-brand-default font-bold' : 'text-neutral-600 dark:text-neutral-dark-600'">
+              {% if mod.price_delta > 0 %}
+              +₹{{ mod.price_delta|floatformat:2 }}
+              {% elif mod.price_delta < 0 %}
+              -₹{{ mod.price_delta|floatformat:2 }}
+              {% else %}
+              Free
+              {% endif %}
+            </div>
+          </label>
+          {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+      {% empty %}
+      <!-- Empty state: no modifier groups assigned to this product -->
+      <div class="flex flex-col items-center justify-center py-8 px-4 rounded-xl border-2 border-dashed border-neutral-200 dark:border-neutral-dark-200 text-center">
+        <div class="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mb-3">
+          <svg class="w-6 h-6 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+        </div>
+        <p class="text-body-strong text-neutral-800 dark:text-neutral-dark-800 mb-1">No modifier groups assigned</p>
+        <p class="text-caption text-neutral-500 dark:text-neutral-dark-500 mb-4 max-w-xs">
+          This product has no customization groups linked yet. Assign modifier groups from the product edit page.
+        </p>
+        <a href="{% url 'catalog:product_update' product.id %}"
+           target="_blank"
+           class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-subtle text-brand-default text-sm font-semibold hover:bg-brand-default hover:text-white transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+          </svg>
+          Edit Product to Assign Modifiers ↗
+        </a>
+      </div>
+      {% endfor %}
+
+      <!-- Quantity & Special Instructions -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+        <div class="sm:col-span-1">
+          <label class="block text-caption-strong text-neutral-700 dark:text-neutral-dark-700 mb-1.5">Quantity</label>
+          <div class="flex items-center border border-neutral-200 dark:border-neutral-dark-200 rounded-lg overflow-hidden h-11">
+            <button type="button" @click="qty = Math.max(1, qty - 1)" class="w-11 h-full flex items-center justify-center bg-neutral-100 dark:bg-neutral-dark-150 hover:bg-neutral-200 text-neutral-700 dark:text-neutral-200 font-bold">-</button>
+            <input type="number" name="qty" x-model.number="qty" min="1" class="w-full h-full text-center font-semibold text-body bg-transparent border-0 focus:ring-0">
+            <button type="button" @click="qty++" class="w-11 h-full flex items-center justify-center bg-neutral-100 dark:bg-neutral-dark-150 hover:bg-neutral-200 text-neutral-700 dark:text-neutral-200 font-bold">+</button>
+          </div>
+        </div>
+
+        <div class="sm:col-span-2">
+          <label class="block text-caption-strong text-neutral-700 dark:text-neutral-dark-700 mb-1.5">Special Kitchen Instructions</label>
+          <input type="text"
+                 name="notes"
+                 x-model="notes"
+                 placeholder="e.g. No onion, Dressing on the side, Extra crispy..."
+                 class="w-full h-11 px-3 rounded-lg border border-neutral-200 dark:border-neutral-dark-200 bg-neutral-0 dark:bg-neutral-dark-100 text-body focus:ring-2 focus:ring-brand-default focus:border-brand-default">
+        </div>
+      </div>
+
+      <!-- Footer Actions -->
+      <div class="sticky bottom-0 -mx-6 -mb-5 px-6 py-4 bg-neutral-50 dark:bg-neutral-dark-150 border-t border-neutral-200 dark:border-neutral-dark-200 flex items-center justify-between">
+        <div>
+          <div class="text-caption text-neutral-500">Total Calculated Price</div>
+          <div class="text-heading-2 text-neutral-900 dark:text-neutral-dark-900 tabular-nums">
+            ₹<span x-text="calculateTotal().toFixed(2)"></span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button type="button"
+                  @click="$el.closest('.fixed').remove()"
+                  class="btn btn-secondary h-11 px-5">
+            Cancel
+          </button>
+
+          <button type="submit"
+                  :disabled="!isValid()"
+                  :class="!isValid() ? 'opacity-50 cursor-not-allowed !bg-neutral-300 !text-neutral-500 border-transparent' : ''"
+                  class="h-11 px-6 rounded-lg font-semibold flex items-center gap-2 transition-all !bg-black !text-white hover:!bg-neutral-800 border border-transparent">
+            <span>{% if is_edit %}Save Customization{% else %}Add to Order{% endif %}</span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function posModifierModal(config) {
+  return {
+    productName: config.productName,
+    basePrice: Number(config.basePrice) || 0,
+    isEdit: config.isEdit,
+    requiredGroups: config.requiredGroups || [],
+    modifierPrices: config.modifierPrices || {},
+    defaultModifiers: config.defaultModifiers || [],
+    selected: new Set(config.initialSelected || []),
+    notes: config.initialNotes || '',
+    qty: Number(config.initialQty) || 1,
+
+    init() {
+      if (!this.isEdit && this.selected.size === 0 && this.defaultModifiers.length > 0) {
+        this.defaultModifiers.forEach(id => this.selected.add(id));
+      }
+    },
+
+    isSelected(modId) {
+      return this.selected.has(modId);
+    },
+
+    toggleOption(groupId, modId, maxSelect) {
+      if (maxSelect === 1) {
+        const radioInputs = this.$el.querySelectorAll(`input[name="modifier_ids"]`);
+        radioInputs.forEach(input => {
+          if (input.value !== modId && input.getAttribute('@change').includes(`'${groupId}'`)) {
+            this.selected.delete(input.value);
+          }
+        });
+        this.selected.add(modId);
+      } else {
+        if (this.selected.has(modId)) {
+          this.selected.delete(modId);
+        } else {
+          this.selected.add(modId);
+        }
+      }
+    },
+
+    calculateTotal() {
+      let extra = 0;
+      this.selected.forEach(id => {
+        extra += Number(this.modifierPrices[id]) || 0;
+      });
+      return (this.basePrice + extra) * this.qty;
+    },
+
+    isValid() {
+      for (let group of this.requiredGroups) {
+        let count = 0;
+        const inputs = this.$el.querySelectorAll(`input[name="modifier_ids"]`);
+        inputs.forEach(input => {
+          if (this.selected.has(input.value) && input.getAttribute('@change').includes(`'${group.id}'`)) {
+            count++;
+          }
+        });
+        if (count < group.min) {
+          return false;
+        }
+      }
+      return true;
+    }
+  };
+}
+</script>

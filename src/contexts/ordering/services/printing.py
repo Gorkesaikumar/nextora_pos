@@ -168,5 +168,5 @@ def _resolve_cashier_name(order: Order) -> str:
     if user_id:
         user = User.objects.filter(id=user_id).first()
         if user:
-            return user.get_full_name() or user.get_username()
+            return user.full_name or user.get_username()
     return "POS Terminal #1"

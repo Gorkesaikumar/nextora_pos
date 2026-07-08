@@ -62,7 +62,6 @@ class SetTenantView(LoginRequiredMixin, View):
     def get(self, request, slug, *args, **kwargs):
         with bypass_tenant():
             tenant = get_object_or_404(Tenant, slug=slug)
-            # Verify membership server-side; never trust the slug alone.
             has_access = Membership.objects.filter(
                 user=request.user, tenant=tenant, is_active=True
             ).exists()
@@ -71,3 +70,18 @@ class SetTenantView(LoginRequiredMixin, View):
             return _activate(request, tenant)
 
         return redirect("tenants:select_tenant")
+
+
+class SetTenantUUIDView(LoginRequiredMixin, View):
+    def get(self, request, pk, *args, **kwargs):
+        with bypass_tenant():
+            tenant = get_object_or_404(Tenant, id=pk)
+            has_access = Membership.objects.filter(
+                user=request.user, tenant=tenant, is_active=True
+            ).exists()
+
+        if has_access and tenant.is_active:
+            return _activate(request, tenant)
+
+        return redirect("tenants:select_tenant")
+

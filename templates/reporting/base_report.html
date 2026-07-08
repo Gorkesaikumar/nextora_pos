@@ -68,16 +68,16 @@
               <i data-lucide="refresh-cw" class="w-4 h-4 mr-1.5"></i> Refresh
             </button>
             {% block report_actions %}
-              <a href="?export=pdf&{{ request.GET.urlencode }}" class="btn-secondary" title="Export as PDF">
+              <button type="button" onclick="exportReport('pdf')" class="btn-secondary" title="Export as PDF">
                 <i data-lucide="file-text" class="w-4 h-4 mr-1.5 text-red-600"></i> PDF
-              </a>
-              <a href="?export=csv&{{ request.GET.urlencode }}" class="btn-secondary" title="Export as CSV">
+              </button>
+              <button type="button" onclick="exportReport('csv')" class="btn-secondary" title="Export as CSV">
                 <i data-lucide="file-spreadsheet" class="w-4 h-4 mr-1.5 text-green-600"></i> CSV
-              </a>
-              <a href="?export=excel&{{ request.GET.urlencode }}" class="btn-secondary" title="Export as Excel">
+              </button>
+              <button type="button" onclick="exportReport('excel')" class="btn-secondary" title="Export as Excel">
                 <i data-lucide="file-spreadsheet" class="w-4 h-4 mr-1.5 text-blue-600"></i> Excel
-              </a>
-              <button onclick="window.print()" class="btn-secondary" title="Print Report">
+              </button>
+              <button type="button" onclick="window.print()" class="btn-secondary" title="Print Report">
                 <i data-lucide="printer" class="w-4 h-4 mr-1.5 text-neutral-500"></i> Print
               </button>
             {% endblock %}
@@ -188,6 +188,11 @@
 
   <!-- Re-run Lucide Icons post Alpine lifecycle -->
   <script>
+    function exportReport(format) {
+      const url = new URL(window.location.href);
+      url.searchParams.set('export', format);
+      window.location.href = url.toString();
+    }
     document.addEventListener("DOMContentLoaded", function() {
       if (typeof lucide !== 'undefined') {
         lucide.createIcons();
@@ -200,27 +205,49 @@
     
     /* Print Styles */
     @media print {
-      body * {
-        visibility: hidden;
-      }
-      .zone-workspace, .zone-workspace * {
-        visibility: visible;
-      }
-      .zone-workspace {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        background: white !important;
-      }
-      .btn, form, #module-sidebar, .module-rail, #module-sidebar-toggle, .zone-shell, .fixed {
+      /* Hide all UI chromes, rails, headers, forms, buttons */
+      header, footer, nav, aside, .top-rail, .zone-top-rail, .module-rail, #module-sidebar, .zone-shell--no-status-rail .module-rail, .btn-primary, .btn-secondary, .btn, button, a.btn-secondary {
         display: none !important;
       }
-      /* Ensure text is dark and fully visible */
+      
+      body {
+        margin: 0;
+        padding: 0;
+        background: white;
+      }
+
+      /* Make the workspace take over the page without absolute positioning which breaks pagination */
+      .zone-workspace {
+        position: relative !important;
+        left: auto !important;
+        top: auto !important;
+        width: 100% !important;
+        height: auto !important;
+        overflow: visible !important;
+        background: white !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+      
+      .zone-shell {
+        display: block !important;
+        height: auto !important;
+        overflow: visible !important;
+      }
+
+      /* Force table colors */
       .card, table, tr, td, th {
         border-color: #e5e7eb !important;
         color: black !important;
         background: transparent !important;
+      }
+      
+      /* Ensure filters form is hidden */
+      form { display: none !important; }
+      
+      /* Avoid breaking rows */
+      tr {
+        page-break-inside: avoid;
       }
     }
   </style>

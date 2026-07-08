@@ -87,9 +87,22 @@ def complete_checkout_transaction(
     if method == PaymentMethod.CASH and tendered_dec < order.total:
         raise ValueError(f"Tendered amount ({tendered_dec}) is less than order total ({order.total}).")
 
+    # 9. Record Payment FIRST — this calls _recompute(), setting order.due_amount = 0.
+    # The invoice service checks due_amount > 0, so payment must exist before invoicing.
+    payment_service.add_payment(
+        order_id=order.id,
+        amount=order.total,
+        method=method,
+        tendered=tendered_dec,
+        created_by=performed_by_id,
+    )
+
+    # Reload order so in-memory due_amount reflects the payment just recorded.
+    order.refresh_from_db()
+
     # 4. Create Sale + 5. Create Invoice + 6. Generate Invoice Number
-    # settle_and_invoice creates the Invoice (#5), generates gapless Invoice Number (#6),
-    # and transitions order.status to SETTLED (#4).
+    # settle_and_invoice checks order.due_amount == 0 (now satisfied after payment above),
+    # creates the Invoice, generates gapless Invoice Number, and sets order.status = SETTLED.
     invoice = invoice_service.settle_and_invoice(order.id)
 
     # 7. Generate KOT Number
@@ -113,15 +126,22 @@ def complete_checkout_transaction(
                 performed_by_id=performed_by_id,
                 allow_negative=True,
             )
-
-    # 9. Record Payment
-    payment_service.add_payment(
-        order_id=order.id,
-        amount=order.total,
-        method=method,
-        tendered=tendered_dec,
-        created_by=performed_by_id,
-    )
+        for mod in item.modifiers.all():
+            from contexts.catalog.models.modifier import Modifier
+            modifier_obj = Modifier.objects.filter(id=mod.modifier_id).first()
+            if modifier_obj and modifier_obj.inventory_item_id:
+                consume_qty = item.qty * modifier_obj.quantity_consumed
+                apply_stock_movement(
+                    inventory_item_id=modifier_obj.inventory_item_id,
+                    movement_type=StockMovementType.SALE,
+                    quantity=-consume_qty,
+                    reference_type="ORDER",
+                    reference_id=order.id,
+                    reference_number=order.order_number,
+                    notes=f"POS Sale #{order.order_number} (Modifier: {modifier_obj.name})",
+                    performed_by_id=performed_by_id,
+                    allow_negative=True,
+                )
 
     # 10. Save Audit Log
     record_audit(

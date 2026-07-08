@@ -55,53 +55,137 @@
   <!-- Items -->
   <div class="flex-grow overflow-y-auto px-5 py-4 space-y-3 min-h-0">
     {% if active_order and active_order.items.all %}
-      {% for item in active_order.items.all %}
-      {% if item.status == 'active' %}
-      <div class="flex gap-3 items-center group">
-        <!-- Qty stepper -->
-        <div class="flex flex-col items-center border border-neutral-200 dark:border-neutral-dark-200 rounded-card overflow-hidden shrink-0">
-          <button class="w-9 h-8 flex items-center justify-center bg-neutral-50 hover:bg-neutral-100 dark:bg-neutral-dark-150 dark:hover:bg-neutral-dark-200 text-neutral-600 dark:text-neutral-dark-600 transition-colors focus:outline-none focus:ring-1 focus:ring-inset focus:ring-brand-default"
-                  aria-label="Increase quantity of {{ item.name_snapshot }}"
-                  hx-post="{% url 'ordering:pos_update_item' item.id 'add' %}" hx-target="#pos-cart-panel" hx-swap="outerHTML">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
-          </button>
-          <div class="w-9 h-8 flex items-center justify-center bg-neutral-0 dark:bg-neutral-dark-100 text-body-strong tabular-nums border-y border-neutral-200 dark:border-neutral-dark-200">{{ item.qty|floatformat:"0" }}</div>
-          <button class="w-9 h-8 flex items-center justify-center bg-neutral-50 hover:bg-neutral-100 dark:bg-neutral-dark-150 dark:hover:bg-neutral-dark-200 text-neutral-600 dark:text-neutral-dark-600 transition-colors focus:outline-none focus:ring-1 focus:ring-inset focus:ring-brand-default"
-                  aria-label="Decrease quantity of {{ item.name_snapshot }}"
-                  hx-post="{% url 'ordering:pos_update_item' item.id 'sub' %}" hx-target="#pos-cart-panel" hx-swap="outerHTML">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M20 12H4"></path></svg>
-          </button>
-        </div>
-
-        <!-- Thumbnail -->
-        <div class="w-11 h-11 rounded-card bg-neutral-100 dark:bg-neutral-dark-150 flex items-center justify-center shrink-0 text-neutral-400 font-bold text-body-strong">
-          {{ item.name_snapshot|make_list|first|upper }}
-        </div>
-
-        <!-- Details -->
-        <div class="flex-grow min-w-0">
-          <div class="flex justify-between items-start gap-2">
-            <div class="text-body-strong text-neutral-900 dark:text-neutral-dark-900 truncate">{{ item.name_snapshot }}</div>
-            <div class="text-body-strong tabular-nums text-neutral-900 dark:text-neutral-dark-900 shrink-0">₹{{ item.line_total|floatformat:2 }}</div>
+      {% regroup active_order.ordered_items by combo as combo_groups %}
+      
+      {% for group in combo_groups %}
+        {% if group.grouper %}
+          <!-- Combo Wrapper -->
+          <div class="mb-3 border border-brand-default/20 rounded-card overflow-hidden bg-brand-default/5 dark:bg-brand-default/10">
+            <div class="bg-brand-default/10 dark:bg-brand-default/20 px-3 py-2 flex justify-between items-center group/combo">
+              <div class="flex items-center gap-2">
+                <span class="w-6 h-6 rounded-full bg-brand-default text-white flex items-center justify-center shrink-0">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </span>
+                <div>
+                  <div class="text-body-strong text-brand-default font-bold">{{ group.grouper.name_snapshot }}</div>
+                  {% if group.grouper.savings > 0 %}
+                    <div class="text-[10px] uppercase font-bold text-semantic-success tracking-wide">Saved ₹{{ group.grouper.savings|floatformat:2 }}</div>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <span class="text-body-strong font-bold text-brand-default tabular-nums">₹{{ group.grouper.price|floatformat:2 }}</span>
+                <!-- Remove Combo -->
+                <button class="p-1 text-brand-default/50 hover:text-semantic-danger transition-colors opacity-0 group-hover/combo:opacity-100 focus:opacity-100 focus:outline-none"
+                        aria-label="Remove {{ group.grouper.name_snapshot }}"
+                        hx-post="{% url 'ordering:pos_remove_combo' group.grouper.id %}" hx-target="#pos-cart-panel" hx-swap="outerHTML"
+                        hx-confirm="Remove this combo from the order?">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                </button>
+              </div>
+            </div>
+            
+            <div class="px-3 py-2 space-y-2">
+              {% for item in group.list %}
+              {% if item.status == 'active' %}
+              <div class="flex gap-2 items-start relative pl-2 border-l-2 border-brand-default/20 ml-1">
+                <div class="flex-grow min-w-0">
+                  <div class="text-body text-neutral-800 dark:text-neutral-dark-800 truncate flex justify-between">
+                    <span>{{ item.qty|floatformat:"0" }}x {{ item.name_snapshot }}</span>
+                    {% if item.modifiers.exists %}
+                    <button type="button"
+                            class="text-[10px] font-semibold text-brand-default hover:underline"
+                            hx-get="{% url 'ordering:pos_edit_modifier_modal' item.id %}"
+                            hx-target="body" hx-swap="beforeend">Customize</button>
+                    {% endif %}
+                  </div>
+                  {% if item.modifiers.all %}
+                  <div class="flex flex-wrap gap-1 mt-1">
+                    {% for mod in item.modifiers.all %}
+                    <span class="inline-flex items-center gap-1 px-1 py-0.5 rounded text-[10px] bg-brand-subtle/30 text-brand-default/80">
+                      + {{ mod.name_snapshot }}
+                    </span>
+                    {% endfor %}
+                  </div>
+                  {% endif %}
+                </div>
+              </div>
+              {% endif %}
+              {% endfor %}
+            </div>
           </div>
-          <div class="text-caption text-neutral-500 dark:text-neutral-dark-500 mt-0.5">₹{{ item.unit_price|floatformat:2 }} each</div>
-          {% if item.modifiers.all %}
-          <div class="text-caption text-neutral-500 mt-1 space-y-0.5">
-            {% for mod in item.modifiers.all %}
-            <div class="flex justify-between"><span>{{ mod.name_snapshot }}</span><span class="tabular-nums">₹{{ mod.price_delta|floatformat:2 }}</span></div>
-            {% endfor %}
+          
+        {% else %}
+          <!-- Standard individual items -->
+          {% for item in group.list %}
+          {% if item.status == 'active' %}
+          <div class="flex gap-3 items-center group">
+            <!-- Qty stepper -->
+            <div class="flex flex-col items-center border border-neutral-200 dark:border-neutral-dark-200 rounded-card overflow-hidden shrink-0">
+              <button class="w-9 h-8 flex items-center justify-center bg-neutral-50 hover:bg-neutral-100 dark:bg-neutral-dark-150 dark:hover:bg-neutral-dark-200 text-neutral-600 dark:text-neutral-dark-600 transition-colors focus:outline-none focus:ring-1 focus:ring-inset focus:ring-brand-default"
+                      aria-label="Increase quantity of {{ item.name_snapshot }}"
+                      hx-post="{% url 'ordering:pos_update_item' item.id 'add' %}" hx-target="#pos-cart-panel" hx-swap="outerHTML">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+              </button>
+              <div class="w-9 h-8 flex items-center justify-center bg-neutral-0 dark:bg-neutral-dark-100 text-body-strong tabular-nums border-y border-neutral-200 dark:border-neutral-dark-200">{{ item.qty|floatformat:"0" }}</div>
+              <button class="w-9 h-8 flex items-center justify-center bg-neutral-50 hover:bg-neutral-100 dark:bg-neutral-dark-150 dark:hover:bg-neutral-dark-200 text-neutral-600 dark:text-neutral-dark-600 transition-colors focus:outline-none focus:ring-1 focus:ring-inset focus:ring-brand-default"
+                      aria-label="Decrease quantity of {{ item.name_snapshot }}"
+                      hx-post="{% url 'ordering:pos_update_item' item.id 'sub' %}" hx-target="#pos-cart-panel" hx-swap="outerHTML">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M20 12H4"></path></svg>
+              </button>
+            </div>
+
+            <!-- Thumbnail -->
+            <div class="w-11 h-11 rounded-card bg-neutral-100 dark:bg-neutral-dark-150 flex items-center justify-center shrink-0 text-neutral-400 font-bold text-body-strong">
+              {{ item.name_snapshot|make_list|first|upper }}
+            </div>
+
+            <!-- Details -->
+            <div class="flex-grow min-w-0">
+              <div class="flex justify-between items-start gap-2">
+                <div class="text-body-strong text-neutral-900 dark:text-neutral-dark-900 truncate">{{ item.name_snapshot }}</div>
+                <div class="text-body-strong tabular-nums text-neutral-900 dark:text-neutral-dark-900 shrink-0">₹{{ item.line_total|floatformat:2 }}</div>
+              </div>
+              <div class="flex items-center justify-between mt-0.5">
+                <span class="text-caption text-neutral-500 dark:text-neutral-dark-500">₹{{ item.unit_price|floatformat:2 }} each</span>
+                <button type="button"
+                        class="text-[11px] font-semibold text-brand-default hover:underline flex items-center gap-1"
+                        hx-get="{% url 'ordering:pos_edit_modifier_modal' item.id %}"
+                        hx-target="body"
+                        hx-swap="beforeend">
+                  <span>Customize</span>
+                </button>
+              </div>
+              {% if item.modifiers.all %}
+              <div class="flex flex-wrap gap-1 mt-1.5">
+                {% for mod in item.modifiers.all %}
+                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] bg-brand-subtle/50 text-brand-default dark:bg-brand-default/10 font-medium">
+                  <span>+ {{ mod.name_snapshot }}</span>
+                  {% if mod.price_delta %}
+                  <span class="opacity-75">(₹{{ mod.price_delta|floatformat:2 }})</span>
+                  {% endif %}
+                </span>
+                {% endfor %}
+              </div>
+              {% endif %}
+              {% if item.notes %}
+              <div class="text-xs italic text-amber-700 dark:text-amber-300 mt-1 flex items-center gap-1">
+                <span>📝</span>
+                <span>{{ item.notes }}</span>
+              </div>
+              {% endif %}
+            </div>
+
+            <!-- Remove -->
+            <button class="p-1.5 text-neutral-300 hover:text-semantic-danger transition-colors shrink-0 opacity-0 group-hover:opacity-100 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-brand-default rounded-card"
+                    aria-label="Remove {{ item.name_snapshot }}"
+                    hx-post="{% url 'ordering:pos_remove_item' item.id %}" hx-target="#pos-cart-panel" hx-swap="outerHTML">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+            </button>
           </div>
           {% endif %}
-        </div>
-
-        <!-- Remove -->
-        <button class="p-1.5 text-neutral-300 hover:text-semantic-danger transition-colors shrink-0 opacity-0 group-hover:opacity-100 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-brand-default rounded-card"
-                aria-label="Remove {{ item.name_snapshot }}"
-                hx-post="{% url 'ordering:pos_remove_item' item.id %}" hx-target="#pos-cart-panel" hx-swap="outerHTML">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-        </button>
-      </div>
-      {% endif %}
+          {% endfor %}
+        {% endif %}
       {% endfor %}
     {% else %}
       <div class="h-full flex flex-col items-center justify-center text-neutral-400 py-10">
@@ -117,11 +201,11 @@
     <div class="space-y-1.5">
       <div class="flex justify-between text-body text-neutral-600 dark:text-neutral-dark-600">
         <span>Subtotal</span>
-        <span class="tabular-nums">₹{{ active_order.subtotal|default:"0.00"|floatformat:2 }}</span>
+        <span class="tabular-nums">₹{{ active_order.gross_subtotal|default:"0.00"|floatformat:2 }}</span>
       </div>
-      <div class="flex justify-between text-body text-neutral-600 dark:text-neutral-dark-600">
+      <div class="flex justify-between text-body text-semantic-success dark:text-semantic-success">
         <span>Discount</span>
-        <span class="tabular-nums">₹{{ active_order.discount_amount|default:"0.00"|floatformat:2 }}</span>
+        <span class="tabular-nums font-medium">-₹{{ active_order.total_discount|default:"0.00"|floatformat:2 }}</span>
       </div>
       {% if active_order and active_order.tax_amount %}
       <div class="flex justify-between text-body text-neutral-600 dark:text-neutral-dark-600">
@@ -133,6 +217,20 @@
         <span>Total</span>
         <span class="tabular-nums">₹{{ active_order.total|default:"0.00"|floatformat:2 }}</span>
       </div>
+    </div>
+
+    <!-- Discount Action -->
+    <div class="pt-2">
+      <button type="button"
+              class="w-full flex items-center justify-center gap-2 h-10 border border-neutral-300 dark:border-neutral-dark-300 rounded-lg text-body-strong text-neutral-700 dark:text-neutral-dark-700 hover:bg-neutral-100 dark:hover:bg-neutral-dark-100 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-default"
+              {% if not active_order or not active_order.items.all %}disabled class="opacity-50 cursor-not-allowed"{% else %}
+              hx-get="{% if request.resolver_match.kwargs.tenant_id %}{% url 'ordering:pos_discount_modal_tenant' request.resolver_match.kwargs.tenant_id %}{% else %}{% url 'ordering:pos_discount_modal' %}{% endif %}"
+              hx-target="#pos-modal-container"
+              hx-swap="innerHTML"
+              {% endif %}>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
+        <span>Discount</span>
+      </button>
     </div>
 
     <div class="grid grid-cols-2 gap-3 pt-1">
@@ -156,7 +254,7 @@
       </button>
       <button class="btn btn-primary h-12"
               {% if not active_order or not active_order.items.all %}disabled{% else %}
-              hx-get="{% url 'ordering:pos_checkout_modal' %}"
+              hx-get="{% if request.resolver_match.kwargs.tenant_id %}{% url 'ordering:pos_checkout_modal_tenant' request.resolver_match.kwargs.tenant_id %}{% else %}{% url 'ordering:pos_checkout_modal' %}{% endif %}"
               hx-target="#pos-modal-container"
               hx-swap="innerHTML"
               {% endif %}>

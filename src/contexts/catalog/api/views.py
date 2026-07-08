@@ -61,3 +61,40 @@ class ProductViewSet(viewsets.ModelViewSet):
             },
             status=status.HTTP_200_OK if report.ok else status.HTTP_207_MULTI_STATUS,
         )
+
+
+from contexts.catalog.api.serializers import ModifierGroupSerializer, ModifierSerializer
+from contexts.catalog.models import ModifierGroup, Modifier
+
+
+class ModifierGroupViewSet(viewsets.ModelViewSet):
+    serializer_class = ModifierGroupSerializer
+
+    def get_queryset(self):
+        qs = ModifierGroup.objects.prefetch_related("modifiers").all()
+        q = self.request.query_params.get("q", "").strip()
+        if q:
+            qs = qs.filter(name__icontains=q)
+        return qs
+
+    def get_permissions(self):
+        read_only = self.action in {"list", "retrieve"}
+        code = "catalog.view" if read_only else "catalog.manage"
+        return [IsAuthenticated(), RequirePermission(code)()]
+
+
+class ModifierViewSet(viewsets.ModelViewSet):
+    serializer_class = ModifierSerializer
+
+    def get_queryset(self):
+        qs = Modifier.objects.select_related("group").all()
+        group_id = self.request.query_params.get("group")
+        if group_id:
+            qs = qs.filter(group_id=group_id)
+        return qs
+
+    def get_permissions(self):
+        read_only = self.action in {"list", "retrieve"}
+        code = "catalog.view" if read_only else "catalog.manage"
+        return [IsAuthenticated(), RequirePermission(code)()]
+

@@ -3,8 +3,7 @@ import logging
 
 from django.template.loader import render_to_string
 from django.shortcuts import get_object_or_404
-from weasyprint import HTML, CSS
-from weasyprint.text.fonts import FontConfiguration
+from xhtml2pdf import pisa
 
 from contexts.ordering.models import Order
 from contexts.tenants.models import Branch
@@ -40,13 +39,13 @@ def generate_invoice_pdf(order_id: str) -> tuple[str, bytes]:
         html_string = render_to_string('reporting/invoice_pdf.html', context)
         
         # Generate PDF bytes
-        font_config = FontConfiguration()
-        html = HTML(string=html_string)
+        output = BytesIO()
+        pisa_status = pisa.CreatePDF(html_string, dest=output)
         
-        # We can also add default CSS if needed
-        # css = CSS(string='@page { size: A4; margin: 1cm; }', font_config=font_config)
-        
-        pdf_file = html.write_pdf(font_config=font_config)
+        if pisa_status.err:
+            raise Exception("PDF Generation Error using xhtml2pdf")
+            
+        pdf_file = output.getvalue()
         
         invoice_number = order.invoice.number if hasattr(order, 'invoice') else order.order_number
         filename = f"Invoice_{invoice_number}.pdf"

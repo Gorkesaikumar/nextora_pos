@@ -1,4 +1,5 @@
 """Order (bill/ticket) with its line items and modifiers."""
+from decimal import Decimal
 from django.db import models
 from django.utils import timezone
 
@@ -60,6 +61,21 @@ class Order(TenantAwareModel):
         "self", on_delete=models.SET_NULL, null=True, blank=True, related_name="merges"
     )
 
+    @property
+    def ordered_items(self):
+        """
+        Returns items sorted so that items in the same combo are grouped together,
+        and standalone items appear at the end.
+        """
+        return sorted(
+            self.items.all(),
+            key=lambda i: (
+                1 if i.combo_id is None else 0,
+                str(i.combo_id) if i.combo_id else "",
+                i.created_at
+            )
+        )
+
     opened_at = models.DateTimeField(default=timezone.now)
     settled_at = models.DateTimeField(null=True, blank=True)
     voided_at = models.DateTimeField(null=True, blank=True)
@@ -89,6 +105,17 @@ class Order(TenantAwareModel):
         return self.order_number or str(self.id)
 
     @property
+    def total_discount(self) -> Decimal:
+        """Total discount (order-level + all line-level discounts)."""
+        lines_discount = sum((item.line_discount for item in self.items.all()), Decimal("0"))
+        return self.discount_amount + lines_discount
+        
+    @property
+    def gross_subtotal(self) -> Decimal:
+        """Subtotal before any discounts (sum of item line_subtotal)."""
+        return sum((item.line_subtotal for item in self.items.all()), Decimal("0"))
+
+    @property
     def table_number(self):
         if not self.table_id:
             return None
@@ -116,6 +143,10 @@ class OrderItem(TenantAwareModel):
         max_length=8, choices=ItemStatus.choices, default=ItemStatus.ACTIVE
     )
     notes = models.CharField(max_length=255, blank=True)
+    combo = models.ForeignKey(
+        "ordering.OrderCombo", on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="items"
+    )
     kot = models.ForeignKey(
         "ordering.KOT", on_delete=models.SET_NULL, null=True, blank=True,
         related_name="routed_items",

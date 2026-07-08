@@ -12,7 +12,7 @@
   <p class="text-neutral-500 max-w-md">
     We are actively working on this enterprise billing feature. It will be available in an upcoming release.
   </p>
-  <a href="{% url 'billing:dashboard' %}" class="mt-6 px-4 py-2 bg-brand-default text-white rounded-md font-medium hover:bg-brand-hover transition-colors">
+  <a href="{% if tenant_id %}{% url 'billing:dashboard_tenant' tenant_id %}{% else %}{% url 'billing:dashboard' %}{% endif %}" class="mt-6 px-4 py-2 bg-brand-default text-white rounded-md font-medium hover:bg-brand-hover transition-colors">
     Return to Dashboard
   </a>
 </div>

@@ -1,0 +1,478 @@
+{% comment %}
+  Nextora POS — Enterprise Notification & Popup System
+  =====================================================
+  Include once in base.html / dashboard.html (end of <body>).
+
+  JavaScript API  (window.NPos):
+  ─────────────────────────────
+  NPos.toast(message, type)              → transient top-right toast
+    type: 'success' | 'error' | 'warning' | 'info'  (default 'info')
+
+  NPos.alert(options)                    → non-blocking info/error popup
+    options: { type, title, message, confirmText }
+
+  NPos.confirm(options)                  → destructive-action confirmation
+    options: { title, message, confirmText, cancelText, danger, onConfirm }
+    returns: Promise<boolean>
+
+  NPos.prompt(options)                   → single-field input modal
+    options: { title, message, placeholder, defaultValue, confirmText, onConfirm }
+    returns: Promise<string|null>
+
+  NPos.paymentError(message)             → styled payment failure modal
+  NPos.paymentSuccess(invoice, total)    → styled payment success popup
+
+  HTMX integration — override hx-confirm automatically:
+    document.body.addEventListener('htmx:confirm', NPos._htmxConfirm);
+{% endcomment %}
+
+{# ═══════════════════════════════════════════════════════ TOAST CONTAINER #}
+<div id="npos-toast-container"
+     aria-live="polite" aria-atomic="false"
+     class="fixed top-5 right-5 z-[9999] flex flex-col gap-3 pointer-events-none"
+     x-data></div>
+
+{# ═══════════════════════════════════════════════════════ MODAL CONTAINER #}
+<div id="npos-modal-root"
+     x-data="NPosMgr()"
+     x-show="open"
+     x-cloak
+     role="dialog"
+     :aria-modal="open"
+     :aria-labelledby="modal.title ? 'npos-modal-title' : undefined"
+     @keydown.escape.window="handleEsc()"
+     class="fixed inset-0 z-[9990] flex items-center justify-center p-4"
+     x-transition:enter="transition ease-out duration-200"
+     x-transition:enter-start="opacity-0"
+     x-transition:enter-end="opacity-100"
+     x-transition:leave="transition ease-in duration-150"
+     x-transition:leave-start="opacity-100"
+     x-transition:leave-end="opacity-0">
+
+  {# Backdrop #}
+  <div class="absolute inset-0 bg-neutral-900/60 backdrop-blur-sm"
+       @click="handleBackdropClick()"></div>
+
+  {# Modal Panel #}
+  <div class="relative bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
+       x-transition:enter="transition ease-out duration-200"
+       x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+       x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+       x-transition:leave="transition ease-in duration-150"
+       x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+       x-transition:leave-end="opacity-0 scale-95 translate-y-4">
+
+    {# ── Header stripe ── #}
+    <div class="px-6 pt-6 pb-4 flex items-start gap-4">
+      {# Icon #}
+      <div class="shrink-0 w-12 h-12 rounded-full flex items-center justify-center"
+           :class="{
+             'bg-red-100 dark:bg-red-900/30':    modal.type === 'error'   || modal.type === 'delete' || modal.type === 'payment_error',
+             'bg-green-100 dark:bg-green-900/30': modal.type === 'success' || modal.type === 'payment_success',
+             'bg-amber-100 dark:bg-amber-900/30': modal.type === 'warning',
+             'bg-blue-100 dark:bg-blue-900/30':   modal.type === 'info'    || modal.type === 'confirm' || modal.type === 'prompt',
+           }">
+        {# Error / Delete / Payment Error icon #}
+        <template x-if="modal.type === 'error' || modal.type === 'delete' || modal.type === 'payment_error'">
+          <svg class="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </template>
+        {# Success / Payment Success icon #}
+        <template x-if="modal.type === 'success' || modal.type === 'payment_success'">
+          <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+        </template>
+        {# Warning icon #}
+        <template x-if="modal.type === 'warning'">
+          <svg class="w-6 h-6 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+          </svg>
+        </template>
+        {# Info / Confirm / Prompt icon #}
+        <template x-if="modal.type === 'info' || modal.type === 'confirm' || modal.type === 'prompt'">
+          <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </template>
+      </div>
+
+      {# Title + Close #}
+      <div class="flex-grow min-w-0 pt-0.5">
+        <h2 id="npos-modal-title"
+            class="text-lg font-bold text-neutral-900 dark:text-white leading-tight"
+            x-text="modal.title"></h2>
+        <p class="text-sm text-neutral-500 dark:text-neutral-400 mt-1 leading-relaxed"
+           x-text="modal.message"></p>
+
+        {# Extra detail (e.g. technical error string) #}
+        <template x-if="modal.detail">
+          <p class="mt-2 text-xs font-mono bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 rounded-lg px-3 py-2 break-all"
+             x-text="modal.detail"></p>
+        </template>
+
+        {# Prompt input #}
+        <template x-if="modal.type === 'prompt'">
+          <div class="mt-3">
+            <input type="text"
+                   x-model="promptValue"
+                   :placeholder="modal.placeholder || ''"
+                   @keydown.enter="handleConfirm()"
+                   class="w-full h-11 px-4 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-sm text-neutral-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                   x-ref="promptInput">
+          </div>
+        </template>
+      </div>
+
+      {# Close button (hidden for required confirmations) #}
+      <template x-if="!modal.required">
+        <button @click="handleCancel()"
+                class="shrink-0 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 transition-colors p-1 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                aria-label="Close">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </template>
+    </div>
+
+    {# ── Footer actions ── #}
+    <div class="px-6 pb-6 flex items-center gap-3"
+         :class="modal.singleAction ? 'justify-center' : 'justify-end'">
+
+      {# Cancel / secondary action #}
+      <template x-if="!modal.singleAction">
+        <button @click="handleCancel()"
+                class="flex-1 h-11 px-5 rounded-xl border border-neutral-300 dark:border-neutral-700 text-sm font-semibold text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors"
+                x-text="modal.cancelText || 'Cancel'"></button>
+      </template>
+
+      {# Confirm / primary action #}
+      <button @click="handleConfirm()"
+              :disabled="loading"
+              :class="{
+                'flex-1 h-11 px-5 rounded-xl text-sm font-bold transition-all': true,
+                'bg-red-600 hover:bg-red-700 text-white': modal.type === 'delete' || modal.type === 'error' || modal.type === 'payment_error',
+                'bg-green-600 hover:bg-green-700 text-white': modal.type === 'success' || modal.type === 'payment_success',
+                'bg-amber-500 hover:bg-amber-600 text-white': modal.type === 'warning',
+                'bg-blue-600 hover:bg-blue-700 text-white': modal.type === 'info' || modal.type === 'confirm' || modal.type === 'prompt',
+                'opacity-50 cursor-not-allowed': loading,
+                'w-full': modal.singleAction,
+              }">
+        <span x-show="!loading" x-text="modal.confirmText || 'OK'"></span>
+        <span x-show="loading" class="flex items-center justify-center gap-2">
+          <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+          </svg>
+          Processing...
+        </span>
+      </button>
+    </div>
+  </div>
+</div>
+
+{# ═══════════════════════════════════════════════════════ EMAIL PROMPT MODAL #}
+<div id="npos-email-modal"
+     x-data="NposEmailModal()"
+     x-show="open"
+     x-cloak
+     role="dialog"
+     aria-modal="true"
+     @keydown.escape.window="close()"
+     class="fixed inset-0 z-[9995] flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-sm"
+     x-transition:enter="transition ease-out duration-200"
+     x-transition:enter-start="opacity-0"
+     x-transition:enter-end="opacity-100">
+  <div class="relative bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden"
+       x-transition:enter="transition ease-out duration-200"
+       x-transition:enter-start="opacity-0 scale-95"
+       x-transition:enter-end="opacity-100 scale-100">
+    <div class="px-6 pt-6 pb-4">
+      <h2 class="text-lg font-bold text-neutral-900 dark:text-white mb-1">Email Receipt</h2>
+      <p class="text-sm text-neutral-500 mb-4">Enter recipient email address to send the invoice.</p>
+      <input type="email" x-model="email" :placeholder="placeholder"
+             @keydown.enter="confirm()"
+             class="w-full h-11 px-4 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+      <p x-show="error" x-text="error" class="text-xs text-red-500 mt-1"></p>
+    </div>
+    <div class="px-6 pb-6 flex gap-3">
+      <button @click="close()" class="flex-1 h-10 px-4 rounded-xl border border-neutral-300 dark:border-neutral-700 text-sm font-semibold text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 transition-colors">Cancel</button>
+      <button @click="confirm()" :disabled="sending"
+              class="flex-1 h-10 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold transition-colors disabled:opacity-50">
+        <span x-show="!sending">Send Email</span>
+        <span x-show="sending">Sending...</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+{# ═══════════════════════════════════════════════════════ JAVASCRIPT ENGINE #}
+<script>
+/* ─────────────────────────────────────────────────────
+   NPos — Global Notification & Modal Engine
+   ───────────────────────────────────────────────────── */
+(function () {
+  'use strict';
+
+  // ── Toast ─────────────────────────────────────────
+  function showToast(message, type) {
+    type = type || 'info';
+    const container = document.getElementById('npos-toast-container');
+    if (!container) return;
+
+    const icons = {
+      success: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>',
+      error:   '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>',
+      warning: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>',
+      info:    '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>',
+    };
+    const colors = {
+      success: 'bg-green-50 border-green-200 text-green-800',
+      error:   'bg-red-50 border-red-200 text-red-800',
+      warning: 'bg-amber-50 border-amber-200 text-amber-800',
+      info:    'bg-blue-50 border-blue-200 text-blue-800',
+    };
+    const iconColors = {
+      success: 'text-green-500', error: 'text-red-500',
+      warning: 'text-amber-500', info: 'text-blue-500',
+    };
+
+    const el = document.createElement('div');
+    el.className = [
+      'pointer-events-auto flex items-start gap-3 px-4 py-3 rounded-xl border shadow-lg',
+      'text-sm font-medium max-w-sm transition-all duration-300 translate-x-0',
+      colors[type] || colors.info,
+    ].join(' ');
+    el.innerHTML = `
+      <svg class="w-5 h-5 shrink-0 mt-0.5 ${iconColors[type] || iconColors.info}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        ${icons[type] || icons.info}
+      </svg>
+      <span class="flex-grow">${message}</span>
+      <button onclick="this.closest('[class]').remove()" class="shrink-0 opacity-60 hover:opacity-100 transition-opacity">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>`;
+
+    container.appendChild(el);
+    requestAnimationFrame(() => { el.style.opacity = '1'; });
+
+    // Auto-dismiss after 4s
+    setTimeout(() => {
+      el.style.opacity = '0';
+      el.style.transform = 'translateX(100%)';
+      setTimeout(() => el.remove(), 300);
+    }, 4000);
+  }
+
+  // ── Modal queue & state ───────────────────────────
+  let _resolveModal = null;
+
+  function openModal(opts) {
+    return new Promise((resolve) => {
+      _resolveModal = resolve;
+      const mgr = _getMgr();
+      if (!mgr) { resolve(false); return; }
+      mgr.show(opts);
+    });
+  }
+
+  function _getMgr() {
+    const el = document.getElementById('npos-modal-root');
+    if (!el || !el._x_dataStack) return null;
+    return el._x_dataStack[0];
+  }
+
+  // ── Public API ────────────────────────────────────
+  window.NPos = {
+    toast: showToast,
+
+    alert: function (opts) {
+      if (typeof opts === 'string') opts = { message: opts };
+      return openModal(Object.assign({ type: 'info', singleAction: true, confirmText: 'OK' }, opts));
+    },
+
+    confirm: function (opts) {
+      if (typeof opts === 'string') opts = { message: opts };
+      return openModal(Object.assign({
+        type: 'confirm', title: 'Are you sure?', confirmText: 'Confirm', cancelText: 'Cancel',
+      }, opts));
+    },
+
+    delete: function (opts) {
+      if (typeof opts === 'string') opts = { message: opts };
+      return openModal(Object.assign({
+        type: 'delete', title: 'Confirm Deletion', confirmText: 'Yes, Delete', cancelText: 'Cancel',
+      }, opts));
+    },
+
+    prompt: function (opts) {
+      if (typeof opts === 'string') opts = { message: opts };
+      return openModal(Object.assign({
+        type: 'prompt', title: 'Input Required', confirmText: 'Submit', cancelText: 'Cancel',
+      }, opts));
+    },
+
+    paymentError: function (message, detail) {
+      return openModal({
+        type: 'payment_error',
+        title: 'Payment Failed',
+        message: message || 'An error occurred while processing the payment. Please try again.',
+        detail: detail || null,
+        confirmText: 'Try Again',
+        cancelText: 'Cancel',
+        singleAction: false,
+      });
+    },
+
+    paymentSuccess: function (invoiceNumber, total) {
+      return openModal({
+        type: 'payment_success',
+        title: 'Payment Successful!',
+        message: `Invoice ${invoiceNumber || ''} — Total ₹${total || ''}`,
+        confirmText: 'Done',
+        singleAction: true,
+      });
+    },
+
+    // Called by Alpine component to resolve the promise
+    _resolve: function (value) {
+      if (_resolveModal) {
+        _resolveModal(value);
+        _resolveModal = null;
+      }
+    },
+
+    // HTMX hx-confirm override
+    _htmxConfirm: function (evt) {
+      if (!evt.detail.question) return;
+      evt.preventDefault();
+      const question = evt.detail.question;
+      NPos.confirm({
+        title: 'Confirm Action',
+        message: question,
+        confirmText: 'Yes, Proceed',
+        cancelText: 'Cancel',
+        type: 'warning',
+      }).then(function (confirmed) {
+        if (confirmed) evt.detail.issueRequest(true);
+      });
+    },
+  };
+
+  // Register HTMX confirm override after DOM ready
+  document.addEventListener('DOMContentLoaded', function () {
+    document.body.addEventListener('htmx:confirm', NPos._htmxConfirm);
+  });
+})();
+
+// ── Alpine component: modal manager ──────────────────
+function NPosMgr() {
+  return {
+    open: false,
+    loading: false,
+    promptValue: '',
+    modal: {
+      type: 'info', title: '', message: '', detail: null,
+      confirmText: 'OK', cancelText: 'Cancel',
+      singleAction: false, required: false, placeholder: '',
+    },
+
+    show(opts) {
+      this.modal = Object.assign({
+        type: 'info', title: '', message: '', detail: null,
+        confirmText: 'OK', cancelText: 'Cancel',
+        singleAction: false, required: false, placeholder: '',
+      }, opts);
+      this.promptValue = opts.defaultValue || '';
+      this.loading = false;
+      this.open = true;
+
+      if (opts.type === 'prompt') {
+        this.$nextTick(() => {
+          const inp = this.$refs.promptInput;
+          if (inp) inp.focus();
+        });
+      }
+    },
+
+    handleConfirm() {
+      if (this.modal.type === 'prompt') {
+        NPos._resolve(this.promptValue || null);
+      } else {
+        NPos._resolve(true);
+      }
+      if (this.modal.onConfirm) this.modal.onConfirm(this.promptValue);
+      this.close();
+    },
+
+    handleCancel() {
+      NPos._resolve(false);
+      this.close();
+    },
+
+    handleEsc() {
+      if (!this.modal.required) this.handleCancel();
+    },
+
+    handleBackdropClick() {
+      if (!this.modal.required) this.handleCancel();
+    },
+
+    close() {
+      this.open = false;
+      this.loading = false;
+      this.promptValue = '';
+    },
+  };
+}
+
+// ── Alpine component: email prompt modal ─────────────
+function NposEmailModal() {
+  return {
+    open: false,
+    email: '',
+    placeholder: '',
+    error: '',
+    sending: false,
+    _resolve: null,
+
+    openFor(defaultEmail) {
+      this.email = defaultEmail || '';
+      this.placeholder = defaultEmail || 'customer@example.com';
+      this.error = '';
+      this.sending = false;
+      this.open = true;
+      return new Promise((resolve) => { this._resolve = resolve; });
+    },
+
+    confirm() {
+      if (!this.email || !this.email.includes('@')) {
+        this.error = 'Please enter a valid email address.';
+        return;
+      }
+      this.error = '';
+      if (this._resolve) this._resolve(this.email);
+      this.close();
+    },
+
+    close() {
+      this.open = false;
+      if (this._resolve) this._resolve(null);
+      this._resolve = null;
+    },
+  };
+}
+
+// Global helper to open email modal from outside Alpine
+window.NposPromptEmail = function (defaultEmail) {
+  const el = document.getElementById('npos-email-modal');
+  if (!el || !el._x_dataStack) return Promise.resolve(null);
+  return el._x_dataStack[0].openFor(defaultEmail);
+};
+</script>

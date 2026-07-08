@@ -1,0 +1,112 @@
+<div id="pos-modal-overlay" class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
+     x-data="{ 
+        submitting: false,
+        validateSelections() {
+            // Client side validation can be added here
+            return true;
+        }
+     }">
+  <!-- Backdrop -->
+  <div class="absolute inset-0 bg-neutral-900/40 dark:bg-neutral-900/60 backdrop-blur-sm"
+       @click="if(!submitting) $el.closest('#pos-modal-container').innerHTML = ''"
+       aria-hidden="true"></div>
+
+  <!-- Modal -->
+  <div class="relative w-full max-w-2xl max-h-full flex flex-col bg-neutral-0 dark:bg-neutral-dark-100 rounded-modal shadow-xl overflow-hidden"
+       role="dialog" aria-modal="true" aria-labelledby="modal-title">
+
+    <!-- Header -->
+    <div class="px-6 py-5 border-b border-neutral-200 dark:border-neutral-dark-200 flex justify-between items-start shrink-0 bg-brand-default/5">
+      <div>
+        <h2 id="modal-title" class="text-heading-2 text-brand-default">{{ combo.name }}</h2>
+        <p class="text-caption mt-1">{{ combo.description }}</p>
+      </div>
+      <button type="button"
+              class="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-dark-900 transition-colors focus:outline-none rounded-card"
+              @click="$el.closest('#pos-modal-container').innerHTML = ''">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
+    </div>
+
+    <!-- Body / Form -->
+    <form id="combo-form" 
+          hx-post="{% url 'ordering:pos_combo_modal' combo.id %}"
+          hx-target="#pos-cart-panel"
+          hx-swap="outerHTML"
+          @htmx:after-request="if($event.detail.successful) $el.closest('#pos-modal-overlay').remove()"
+          @submit="submitting = true; if(!validateSelections()) { $event.preventDefault(); submitting = false; }"
+          class="flex flex-col min-h-0">
+      {% csrf_token %}
+      
+      <div class="flex-grow overflow-y-auto px-6 py-5 space-y-6">
+        {% for group in groups %}
+        <div class="space-y-3" x-data="{ selectedCount: 0 }">
+          <div class="flex justify-between items-end border-b border-neutral-100 dark:border-neutral-dark-200 pb-2">
+            <div>
+              <h3 class="text-body-strong text-neutral-900 dark:text-neutral-dark-900">{{ group.name }}</h3>
+              <p class="text-caption text-neutral-500">
+                {% if group.min_selections == group.max_selections %}
+                  Select exactly {{ group.min_selections }}
+                {% else %}
+                  Select {{ group.min_selections }} to {{ group.max_selections }}
+                {% endif %}
+              </p>
+            </div>
+            <div class="text-xs font-semibold px-2 py-1 rounded bg-neutral-100 dark:bg-neutral-dark-150 text-neutral-600"
+                 :class="{ 'bg-semantic-success/20 text-semantic-success': selectedCount >= {{ group.min_selections }} && selectedCount <= {{ group.max_selections }}, 'bg-semantic-danger/20 text-semantic-danger': selectedCount > {{ group.max_selections }} }">
+              <span x-text="selectedCount">0</span> / {{ group.max_selections }}
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {% for item in group.items.all %}
+            <label class="relative flex flex-col justify-between p-3 border rounded-card cursor-pointer transition-all hover:bg-neutral-50 dark:hover:bg-neutral-dark-50"
+                   :class="selected_{{ group.id }}_{{ item.product.id }} ? 'border-brand-default bg-brand-default/5 dark:bg-brand-default/10 ring-1 ring-brand-default' : 'border-neutral-200 dark:border-neutral-dark-200'"
+                   x-data="{ selected_{{ group.id }}_{{ item.product.id }}: false }">
+              <input type="checkbox" 
+                     name="group_{{ group.id }}_product" 
+                     value="{{ item.product.id }}"
+                     class="sr-only"
+                     x-model="selected_{{ group.id }}_{{ item.product.id }}"
+                     @change="selected_{{ group.id }}_{{ item.product.id }} ? selectedCount++ : selectedCount--">
+              
+              <div class="text-body-strong mb-1 line-clamp-2 text-neutral-900 dark:text-neutral-dark-900">{{ item.product.name }}</div>
+              {% if item.upgrade_surcharge > 0 %}
+                <div class="text-[11px] font-bold text-amber-600 dark:text-amber-400">+ ₹{{ item.upgrade_surcharge|floatformat:2 }}</div>
+              {% endif %}
+              
+              <!-- Checkmark indicator -->
+              <div class="absolute top-2 right-2 w-5 h-5 rounded-full border flex items-center justify-center transition-colors"
+                   :class="selected_{{ group.id }}_{{ item.product.id }} ? 'bg-brand-default border-brand-default text-white' : 'border-neutral-300 dark:border-neutral-dark-300 text-transparent'">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+              </div>
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      
+      <!-- Footer -->
+      <div class="px-6 py-4 border-t border-neutral-200 dark:border-neutral-dark-200 bg-neutral-50 dark:bg-neutral-dark-50 shrink-0 flex items-center justify-between">
+        <div class="text-body-strong text-neutral-900">
+          Combo Total: <span class="text-brand-default font-bold">₹{{ combo.price|default:combo.discount_value|floatformat:2 }}</span>
+        </div>
+        <div class="flex gap-3">
+          <button type="button"
+                  class="px-5 py-2.5 rounded-button text-button-label text-neutral-700 bg-white border border-neutral-300 hover:bg-neutral-50 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-default"
+                  @click="$el.closest('#pos-modal-container').innerHTML = ''"
+                  :disabled="submitting">
+            Cancel
+          </button>
+          <button type="submit"
+                  class="px-6 py-2.5 rounded-button text-button-label transition-all focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 !bg-black !text-white hover:!bg-neutral-800 border border-transparent disabled:!bg-neutral-300 disabled:!text-neutral-500"
+                  :disabled="submitting">
+            <svg x-show="submitting" class="animate-spin -ml-1 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            <span x-text="submitting ? 'Adding...' : 'Add Combo to Order'"></span>
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,126 @@
+{% extends "layouts/dashboard.html" %}
+
+{% block page_title %}Create Combo Offer{% endblock %}
+{% block page_subtitle %}
+{% if request.tenant_id %}
+<a href="{% url 'catalog:combo_list_tenant' request.tenant_id %}" class="inline-flex items-center text-sm font-medium text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-dark-900 transition-colors">
+{% else %}
+<a href="{% url 'catalog:combo_list' %}" class="inline-flex items-center text-sm font-medium text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-dark-900 transition-colors">
+{% endif %}
+  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+  Back to Combos
+</a>
+{% endblock %}
+
+{% block workspace %}
+<div class="max-w-3xl">
+
+  <form method="post" enctype="multipart/form-data" class="bg-neutral-0 dark:bg-neutral-dark-100 rounded-card border border-neutral-200 dark:border-neutral-dark-200 shadow-sm overflow-hidden">
+    {% csrf_token %}
+    
+    <div class="p-6 md:p-8 space-y-8">
+      
+      <!-- Basic Details -->
+      <section>
+        <h2 class="text-heading-2 text-neutral-900 dark:text-neutral-dark-900 mb-4 pb-2 border-b border-neutral-100 dark:border-neutral-dark-200">Basic Details</h2>
+        
+        {% if form.errors %}
+        <div class="bg-red-50 text-red-600 px-4 py-3 rounded-xl mb-6 text-sm">
+          Please correct the errors below.
+        </div>
+        {% endif %}
+
+        <div class="space-y-5">
+          <div class="space-y-1">
+            <label for="{{ form.name.id_for_label }}" class="block text-sm font-semibold text-neutral-800 dark:text-neutral-200">Name</label>
+            {{ form.name }}
+            {% if form.name.errors %}<div class="text-red-500 text-xs mt-1">{{ form.name.errors.0 }}</div>{% endif %}
+          </div>
+          <div class="space-y-1">
+            <label for="{{ form.description.id_for_label }}" class="block text-sm font-semibold text-neutral-800 dark:text-neutral-200">Description</label>
+            {{ form.description }}
+            {% if form.description.errors %}<div class="text-red-500 text-xs mt-1">{{ form.description.errors.0 }}</div>{% endif %}
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div class="space-y-1">
+              <label for="{{ form.status.id_for_label }}" class="block text-sm font-semibold text-neutral-800 dark:text-neutral-200">Status</label>
+              {{ form.status }}
+              {% if form.status.errors %}<div class="text-red-500 text-xs mt-1">{{ form.status.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="space-y-1">
+              <label for="{{ form.offer_type.id_for_label }}" class="block text-sm font-semibold text-neutral-800 dark:text-neutral-200">Offer Type</label>
+              {{ form.offer_type }}
+              {% if form.offer_type.errors %}<div class="text-red-500 text-xs mt-1">{{ form.offer_type.errors.0 }}</div>{% endif %}
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div class="space-y-1">
+              <label for="{{ form.discount_value.id_for_label }}" class="block text-sm font-semibold text-neutral-800 dark:text-neutral-200">Discount Value / Price</label>
+              {{ form.discount_value }}
+              {% if form.discount_value.errors %}<div class="text-red-500 text-xs mt-1">{{ form.discount_value.errors.0 }}</div>{% endif %}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Eligibility Rules -->
+      <section>
+        <h2 class="text-heading-2 text-neutral-900 dark:text-neutral-dark-900 mb-4 pb-2 border-b border-neutral-100 dark:border-neutral-dark-200">Eligibility Rules</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div class="space-y-1">
+            <label for="{{ form.min_order_value.id_for_label }}" class="block text-sm font-semibold text-neutral-800 dark:text-neutral-200">Minimum Order Value</label>
+            {{ form.min_order_value }}
+            <p class="text-xs text-neutral-500">Cart subtotal required (e.g. 500.00). Leave 0 for no minimum.</p>
+            {% if form.min_order_value.errors %}<div class="text-red-500 text-xs mt-1">{{ form.min_order_value.errors.0 }}</div>{% endif %}
+          </div>
+          <div class="space-y-1">
+            <label for="{{ form.min_cart_items.id_for_label }}" class="block text-sm font-semibold text-neutral-800 dark:text-neutral-200">Minimum Cart Items</label>
+            {{ form.min_cart_items }}
+            <p class="text-xs text-neutral-500">Total item quantity required. Leave 0 for no minimum.</p>
+            {% if form.min_cart_items.errors %}<div class="text-red-500 text-xs mt-1">{{ form.min_cart_items.errors.0 }}</div>{% endif %}
+          </div>
+          <div class="space-y-1">
+            <label for="{{ form.customer_eligibility.id_for_label }}" class="block text-sm font-semibold text-neutral-800 dark:text-neutral-200">Customer Eligibility</label>
+            {{ form.customer_eligibility }}
+            {% if form.customer_eligibility.errors %}<div class="text-red-500 text-xs mt-1">{{ form.customer_eligibility.errors.0 }}</div>{% endif %}
+          </div>
+        </div>
+      </section>
+
+      <!-- Usage Limits -->
+      <section>
+        <h2 class="text-heading-2 text-neutral-900 dark:text-neutral-dark-900 mb-4 pb-2 border-b border-neutral-100 dark:border-neutral-dark-200">Usage Limits</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div class="space-y-1">
+            <label for="{{ form.usage_limit_type.id_for_label }}" class="block text-sm font-semibold text-neutral-800 dark:text-neutral-200">Usage Limit Type</label>
+            {{ form.usage_limit_type }}
+            {% if form.usage_limit_type.errors %}<div class="text-red-500 text-xs mt-1">{{ form.usage_limit_type.errors.0 }}</div>{% endif %}
+          </div>
+          <div class="space-y-1">
+            <label for="{{ form.usage_limit_value.id_for_label }}" class="block text-sm font-semibold text-neutral-800 dark:text-neutral-200">Usage Limit Value</label>
+            {{ form.usage_limit_value }}
+            <p class="text-xs text-neutral-500">Maximum redemptions allowed based on the selected type.</p>
+            {% if form.usage_limit_value.errors %}<div class="text-red-500 text-xs mt-1">{{ form.usage_limit_value.errors.0 }}</div>{% endif %}
+          </div>
+        </div>
+      </section>
+
+      <div class="bg-brand-default/5 border border-brand-default/20 rounded-card p-4 flex gap-3 text-sm text-brand-700">
+        <svg class="w-5 h-5 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <p>After creating the basic combo details, you will be able to add selection groups (e.g. "Choose 1 Burger", "Choose 2 Sides") and availability rules on the next screen.</p>
+      </div>
+      
+    </div>
+
+    <!-- Actions -->
+    <div class="px-6 py-4 bg-neutral-50 dark:bg-neutral-dark-50 border-t border-neutral-200 dark:border-neutral-dark-200 flex items-center justify-end gap-3">
+      {% if request.tenant_id %}
+      <a href="{% url 'catalog:combo_list_tenant' request.tenant_id %}" class="btn-secondary">Cancel</a>
+      {% else %}
+      <a href="{% url 'catalog:combo_list' %}" class="btn-secondary">Cancel</a>
+      {% endif %}
+      <button type="submit" class="btn-primary">Save & Continue</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

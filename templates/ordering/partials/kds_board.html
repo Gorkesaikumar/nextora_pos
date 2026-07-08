@@ -44,20 +44,48 @@
           </div>
           <!-- Items -->
           <div class="max-h-[350px] overflow-y-auto px-3 py-2 space-y-1">
-            {% for item in kot.items.all %}
-            <div class="flex items-center justify-between gap-2 p-1.5 rounded hover:bg-neutral-100 dark:hover:bg-neutral-dark-200 transition-colors">
-              <div class="flex items-center gap-2.5 cursor-pointer {% if item.is_completed %}line-through opacity-50{% endif %}"
-                   hx-post="{% url 'ordering:kds_bump_item' item.id %}{% if selected_station_id %}?station_id={{ selected_station_id }}{% endif %}"
-                   hx-target="#kds-board"
-                   hx-swap="outerHTML transition:true">
-                <input type="checkbox" {% if item.is_completed %}checked{% endif %} class="w-4 h-4 rounded border-neutral-300 text-brand-default focus:ring-brand-default cursor-pointer">
-                <span class="font-mono text-body-strong text-neutral-900 dark:text-neutral-dark-900">{{ item.qty|floatformat:"0" }}x</span>
-                <span class="text-body-strong text-neutral-900 dark:text-neutral-dark-900 leading-snug">{{ item.name_snapshot }}</span>
-              </div>
-              {% if item.notes %}
-              <span class="text-micro font-bold px-1.5 py-0.5 bg-semantic-warning/10 text-semantic-warning rounded">{{ item.notes }}</span>
+            {% regroup kot.items.all|dictsort:"combo_id" by combo as kds_groups %}
+            {% for group in kds_groups %}
+              {% if group.grouper %}
+                <div class="mb-2 border border-neutral-200 rounded overflow-hidden">
+                  <div class="bg-brand-default/10 px-2 py-1 text-xs font-bold text-brand-default uppercase tracking-wide border-b border-brand-default/10">
+                    Combo: {{ group.grouper.name_snapshot }}
+                  </div>
+                  <div class="p-1 space-y-1 bg-neutral-50 dark:bg-neutral-dark-50">
+                    {% for item in group.list %}
+                    <div class="flex items-center justify-between gap-2 p-1 rounded hover:bg-neutral-100 dark:hover:bg-neutral-dark-200 transition-colors border-l-2 border-brand-default ml-1">
+                      <div class="flex items-center gap-2.5 cursor-pointer {% if item.is_completed %}line-through opacity-50{% endif %}"
+                           hx-post="{% url 'ordering:kds_bump_item' item.id %}{% if selected_station_id %}?station_id={{ selected_station_id }}{% endif %}"
+                           hx-target="#kds-board"
+                           hx-swap="outerHTML transition:true">
+                        <input type="checkbox" {% if item.is_completed %}checked{% endif %} class="w-4 h-4 rounded border-neutral-300 text-brand-default focus:ring-brand-default cursor-pointer">
+                        <span class="font-mono text-body-strong text-neutral-900 dark:text-neutral-dark-900">{{ item.qty|floatformat:"0" }}x</span>
+                        <span class="text-body-strong text-neutral-900 dark:text-neutral-dark-900 leading-snug">{{ item.name_snapshot }}</span>
+                      </div>
+                      {% if item.notes %}
+                      <span class="text-micro font-bold px-1.5 py-0.5 bg-semantic-warning/10 text-semantic-warning rounded">{{ item.notes }}</span>
+                      {% endif %}
+                    </div>
+                    {% endfor %}
+                  </div>
+                </div>
+              {% else %}
+                {% for item in group.list %}
+                <div class="flex items-center justify-between gap-2 p-1.5 rounded hover:bg-neutral-100 dark:hover:bg-neutral-dark-200 transition-colors">
+                  <div class="flex items-center gap-2.5 cursor-pointer {% if item.is_completed %}line-through opacity-50{% endif %}"
+                       hx-post="{% url 'ordering:kds_bump_item' item.id %}{% if selected_station_id %}?station_id={{ selected_station_id }}{% endif %}"
+                       hx-target="#kds-board"
+                       hx-swap="outerHTML transition:true">
+                    <input type="checkbox" {% if item.is_completed %}checked{% endif %} class="w-4 h-4 rounded border-neutral-300 text-brand-default focus:ring-brand-default cursor-pointer">
+                    <span class="font-mono text-body-strong text-neutral-900 dark:text-neutral-dark-900">{{ item.qty|floatformat:"0" }}x</span>
+                    <span class="text-body-strong text-neutral-900 dark:text-neutral-dark-900 leading-snug">{{ item.name_snapshot }}</span>
+                  </div>
+                  {% if item.notes %}
+                  <span class="text-micro font-bold px-1.5 py-0.5 bg-semantic-warning/10 text-semantic-warning rounded">{{ item.notes }}</span>
+                  {% endif %}
+                </div>
+                {% endfor %}
               {% endif %}
-            </div>
             {% endfor %}
           </div>
           <!-- Actions -->

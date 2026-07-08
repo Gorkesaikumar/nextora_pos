@@ -1,4 +1,5 @@
 from .category import Category
+from .combo import ComboGroup, ComboGroupItem, ComboOffer
 from .modifier import Modifier, ModifierGroup, ProductModifierGroup
 from .pricing import PriceTier
 from .product import Product, ProductComboItem, ProductImage, ProductVariant
@@ -8,16 +9,19 @@ from .unit import Unit
 
 __all__ = [
     "Category",
-    "KitchenStation",
+    "ComboGroup",
+    "ComboGroupItem",
+    "ComboOffer",
     "Modifier",
     "ModifierGroup",
+    "ProductModifierGroup",
     "PriceTier",
-    "Printer",
     "Product",
     "ProductComboItem",
     "ProductImage",
-    "ProductModifierGroup",
     "ProductVariant",
+    "KitchenStation",
+    "Printer",
     "TaxClass",
     "Unit",
 ]

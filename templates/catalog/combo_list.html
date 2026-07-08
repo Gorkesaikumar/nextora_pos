@@ -1,0 +1,78 @@
+{% extends "layouts/dashboard.html" %}
+
+{% block page_title %}Combo Offers{% endblock %}
+{% block page_subtitle %}Manage promotional bundles and combos.{% endblock %}
+
+{% block primary_action %}
+{% if request.tenant_id %}
+<a href="{% url 'catalog:combo_create_tenant' request.tenant_id %}" class="btn-primary">
+{% else %}
+<a href="{% url 'catalog:combo_create' %}" class="btn-primary">
+{% endif %}
+  <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+  </svg>
+  Create Combo
+</a>
+{% endblock %}
+
+{% block workspace %}
+
+<div class="bg-neutral-0 dark:bg-neutral-dark-100 rounded-card border border-neutral-200 dark:border-neutral-dark-200 overflow-hidden shadow-sm">
+  {% if combos %}
+  <table class="w-full text-left border-collapse">
+    <thead>
+      <tr class="bg-neutral-50 dark:bg-neutral-dark-50 border-b border-neutral-200 dark:border-neutral-dark-200 text-caption-strong text-neutral-500 uppercase tracking-wider">
+        <th class="px-6 py-4 font-semibold">Name</th>
+        <th class="px-6 py-4 font-semibold">Type</th>
+        <th class="px-6 py-4 font-semibold">Value</th>
+        <th class="px-6 py-4 font-semibold">Status</th>
+        <th class="px-6 py-4 font-semibold text-right">Actions</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-neutral-200 dark:divide-neutral-dark-200 text-body">
+      {% for combo in combos %}
+      <tr class="hover:bg-neutral-50/50 dark:hover:bg-neutral-dark-50/50 transition-colors group">
+        <td class="px-6 py-4">
+          <div class="text-body-strong text-neutral-900 dark:text-neutral-dark-900">{{ combo.name }}</div>
+          <div class="text-caption text-neutral-500 line-clamp-1">{{ combo.description }}</div>
+        </td>
+        <td class="px-6 py-4">
+          <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-brand-subtle text-brand-default">
+            {{ combo.get_offer_type_display }}
+          </span>
+        </td>
+        <td class="px-6 py-4 font-mono font-bold text-neutral-900 dark:text-neutral-dark-900">
+          {% if combo.offer_type == 'percentage' %}
+            {{ combo.discount_value }}%
+          {% else %}
+            ₹{{ combo.discount_value|floatformat:2 }}
+          {% endif %}
+        </td>
+        <td class="px-6 py-4">
+          {% if combo.status == 'active' %}
+            <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-semantic-success/10 text-semantic-success uppercase tracking-wide">Active</span>
+          {% else %}
+            <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-neutral-200 text-neutral-600 uppercase tracking-wide">{{ combo.status }}</span>
+          {% endif %}
+        </td>
+        <td class="px-6 py-4 text-right">
+          <!-- Actions -->
+          <a href="{% if request.tenant_id %}{% url 'catalog:combo_update_tenant' request.tenant_id combo.id %}{% else %}{% url 'catalog:combo_update' combo.id %}{% endif %}" class="text-neutral-400 hover:text-brand-default px-2 py-1 transition-colors inline-block">Edit</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="flex flex-col items-center justify-center py-16 text-center">
+    <div class="w-16 h-16 bg-neutral-100 rounded-full flex items-center justify-center mb-4 text-neutral-400">
+      <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+    </div>
+    <h3 class="text-heading-2 text-neutral-900 mb-1">No combos yet</h3>
+    <p class="text-body text-neutral-500 max-w-sm">Create your first combo offer or meal bundle to drive more sales.</p>
+    <a href="{% url 'catalog:combo_create' %}" class="btn-primary mt-6">Create Combo</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

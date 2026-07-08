@@ -11,6 +11,7 @@ from django.views.decorators.cache import never_cache
 from contexts.identity.permissions.mixins import TenantPermissionRequiredMixin
 from contexts.catalog.models.category import Category
 from contexts.catalog.models.product import Product
+from contexts.catalog.models.modifier import Modifier, ModifierGroup
 from contexts.ordering.models.order import Order, OrderItem
 from contexts.ordering.services import order_service
 from contexts.restaurant.models.branch import Branch
@@ -32,8 +33,6 @@ class POSMainView(LoginRequiredMixin, TemplateView):
         ).order_by('sort_order', 'name')
         context["categories"] = categories
 
-        # Initial load of active products. Ordered category-first so the grid
-        # template can `regroup` them under category section headers.
         products = Product.objects.filter(
             is_active=True, is_deleted=False
         ).select_related('category').order_by(
@@ -66,6 +65,49 @@ class POSMainView(LoginRequiredMixin, TemplateView):
             context["active_order"] = None
 
         return context
+
+
+class POSDiscountModalView(TenantPermissionRequiredMixin, LoginRequiredMixin, TemplateView):
+    permission_required = "orders.create"
+    template_name = "ordering/partials/discount_modal.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        from contexts.ordering.services.discount_service import evaluate_order_combos
+        
+        order_id = self.request.session.get('active_order_id')
+        if not order_id:
+            context["eligible_offers"] = []
+            context["ineligible_offers"] = []
+            return context
+            
+        from django.shortcuts import get_object_or_404
+        order = get_object_or_404(Order, id=order_id, status=OrderStatus.OPEN)
+        context["active_order"] = order
+        
+        results = evaluate_order_combos(order)
+        context["eligible_offers"] = results["eligible_offers"]
+        context["ineligible_offers"] = results["ineligible_offers"]
+        return context
+
+
+class POSApplyComboView(TenantPermissionRequiredMixin, LoginRequiredMixin, View):
+    permission_required = "orders.create"
+
+    def post(self, request, combo_id, *args, **kwargs):
+        from contexts.ordering.services.discount_service import apply_retrospective_combo
+        
+        order_id = request.session.get('active_order_id')
+        if order_id:
+            try:
+                apply_retrospective_combo(order_id, combo_id)
+            except Exception as e:
+                # In a real app we'd add a django message here, but for HTMX we just re-render cart
+                pass
+                
+        # Re-fetch order and render cart panel
+        order = Order.objects.filter(id=order_id, status=OrderStatus.OPEN).first()
+        return render(request, "ordering/partials/cart_panel.html", {"active_order": order})
 
 
 class POSCategoryRibbonView(TenantPermissionRequiredMixin, LoginRequiredMixin, ListView):
@@ -105,6 +147,10 @@ class POSProductGridView(TenantPermissionRequiredMixin, LoginRequiredMixin, List
             qs = qs.filter(category_id=category_id)
             
         return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        return context
 
 
 def _get_or_create_active_order(request):
@@ -153,6 +199,176 @@ class POSAddToCartView(TenantPermissionRequiredMixin, LoginRequiredMixin, View):
         return render(request, "ordering/partials/cart_panel.html", {"active_order": order})
 
 
+class POSModifierModalView(TenantPermissionRequiredMixin, LoginRequiredMixin, View):
+    permission_required = "orders.view"
+
+    def get(self, request, product_id, *args, **kwargs):
+        product = get_object_or_404(Product, id=product_id, is_active=True)
+        groups = (
+            product.modifier_groups.filter(is_active=True, is_deleted=False)
+            .prefetch_related("modifiers")
+            .distinct()
+        )
+        return render(
+            request,
+            "ordering/partials/modifier_modal.html",
+            {
+                "product": product,
+                "groups": groups,
+                "is_edit": False,
+                "selected_modifier_ids": [],
+            },
+        )
+
+
+class POSAddWithModifiersView(TenantPermissionRequiredMixin, LoginRequiredMixin, View):
+    permission_required = "orders.create"
+
+    def post(self, request, product_id, *args, **kwargs):
+        product = get_object_or_404(Product, id=product_id, is_active=True)
+        order = _get_or_create_active_order(request)
+
+        modifier_ids = request.POST.getlist("modifier_ids")
+        notes = request.POST.get("notes", "").strip()
+        try:
+            from decimal import Decimal
+            qty = Decimal(request.POST.get("qty", "1"))
+            if qty < 1:
+                qty = Decimal("1")
+        except Exception:
+            qty = Decimal("1")
+
+        modifiers = list(
+            Modifier.objects.filter(
+                id__in=modifier_ids, is_active=True, is_deleted=False
+            )
+        )
+        order_service.add_item(
+            order.id, product, qty=qty, modifiers=modifiers, notes=notes
+        )
+
+        order.refresh_from_db()
+        return render(
+            request, "ordering/partials/cart_panel.html", {"active_order": order}
+        )
+
+
+class POSCartEditModifierModalView(TenantPermissionRequiredMixin, LoginRequiredMixin, View):
+    permission_required = "orders.update"
+
+    def get(self, request, item_id, *args, **kwargs):
+        order_id = request.session.get("active_order_id")
+        if not order_id:
+            return HttpResponse("")
+        order = get_object_or_404(Order, id=order_id)
+        item = get_object_or_404(OrderItem, id=item_id, order=order)
+        product = get_object_or_404(Product, id=item.product_id)
+        groups = (
+            product.modifier_groups.filter(is_active=True, is_deleted=False)
+            .prefetch_related("modifiers")
+            .distinct()
+        )
+        selected_modifier_ids = [str(m.modifier_id) for m in item.modifiers.all()]
+        return render(
+            request,
+            "ordering/partials/modifier_modal.html",
+            {
+                "product": product,
+                "groups": groups,
+                "item": item,
+                "is_edit": True,
+                "selected_modifier_ids": selected_modifier_ids,
+            },
+        )
+
+    def post(self, request, item_id, *args, **kwargs):
+        order_id = request.session.get("active_order_id")
+        if not order_id:
+            return HttpResponse("")
+        order = get_object_or_404(Order, id=order_id)
+        item = get_object_or_404(OrderItem, id=item_id, order=order)
+
+        modifier_ids = request.POST.getlist("modifier_ids")
+        notes = request.POST.get("notes", "").strip()
+        modifiers = list(
+            Modifier.objects.filter(
+                id__in=modifier_ids, is_active=True, is_deleted=False
+            )
+        )
+
+        order_service.update_item_modifiers(
+            order.id, item.id, modifiers=modifiers, notes=notes
+        )
+        order.refresh_from_db()
+        return render(
+            request, "ordering/partials/cart_panel.html", {"active_order": order}
+        )
+
+
+class POSComboModalView(TenantPermissionRequiredMixin, LoginRequiredMixin, View):
+    permission_required = "orders.create"
+
+    def get(self, request, combo_id, *args, **kwargs):
+        from contexts.catalog.models import ComboOffer
+        combo = get_object_or_404(ComboOffer, id=combo_id, is_active=True)
+        groups = combo.groups.prefetch_related("items__product").order_by("sort_order")
+        return render(
+            request,
+            "ordering/partials/combo_modal.html",
+            {
+                "combo": combo,
+                "groups": groups,
+            },
+        )
+
+    def post(self, request, combo_id, *args, **kwargs):
+        from contexts.catalog.models import ComboOffer, Product
+        from django.http import HttpResponseBadRequest
+        
+        combo = get_object_or_404(ComboOffer, id=combo_id, is_active=True)
+        order = _get_or_create_active_order(request)
+        
+        # We expect a payload like:
+        # group_{group_id}_product = [product_id1, product_id2]
+        
+        selections = []
+        groups = combo.groups.all()
+        for group in groups:
+            selected_product_ids = request.POST.getlist(f"group_{group.id}_product")
+            if len(selected_product_ids) < group.min_selections:
+                return HttpResponseBadRequest(f"Please select at least {group.min_selections} item(s) for {group.name}.")
+            if len(selected_product_ids) > group.max_selections:
+                return HttpResponseBadRequest(f"You can only select up to {group.max_selections} item(s) for {group.name}.")
+                
+            for p_id in selected_product_ids:
+                try:
+                    product = Product.objects.get(id=p_id, is_active=True, is_deleted=False)
+                    # Modifiers for this specific product in the combo
+                    # The form inputs could be named: mod_{group_id}_{product_id} = [mod_id, mod_id]
+                    mod_ids = request.POST.getlist(f"mod_{group.id}_{product.id}")
+                    modifiers = list(Modifier.objects.filter(id__in=mod_ids, is_active=True, is_deleted=False))
+                    
+                    selections.append({
+                        "product": product,
+                        "variant": None,
+                        "modifiers": modifiers,
+                        "qty": 1,
+                        "notes": ""
+                    })
+                except Product.DoesNotExist:
+                    pass
+
+        if not selections:
+            return HttpResponseBadRequest("No valid selections made.")
+
+        order_service.add_combo(order.id, combo, selections)
+        
+        order.refresh_from_db()
+        return render(
+            request, "ordering/partials/cart_panel.html", {"active_order": order}
+        )
+
+
 class POSUpdateItemView(TenantPermissionRequiredMixin, LoginRequiredMixin, View):
     permission_required = "orders.update"
     
@@ -182,6 +398,21 @@ class POSRemoveItemView(TenantPermissionRequiredMixin, LoginRequiredMixin, View)
 
         order = get_object_or_404(Order, id=order_id)
         order_service.void_item(order.id, item_id)
+        
+        order.refresh_from_db()
+        return render(request, "ordering/partials/cart_panel.html", {"active_order": order})
+
+
+class POSRemoveComboView(TenantPermissionRequiredMixin, LoginRequiredMixin, View):
+    permission_required = "orders.update"
+    
+    def post(self, request, combo_id, *args, **kwargs):
+        order_id = request.session.get('active_order_id')
+        if not order_id:
+            return HttpResponse("")
+
+        order = get_object_or_404(Order, id=order_id)
+        order_service.remove_combo(order.id, combo_id)
         
         order.refresh_from_db()
         return render(request, "ordering/partials/cart_panel.html", {"active_order": order})
@@ -312,14 +543,12 @@ class POSProcessPaymentView(TenantPermissionRequiredMixin, LoginRequiredMixin, V
                 f.write("=== PAYMENT ERROR ===\n")
                 f.write(traceback.format_exc() + "\n")
             
-            # Return an alert script and reset the button state so it's not stuck
-            error_html = f"""
-            <script>
-                alert('Payment Error: {str(e)}');
-                document.getElementById('checkout-form').__x.$data.processing = false;
-            </script>
-            """
-            return HttpResponse(error_html)
+            return render(
+                request,
+                "ordering/partials/checkout_error_modal.html",
+                {"error_message": str(e)},
+                status=400,
+            )
 
 
 from contexts.ordering.models.kot import KOT
@@ -366,7 +595,7 @@ def attach_waiters_and_stations_to_kots(kots):
     from contexts.restaurant.models.kitchen import KitchenStation
 
     waiters = EmployeeProfile.objects.filter(is_active=True)
-    waiter_map = {str(w.id): w.user.get_full_name() or w.user.email for w in waiters}
+    waiter_map = {str(w.id): w.user.full_name or w.user.email for w in waiters}
 
     stations = KitchenStation.objects.filter(is_active=True)
     station_map = {str(s.id): s.name for s in stations}
@@ -599,7 +828,7 @@ class POSTableMainView(TenantPermissionRequiredMixin, LoginRequiredMixin, Templa
         
         from contexts.employees.models import EmployeeProfile
         waiters = EmployeeProfile.objects.filter(is_active=True)
-        waiter_map = {str(w.id): w.user.get_full_name() or w.user.email for w in waiters}
+        waiter_map = {str(w.id): w.user.full_name or w.user.email for w in waiters}
         
         tables = DiningTable.objects.filter(is_active=True, is_deleted=False).order_by('number')
         for table in tables:
@@ -700,7 +929,7 @@ class TransferTableModalView(TenantPermissionRequiredMixin, LoginRequiredMixin, 
 
 
 class PrintQueueView(TenantPermissionRequiredMixin, LoginRequiredMixin, ListView):
-    permission_required = "ordering.view_orders"
+    permission_required = "orders.view"
     template_name = "ordering/print_queue.html"
     context_object_name = "print_jobs"
     paginate_by = 50
@@ -712,7 +941,7 @@ class PrintQueueView(TenantPermissionRequiredMixin, LoginRequiredMixin, ListView
 
 
 class ManualReprintView(TenantPermissionRequiredMixin, LoginRequiredMixin, View):
-    permission_required = "ordering.manage_orders"
+    permission_required = "orders.update"
 
     def post(self, request, job_id, *args, **kwargs):
         from contexts.ordering.models.print_job import PrintJob
