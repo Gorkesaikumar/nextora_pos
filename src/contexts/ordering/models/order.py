@@ -16,6 +16,7 @@ _MONEY = {"max_digits": 12, "decimal_places": 2, "default": 0}
 class Order(TenantAwareModel):
     location_id = models.UUIDField()
     order_number = models.CharField(max_length=30, blank=True)
+    offline_reference_id = models.CharField(max_length=100, null=True, blank=True, db_index=True)
     table_id = models.UUIDField(null=True, blank=True)
     type = models.CharField(
         max_length=12, choices=OrderType.choices, default=OrderType.DINE_IN

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+    <style>
+        @page {
+            size: A4 landscape;
+            margin: 15mm;
+            @bottom-right {
+                content: "Page " counter(page) " of " counter(pages);
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 10px;
+                color: #888;
+            }
+        }
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: #333;
+            line-height: 1.4;
+            font-size: 12px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        .header h1 {
+            margin: 0;
+            color: #111;
+            font-size: 24px;
+        }
+        .header p {
+            margin: 5px 0 0;
+            color: #666;
+            font-size: 12px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 8px 10px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+            font-size: 11px;
+        }
+        th {
+            background-color: #f8fafc;
+            font-weight: 600;
+            color: #475569;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        tbody tr:nth-child(even) {
+            background-color: #fbfbfc;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>{{ title }}</h1>
+    <p>Generated on {% now "F j, Y, P" %}</p>
+</div>
+
+<table>
+    <thead>
+        <tr>
+            {% for col in header %}
+                <th>{{ col }}</th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in rows %}
+            <tr>
+                {% for cell in row %}
+                    <td>{{ cell }}</td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+</body>
+</html>

@@ -49,10 +49,27 @@ def send_notification_task(self, notification_id: str):
             else:
                 provider = get_provider(notification.channel)
                 recipient_address = notification.recipient.get("address") or notification.recipient
+                
+                # Check for JIT dynamic attachments
+                attachments = []
+                attachment_instruction = notification.context_data.get("_attachment_instruction")
+                if attachment_instruction:
+                    if attachment_instruction.get("type") == "invoice_pdf":
+                        order_id = attachment_instruction.get("order_id")
+                        if order_id:
+                            try:
+                                from contexts.reporting.services.pdf_generator import generate_invoice_pdf
+                                filename, pdf_bytes = generate_invoice_pdf(order_id)
+                                attachments.append((filename, pdf_bytes, "application/pdf"))
+                            except Exception as e:
+                                logger.error(f"Failed to generate PDF attachment for notification {notification_id}: {e}")
+                                raise
+                
                 external_id = provider.send(
                     recipient=recipient_address,
                     subject=subject,
                     body=body,
+                    attachments=attachments,
                 )
 
             # 3. Mark success

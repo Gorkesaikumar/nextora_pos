@@ -19,6 +19,7 @@ urlpatterns = [
     path("kds/", views.KDSMainView.as_view(), name="kds_main"),
     path("kds/tickets/", views.KDSTicketListView.as_view(), name="kds_ticket_list"),
     path("kds/update/<uuid:kot_id>/<str:status>/", views.KDSUpdateStatusView.as_view(), name="kds_update_status"),
+    path("kds/item/<uuid:item_id>/bump/", views.KDSBumpItemView.as_view(), name="kds_bump_item"),
     
     # Table Management
     path("tables/", views.POSTableMainView.as_view(), name="pos_tables_main"),
@@ -27,4 +28,8 @@ urlpatterns = [
     path("tables/select/<uuid:table_id>/", views.POSSelectTableView.as_view(), name="pos_select_table"),
     path("tables/transfer/<uuid:source_table_id>/<uuid:target_table_id>/", views.TableTransferView.as_view(), name="pos_transfer_table"),
     path("tables/transfer/modal/<uuid:table_id>/", views.TransferTableModalView.as_view(), name="pos_transfer_table_modal"),
+    
+    # Print Queue
+    path("print-queue/", views.PrintQueueView.as_view(), name="print_queue"),
+    path("print-queue/reprint/<uuid:job_id>/", views.ManualReprintView.as_view(), name="manual_reprint"),
 ]

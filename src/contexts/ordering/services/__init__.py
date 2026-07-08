@@ -1,4 +1,5 @@
 from . import (
+    checkout_service,
     invoice_service,
     kot_service,
     order_service,
@@ -8,6 +9,7 @@ from . import (
 )
 
 __all__ = [
+    "checkout_service",
     "invoice_service",
     "kot_service",
     "order_service",

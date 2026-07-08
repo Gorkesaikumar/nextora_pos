@@ -28,10 +28,11 @@
             hx-swap="innerHTML"
             class="space-y-6"
             x-data="{ processing: false }"
-            @htmx:before-request="processing = true"
-            @htmx:after-request="processing = false"
+            @submit="if (processing) { $event.preventDefault(); return false; } processing = true;"
+            @htmx:after-request="if($event.detail.failed) processing = false"
             novalidate>
         {% csrf_token %}
+        <input type="hidden" name="idempotency_key" value="{{ idempotency_key }}">
         
         <!-- Payment Methods -->
         <div>

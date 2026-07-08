@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Invoice {{ order.invoice.number|default:order.order_number }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm;
+        }
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: #333;
+            line-height: 1.5;
+            font-size: 14px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 20px;
+        }
+        .header h1 {
+            margin: 0;
+            color: #111;
+            font-size: 28px;
+        }
+        .header p {
+            margin: 5px 0 0;
+            color: #666;
+        }
+        .details-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+        .details-section {
+            width: 48%;
+        }
+        .details-section h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 14px;
+            text-transform: uppercase;
+            color: #888;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        th {
+            background-color: #f9f9f9;
+            font-weight: bold;
+            color: #555;
+            text-transform: uppercase;
+            font-size: 12px;
+        }
+        td.right, th.right {
+            text-align: right;
+        }
+        .totals {
+            width: 40%;
+            margin-left: auto;
+        }
+        .totals-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f5f5f5;
+        }
+        .totals-row.grand-total {
+            font-weight: bold;
+            font-size: 18px;
+            border-bottom: 2px solid #333;
+            border-top: 2px solid #333;
+            padding: 12px 0;
+            margin-top: 5px;
+        }
+        .footer {
+            margin-top: 50px;
+            text-align: center;
+            font-size: 12px;
+            color: #888;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>{{ branch.name|default:"Nextora POS" }}</h1>
+    <p>{{ branch.address|default:"Thank you for your business!" }}</p>
+    {% if branch.contact_email or branch.contact_phone %}
+    <p>
+        {% if branch.contact_phone %}Phone: {{ branch.contact_phone }} &bull; {% endif %}
+        {% if branch.contact_email %}Email: {{ branch.contact_email }}{% endif %}
+    </p>
+    {% endif %}
+</div>
+
+<div class="details-container" style="width: 100%;">
+    <table style="width: 100%; border: none;">
+        <tr>
+            <td style="width: 50%; border: none; padding: 0;">
+                <div class="details-section">
+                    <h3>Invoice To:</h3>
+                    <strong>{{ order.customer_name|default:"Valued Customer" }}</strong><br>
+                    {% if order.customer_phone %}Phone: {{ order.customer_phone }}<br>{% endif %}
+                    {% if order.customer_email %}Email: {{ order.customer_email }}<br>{% endif %}
+                </div>
+            </td>
+            <td style="width: 50%; border: none; padding: 0; text-align: right;">
+                <div class="details-section" style="width: 100%;">
+                    <h3>Invoice Details:</h3>
+                    <strong>Invoice #:</strong> {{ order.invoice.number|default:order.order_number }}<br>
+                    <strong>Date:</strong> {{ order.created_at|date:"M d, Y" }}<br>
+                    <strong>Time:</strong> {{ order.created_at|time:"h:i A" }}<br>
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>Item</th>
+            <th class="right">Qty</th>
+            <th class="right">Price</th>
+            <th class="right">Total</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in order.items.all %}
+        <tr>
+            <td>
+                {{ item.item_name }}
+                {% if item.variant_name %}
+                <br><span style="font-size: 12px; color: #777;">{{ item.variant_name }}</span>
+                {% endif %}
+            </td>
+            <td class="right">{{ item.quantity }}</td>
+            <td class="right">₹{{ item.unit_price|floatformat:2 }}</td>
+            <td class="right">₹{{ item.total_price|floatformat:2 }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div class="totals">
+    <div class="totals-row">
+        <span>Subtotal:</span>
+        <span>₹{{ subtotal|floatformat:2 }}</span>
+    </div>
+    {% if discount > 0 %}
+    <div class="totals-row">
+        <span>Discount:</span>
+        <span style="color: #e53e3e;">-₹{{ discount|floatformat:2 }}</span>
+    </div>
+    {% endif %}
+    {% if tax > 0 %}
+    <div class="totals-row">
+        <span>Tax:</span>
+        <span>₹{{ tax|floatformat:2 }}</span>
+    </div>
+    {% endif %}
+    <div class="totals-row grand-total">
+        <span>Total:</span>
+        <span>₹{{ total|floatformat:2 }}</span>
+    </div>
+</div>
+
+<div class="footer">
+    <p>This is a computer generated invoice and does not require a physical signature.</p>
+</div>
+
+</body>
+</html>

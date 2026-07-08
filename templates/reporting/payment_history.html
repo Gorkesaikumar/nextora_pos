@@ -1,0 +1,170 @@
+{% extends "layouts/dashboard.html" %}
+{% load static %}
+
+{% block page_title %}Payment History{% endblock %}
+{% block page_subtitle %}Real-time ledger of captured payments. Total Today: <span class="font-bold text-semantic-success">₹{{ total_today|floatformat:2 }}</span>{% endblock %}
+
+{% block primary_action %}
+<div class="flex gap-2">
+  <a href="?export=csv&q={{ query }}&start_date={{ start_date }}&end_date={{ end_date }}&method={{ selected_method }}" class="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-neutral-600 bg-white border border-neutral-200 rounded hover:bg-neutral-50 shadow-sm transition-colors">
+    <i data-lucide="download" class="w-4 h-4"></i> Export CSV
+  </a>
+  <a href="?export=excel&q={{ query }}&start_date={{ start_date }}&end_date={{ end_date }}&method={{ selected_method }}" class="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-neutral-600 bg-white border border-neutral-200 rounded hover:bg-neutral-50 shadow-sm transition-colors">
+    <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Export Excel
+  </a>
+  <button onclick="window.location.reload()" class="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-neutral-900 border border-neutral-900 rounded hover:bg-neutral-800 shadow-sm transition-colors ml-2">
+    <i data-lucide="refresh-cw" class="w-4 h-4"></i> Refresh
+  </button>
+</div>
+{% endblock %}
+
+{% block filter_strip %}
+<div class="px-8 pb-4">
+  <form method="GET" class="flex flex-wrap gap-4 items-end bg-white p-4 rounded-card border border-neutral-200 shadow-sm">
+    <div class="w-48">
+      <label class="block text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-1">Search</label>
+      <div class="relative">
+        <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400"></i>
+        <input type="text" name="q" value="{{ query }}" placeholder="Txn ID, Order, Phone..." class="w-full pl-9 pr-3 py-2 bg-neutral-50 border border-neutral-200 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-default focus:border-transparent text-sm">
+      </div>
+    </div>
+    
+    <div class="w-36">
+      <label class="block text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-1">Start Date</label>
+      <input type="date" name="start_date" value="{{ start_date }}" class="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-default focus:border-transparent text-sm">
+    </div>
+
+    <div class="w-36">
+      <label class="block text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-1">End Date</label>
+      <input type="date" name="end_date" value="{{ end_date }}" class="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-default focus:border-transparent text-sm">
+    </div>
+
+    <div class="w-40">
+      <label class="block text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-1">Payment Method</label>
+      <select name="method" class="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-default focus:border-transparent text-sm">
+        <option value="">All Methods</option>
+        {% for st_val, st_label in methods %}
+        <option value="{{ st_val }}" {% if selected_method == st_val %}selected{% endif %}>{{ st_label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <button type="submit" class="px-4 py-2 bg-neutral-900 text-white rounded-md text-sm font-medium hover:bg-neutral-800 transition-colors shrink-0">
+      Apply Filters
+    </button>
+  </form>
+</div>
+{% endblock %}
+
+{% block workspace %}
+<div class="px-8 pb-8" hx-get="{% url 'billing:payments' %}?q={{ query }}&start_date={{ start_date }}&end_date={{ end_date }}&method={{ selected_method }}" hx-trigger="every 15s" hx-swap="outerHTML" hx-select="#payment-table-wrapper" id="payment-table-wrapper">
+  <div class="bg-white rounded-card shadow-sm border border-neutral-200 overflow-visible">
+    <div class="overflow-x-auto overflow-y-visible" style="min-height: 400px;">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-neutral-50 border-b border-neutral-200">
+            <th class="px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wider whitespace-nowrap">Transaction ID</th>
+            <th class="px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wider whitespace-nowrap">Invoice & Order</th>
+            <th class="px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wider whitespace-nowrap">Date & Time</th>
+            <th class="px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wider whitespace-nowrap">Customer</th>
+            <th class="px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wider whitespace-nowrap">Cashier</th>
+            <th class="px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wider whitespace-nowrap">Branch</th>
+            <th class="px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wider whitespace-nowrap">Method</th>
+            <th class="px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wider text-right whitespace-nowrap">Amount</th>
+            <th class="px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wider text-center whitespace-nowrap">Status</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-neutral-100">
+          {% for payment in page_obj %}
+          <tr class="hover:bg-brand-subtle/30 transition-colors">
+            <td class="px-4 py-3 whitespace-nowrap">
+              <span class="font-mono text-sm text-neutral-900 font-medium">
+                {% if payment.reference %}
+                  {{ payment.reference }}
+                {% else %}
+                  {{ payment.id|stringformat:"s"|slice:":8" }}...
+                {% endif %}
+              </span>
+            </td>
+            <td class="px-4 py-3 whitespace-nowrap">
+              {% if payment.order.invoice %}
+              <span class="block text-sm font-semibold text-brand-default">{{ payment.order.invoice.number }}</span>
+              {% else %}
+              <span class="block text-sm font-semibold text-neutral-400 italic">No Invoice</span>
+              {% endif %}
+              <span class="block text-xs text-neutral-500">Order: {{ payment.order.order_number }}</span>
+            </td>
+            <td class="px-4 py-3 whitespace-nowrap">
+              <span class="block text-sm text-neutral-900">{{ payment.captured_at|date:"M d, Y" }}</span>
+              <span class="block text-xs text-neutral-500">{{ payment.captured_at|time:"h:i A" }}</span>
+            </td>
+            <td class="px-4 py-3 whitespace-nowrap">
+              <span class="block text-sm text-neutral-900 font-medium">{{ payment.order.customer_name|default:"Guest" }}</span>
+              {% if payment.order.customer_phone %}
+              <span class="block text-xs text-neutral-500">{{ payment.order.customer_phone }}</span>
+              {% endif %}
+            </td>
+            <td class="px-4 py-3 whitespace-nowrap">
+              <span class="text-sm text-neutral-600">{{ payment.cashier_name }}</span>
+            </td>
+            <td class="px-4 py-3 whitespace-nowrap">
+              <span class="text-sm text-neutral-600">{{ payment.branch_name }}</span>
+            </td>
+            <td class="px-4 py-3 whitespace-nowrap">
+              <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-medium bg-neutral-100 text-neutral-800">
+                {% if payment.method == 'CASH' %}<i data-lucide="banknote" class="w-3 h-3"></i>{% endif %}
+                {% if payment.method == 'CARD' %}<i data-lucide="credit-card" class="w-3 h-3"></i>{% endif %}
+                {% if payment.method == 'UPI' %}<i data-lucide="smartphone" class="w-3 h-3"></i>{% endif %}
+                {{ payment.method }}
+              </span>
+            </td>
+            <td class="px-4 py-3 whitespace-nowrap text-right">
+              <span class="text-sm font-bold text-neutral-900">₹{{ payment.amount|floatformat:2 }}</span>
+            </td>
+            <td class="px-4 py-3 whitespace-nowrap text-center">
+              {% if payment.status == 'CAPTURED' %}
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-semantic-success-subtle text-semantic-success-dark">
+                  Captured
+                </span>
+              {% elif payment.status == 'REFUNDED' %}
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-semantic-danger-subtle text-semantic-danger-dark">
+                  Refunded
+                </span>
+              {% else %}
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-semantic-warning-subtle text-semantic-warning-dark">
+                  {{ payment.status }}
+                </span>
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="9" class="px-4 py-16 text-center text-neutral-500 bg-neutral-50/50">
+              <i data-lucide="search-x" class="w-12 h-12 mx-auto mb-3 opacity-30 text-neutral-400"></i>
+              <p class="text-base font-medium text-neutral-700">No payments found</p>
+              <p class="text-sm mt-1">Try adjusting your search or filter criteria.</p>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    
+    {% if page_obj.has_other_pages %}
+    <div class="px-4 py-3 border-t border-neutral-200 bg-neutral-50 flex items-center justify-between">
+      <div class="text-sm text-neutral-500 font-medium">
+        Showing <span class="text-neutral-900">{{ page_obj.start_index }}</span> to <span class="text-neutral-900">{{ page_obj.end_index }}</span> of <span class="text-neutral-900">{{ page_obj.paginator.count }}</span> payments
+      </div>
+      <div class="flex gap-1">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}&q={{ query }}&start_date={{ start_date }}&end_date={{ end_date }}&method={{ selected_method }}" class="px-3 py-1.5 border border-neutral-200 rounded bg-white text-sm font-medium text-neutral-600 hover:bg-neutral-50 transition-colors">Previous</a>
+        {% endif %}
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}&q={{ query }}&start_date={{ start_date }}&end_date={{ end_date }}&method={{ selected_method }}" class="px-3 py-1.5 border border-neutral-200 rounded bg-white text-sm font-medium text-neutral-600 hover:bg-neutral-50 transition-colors">Next</a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

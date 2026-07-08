@@ -60,17 +60,37 @@ visibleCols = {
 {% block report_kpis %}
   <div class="bg-white dark:bg-neutral-800 p-5 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center gap-4">
     <div class="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-lg flex items-center justify-center shrink-0">
-      <i data-lucide="calculator" class="w-6 h-6"></i>
+      <i data-lucide="calendar" class="w-6 h-6"></i>
     </div>
     <div>
-      <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Total Tax Collected</span>
-      <h3 class="text-xl font-bold text-neutral-900 dark:text-white mt-0.5">₹{{ total_tax|floatformat:2 }}</h3>
+      <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Daily GST</span>
+      <h3 class="text-xl font-bold text-neutral-900 dark:text-white mt-0.5">₹{{ daily_gst|floatformat:2 }}</h3>
     </div>
   </div>
 
   <div class="bg-white dark:bg-neutral-800 p-5 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center gap-4">
-    <div class="w-12 h-12 bg-green-50 dark:bg-green-900/20 text-green-600 rounded-lg flex items-center justify-center shrink-0">
-      <i data-lucide="percent" class="w-6 h-6"></i>
+    <div class="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-lg flex items-center justify-center shrink-0">
+      <i data-lucide="calendar-days" class="w-6 h-6"></i>
+    </div>
+    <div>
+      <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Monthly GST</span>
+      <h3 class="text-xl font-bold text-neutral-900 dark:text-white mt-0.5">₹{{ monthly_gst|floatformat:2 }}</h3>
+    </div>
+  </div>
+
+  <div class="bg-white dark:bg-neutral-800 p-5 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center gap-4">
+    <div class="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-lg flex items-center justify-center shrink-0">
+      <i data-lucide="calendar-range" class="w-6 h-6"></i>
+    </div>
+    <div>
+      <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Yearly GST</span>
+      <h3 class="text-xl font-bold text-neutral-900 dark:text-white mt-0.5">₹{{ yearly_gst|floatformat:2 }}</h3>
+    </div>
+  </div>
+
+  <div class="bg-white dark:bg-neutral-800 p-5 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center gap-4">
+    <div class="w-12 h-12 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 rounded-lg flex items-center justify-center shrink-0">
+      <i data-lucide="check-circle" class="w-6 h-6"></i>
     </div>
     <div>
       <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Taxable Sales</span>
@@ -79,11 +99,31 @@ visibleCols = {
   </div>
 
   <div class="bg-white dark:bg-neutral-800 p-5 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center gap-4">
+    <div class="w-12 h-12 bg-amber-50 dark:bg-amber-900/20 text-amber-600 rounded-lg flex items-center justify-center shrink-0">
+      <i data-lucide="alert-circle" class="w-6 h-6"></i>
+    </div>
+    <div>
+      <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Non-Taxable Sales</span>
+      <h3 class="text-xl font-bold text-neutral-900 dark:text-white mt-0.5">₹{{ non_taxable_sales|floatformat:2 }}</h3>
+    </div>
+  </div>
+
+  <div class="bg-white dark:bg-neutral-800 p-5 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center gap-4">
+    <div class="w-12 h-12 bg-neutral-100 dark:bg-neutral-900 text-neutral-600 rounded-lg flex items-center justify-center shrink-0">
+      <i data-lucide="slash" class="w-6 h-6"></i>
+    </div>
+    <div>
+      <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Exempt Sales</span>
+      <h3 class="text-xl font-bold text-neutral-900 dark:text-white mt-0.5">₹{{ exempt_sales|floatformat:2 }}</h3>
+    </div>
+  </div>
+
+  <div class="bg-white dark:bg-neutral-800 p-5 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center gap-4">
     <div class="w-12 h-12 bg-purple-50 dark:bg-purple-900/20 text-purple-600 rounded-lg flex items-center justify-center shrink-0">
       <i data-lucide="landmark" class="w-6 h-6"></i>
     </div>
     <div>
-      <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">CGST</span>
+      <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">CGST (Period)</span>
       <h3 class="text-xl font-bold text-neutral-900 dark:text-white mt-0.5">₹{{ cgst|floatformat:2 }}</h3>
     </div>
   </div>
@@ -93,7 +133,7 @@ visibleCols = {
       <i data-lucide="landmark" class="w-6 h-6"></i>
     </div>
     <div>
-      <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">SGST</span>
+      <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">SGST (Period)</span>
       <h3 class="text-xl font-bold text-neutral-900 dark:text-white mt-0.5">₹{{ sgst|floatformat:2 }}</h3>
     </div>
   </div>

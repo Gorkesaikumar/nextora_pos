@@ -37,6 +37,7 @@ class KOTItem(TenantAwareModel):
     name_snapshot = models.CharField(max_length=220)
     qty = models.DecimalField(max_digits=8, decimal_places=2, default=1)
     notes = models.CharField(max_length=255, blank=True)
+    is_completed = models.BooleanField(default=False)
 
     class Meta(TenantAwareModel.Meta):
         db_table = "kot_item"

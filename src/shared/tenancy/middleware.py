@@ -44,6 +44,9 @@ class TenantResolutionMiddleware:
             # Fallback 1: explicit X-Tenant-ID header (API / internal clients).
             resolved = self._resolve_from_header(request)
         if resolved is None:
+            # Fallback 1.5: explicit tenant UUID in URL path or query string.
+            resolved = self._resolve_from_path_or_query(request)
+        if resolved is None:
             # Fallback 2: a session-authenticated user with exactly one tenant
             # membership (covers central-domain / non-subdomain access).
             resolved = self._resolve_from_user(request)
@@ -87,6 +90,38 @@ class TenantResolutionMiddleware:
             tenant = Tenant.objects.filter(id=tenant_id).first()
         if tenant is None:
             return None
+        return ResolvedTenant(tenant.id, tenant.status)
+
+    @staticmethod
+    def _resolve_from_path_or_query(request: HttpRequest) -> ResolvedTenant | None:
+        """Resolve tenant from explicit UUID in URL path or query string (?tenant_id=...)."""
+        import re
+        import uuid as _uuid
+        val = request.GET.get("tenant_id") or request.GET.get("tenant")
+        if not val:
+            match = re.search(r"([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})", request.path, re.I)
+            if match:
+                val = match.group(1)
+        if not val:
+            return None
+        try:
+            tenant_id = _uuid.UUID(val)
+        except ValueError:
+            return None
+        from contexts.tenants.models import Tenant
+        from shared.tenancy.context import bypass_tenant
+        with bypass_tenant():
+            tenant = Tenant.objects.filter(id=tenant_id).first()
+        if tenant is None:
+            return None
+        user = getattr(request, "user", None)
+        if user and user.is_authenticated:
+            from contexts.identity.models import Membership
+            with bypass_tenant():
+                has_access = Membership.objects.filter(user=user, tenant=tenant, is_active=True).exists()
+            if not has_access and not getattr(user, "is_superuser", False):
+                return None
+            request.session["active_tenant_id"] = str(tenant.id)
         return ResolvedTenant(tenant.id, tenant.status)
 
     @staticmethod

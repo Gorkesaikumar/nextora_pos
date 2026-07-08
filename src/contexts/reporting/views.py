@@ -9,7 +9,7 @@ from django.views.generic import TemplateView, View
 from django.views.decorators.cache import never_cache
 from django.utils.decorators import method_decorator
 from django.db.models import Sum, Count, F, Q, ExpressionWrapper, DecimalField
-from django.db.models.functions import TruncDate, TruncMonth, ExtractHour, ExtractWeekDay
+from django.db.models.functions import TruncDate, TruncWeek, TruncMonth, TruncYear, ExtractHour, ExtractWeekDay
 from django.utils import timezone
 from django.http import HttpResponse, Http404
 
@@ -18,7 +18,7 @@ from contexts.identity.services.authorization import has_permission
 from contexts.identity.models import User
 from contexts.tenants.models import Branch, Table
 from contexts.ordering.models import Order, OrderItem, KOT, Payment, Invoice
-from contexts.ordering.domain.enums import OrderStatus, OrderType, PaymentMethod, PaymentKind, PaymentStatus, KOTStatus
+from contexts.ordering.domain.enums import OrderStatus, OrderType, PaymentMethod, PaymentKind, PaymentStatus, KOTStatus, InvoiceStatus
 from contexts.inventory.models.item import InventoryItem
 from contexts.inventory.models.warehouse import Warehouse
 from contexts.inventory.models.adjustment import DamagedStock
@@ -87,7 +87,21 @@ def get_date_range(preset, start_date_str=None, end_date_str=None):
 
 
 def generate_export_response(header, rows, file_format='csv', filename='report'):
-    if file_format == 'excel':
+    if file_format == 'pdf':
+        from django.template.loader import render_to_string
+        from weasyprint import HTML
+        
+        html_string = render_to_string('reporting/export_pdf.html', {
+            'header': header,
+            'rows': rows,
+            'title': filename.replace('_', ' ').title()
+        })
+        pdf_file = HTML(string=html_string).write_pdf()
+        
+        response = HttpResponse(pdf_file, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{filename}.pdf"'
+        return response
+    elif file_format == 'excel':
         response = HttpResponse(content_type='application/vnd.ms-excel')
         response['Content-Disposition'] = f'attachment; filename="{filename}.xls"'
         # Write Excel friendly Tab-Separated format
@@ -120,6 +134,17 @@ class DashboardHomeView(TenantPermissionRequiredMixin, LoginRequiredMixin, Templ
         elif has_permission(self.request.user, "kds.view", tenant_id):
             return redirect('ordering:kds_main')
         return super().handle_no_permission()
+
+    def get(self, request, *args, **kwargs):
+        if "tenant_id" not in kwargs and getattr(request, "tenant_id", None):
+            is_htmx = request.headers.get("HX-Request") == "true"
+            if not is_htmx:
+                query_string = request.META.get("QUERY_STRING", "")
+                url = f"/dashboard/{request.tenant_id}/"
+                if query_string:
+                    url += f"?{query_string}"
+                return redirect(url)
+        return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -223,6 +248,100 @@ class DashboardHomeView(TenantPermissionRequiredMixin, LoginRequiredMixin, Templ
         })
         return context
 
+class BillingDashboardView(TenantPermissionRequiredMixin, LoginRequiredMixin, TemplateView):
+    template_name = "reporting/billing_dashboard.html"
+    permission_required = "reports.sales.view"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        branch_id = self.request.GET.get('branch_id')
+        
+        today = timezone.now().date()
+        today_start = timezone.make_aware(datetime.combine(today, time.min))
+        today_end = timezone.make_aware(datetime.combine(today, time.max))
+        
+        orders = Order.objects.all()
+        if branch_id:
+            orders = orders.filter(location_id=branch_id)
+            
+        today_orders = orders.filter(opened_at__gte=today_start, opened_at__lte=today_end)
+        settled_today = today_orders.filter(status=OrderStatus.SETTLED)
+        
+        # KPIs
+        revenue_today = settled_today.aggregate(sum=Sum('total'))['sum'] or Decimal('0')
+        total_bills = settled_today.count()
+        avg_bill = (revenue_today / total_bills) if total_bills else Decimal('0')
+        gst_collected = settled_today.aggregate(sum=Sum('tax_amount'))['sum'] or Decimal('0')
+        
+        # Payment Methods
+        today_payments = Payment.objects.filter(order__in=today_orders, status=PaymentStatus.CAPTURED, kind=PaymentKind.PAYMENT)
+        cash_sales = today_payments.filter(method=PaymentMethod.CASH).aggregate(sum=Sum('amount'))['sum'] or Decimal('0')
+        card_sales = today_payments.filter(method=PaymentMethod.CARD).aggregate(sum=Sum('amount'))['sum'] or Decimal('0')
+        upi_sales = today_payments.filter(method=PaymentMethod.UPI).aggregate(sum=Sum('amount'))['sum'] or Decimal('0')
+        
+        # Refunds
+        refund_amount = Payment.objects.filter(
+            order__in=today_orders, status=PaymentStatus.CAPTURED, kind=PaymentKind.REFUND
+        ).aggregate(sum=Sum('amount'))['sum'] or Decimal('0')
+        
+        # Pending Payments
+        pending_payments = today_orders.exclude(status__in=[OrderStatus.SETTLED, OrderStatus.VOID]).aggregate(sum=Sum('total'))['sum'] or Decimal('0')
+        
+        # Charts - Daily
+        fourteen_days_ago = today_start - timedelta(days=13)
+        daily_sales = orders.filter(status=OrderStatus.SETTLED, opened_at__gte=fourteen_days_ago, opened_at__lte=today_end) \
+            .annotate(date=TruncDate('opened_at')).values('date').annotate(revenue=Sum('total')).order_by('date')
+            
+        chart_daily_labels = [d['date'].strftime('%b %d') for d in daily_sales if d['date']]
+        chart_daily_data = [float(d['revenue']) for d in daily_sales]
+        
+        # Hourly
+        hourly_sales = settled_today.annotate(hour=ExtractHour('opened_at')).values('hour').annotate(revenue=Sum('total')).order_by('hour')
+        chart_hourly_labels = [f"{d['hour']}:00" for d in hourly_sales]
+        chart_hourly_data = [float(d['revenue']) for d in hourly_sales]
+        
+        # Monthly
+        six_months_ago = today_start - timedelta(days=180)
+        monthly_sales = orders.filter(status=OrderStatus.SETTLED, opened_at__gte=six_months_ago) \
+            .annotate(month=TruncMonth('opened_at')).values('month').annotate(revenue=Sum('total')).order_by('month')
+        chart_monthly_labels = [d['month'].strftime('%b %Y') for d in monthly_sales if d['month']]
+        chart_monthly_data = [float(d['revenue']) for d in monthly_sales]
+        
+        # Payment pie
+        pm_sales = Payment.objects.filter(order__in=orders.filter(status=OrderStatus.SETTLED), status=PaymentStatus.CAPTURED, kind=PaymentKind.PAYMENT) \
+            .values('method').annotate(val=Sum('amount'))
+        pm_map = {p['method']: float(p['val']) for p in pm_sales}
+        chart_pm_labels = ['Card', 'Cash', 'UPI']
+        chart_pm_data = [pm_map.get('card', 0), pm_map.get('cash', 0), pm_map.get('upi', 0)]
+        
+        # GST pie (mocked split based on total GST for now since exact IGST/CGST depends on detailed calculation)
+        chart_gst_data = [float(gst_collected * Decimal('0.5')), float(gst_collected * Decimal('0.5')), 0]
+        
+        context.update({
+            'branches': Branch.objects.filter(is_active=True),
+            'selected_branch': branch_id or '',
+            'revenue_today': revenue_today,
+            'total_bills': total_bills,
+            'avg_bill': avg_bill,
+            'gst_collected': gst_collected,
+            'cash_sales': cash_sales,
+            'card_sales': card_sales,
+            'upi_sales': upi_sales,
+            'refund_amount': refund_amount,
+            'pending_payments': pending_payments,
+            'chart_daily_labels': chart_daily_labels,
+            'chart_daily_data': chart_daily_data,
+            'chart_hourly_labels': chart_hourly_labels,
+            'chart_hourly_data': chart_hourly_data,
+            'chart_monthly_labels': chart_monthly_labels,
+            'chart_monthly_data': chart_monthly_data,
+            'chart_pm_labels': chart_pm_labels,
+            'chart_pm_data': chart_pm_data,
+            'chart_gst_data': chart_gst_data,
+        })
+        return context
+
 
 class SalesReportView(TenantPermissionRequiredMixin, LoginRequiredMixin, TemplateView):
     template_name = "reporting/sales_report.html"
@@ -264,28 +383,127 @@ class SalesReportView(TenantPermissionRequiredMixin, LoginRequiredMixin, Templat
 
         settled = orders.filter(status=OrderStatus.SETTLED)
 
+        export_format = request.GET.get('export')
+        report_type = request.GET.get('report_type', 'daily')
+
+        report_headers = []
+        report_rows = []
+
+        if report_type == 'daily':
+            report_headers = ['Date', 'Orders', 'Gross Sales', 'Discounts', 'Taxes', 'Net Sales']
+            daily_data = settled.annotate(date=TruncDate('opened_at')).values('date').annotate(
+                order_count=Count('id'), gross=Sum('subtotal'), disc=Sum('discount_amount'),
+                tax=Sum('tax_amount'), net=Sum('total')
+            ).order_by('-date')
+            for d in daily_data:
+                report_rows.append([d['date'].strftime('%Y-%m-%d') if d['date'] else 'N/A', d['order_count'], d['gross'], d['disc'], d['tax'], d['net']])
+                
+        elif report_type == 'cashier':
+            report_headers = ['Cashier ID', 'Orders', 'Gross Sales', 'Discounts', 'Taxes', 'Net Sales']
+            cashier_data = settled.values('created_by').annotate(
+                order_count=Count('id'), gross=Sum('subtotal'), disc=Sum('discount_amount'),
+                tax=Sum('tax_amount'), net=Sum('total')
+            ).order_by('-net')
+            for d in cashier_data:
+                report_rows.append([str(d['created_by']) or 'System', d['order_count'], d['gross'], d['disc'], d['tax'], d['net']])
+                
+        elif report_type == 'branch':
+            report_headers = ['Branch ID', 'Orders', 'Gross Sales', 'Discounts', 'Taxes', 'Net Sales']
+            branch_data = settled.values('location_id').annotate(
+                order_count=Count('id'), gross=Sum('subtotal'), disc=Sum('discount_amount'),
+                tax=Sum('tax_amount'), net=Sum('total')
+            ).order_by('-net')
+            for d in branch_data:
+                report_rows.append([str(d['location_id']) or 'Unknown', d['order_count'], d['gross'], d['disc'], d['tax'], d['net']])
+                
+        elif report_type == 'payment':
+            report_headers = ['Payment Method', 'Transactions', 'Collected Amount']
+            payment_data = Payment.objects.filter(
+                order__in=settled, kind=PaymentKind.PAYMENT, status=PaymentStatus.CAPTURED
+            ).values('method').annotate(count=Count('id'), total=Sum('amount')).order_by('-total')
+            for d in payment_data:
+                report_rows.append([d['method'], d['count'], d['total']])
+
+        elif report_type == 'customer':
+            report_headers = ['Customer Phone', 'Name', 'Orders', 'Total Spent']
+            customer_data = settled.exclude(customer_phone="").values('customer_phone', 'customer_name').annotate(
+                order_count=Count('id'), total=Sum('total')
+            ).order_by('-total')
+            for d in customer_data:
+                report_rows.append([d['customer_phone'], d['customer_name'] or 'Unknown', d['order_count'], d['total']])
+                
+        elif report_type == 'refund':
+            report_headers = ['Date', 'Refunds Count', 'Total Refunded']
+            refund_data = Payment.objects.filter(
+                order__in=orders, kind=PaymentKind.REFUND, status=PaymentStatus.CAPTURED
+            ).annotate(date=TruncDate('captured_at')).values('date').annotate(
+                count=Count('id'), total=Sum('amount')
+            ).order_by('-date')
+            for d in refund_data:
+                report_rows.append([d['date'].strftime('%Y-%m-%d') if d['date'] else 'N/A', d['count'], d['total']])
+                
+        elif report_type == 'weekly':
+            report_headers = ['Week Start', 'Orders', 'Net Sales']
+            weekly_data = settled.annotate(week=TruncWeek('opened_at')).values('week').annotate(
+                order_count=Count('id'), net=Sum('total')
+            ).order_by('-week')
+            for d in weekly_data:
+                report_rows.append([d['week'].strftime('%Y-%m-%d') if d['week'] else 'N/A', d['order_count'], d['net']])
+                
+        elif report_type == 'monthly':
+            report_headers = ['Month', 'Orders', 'Net Sales']
+            monthly_data = settled.annotate(month=TruncMonth('opened_at')).values('month').annotate(
+                order_count=Count('id'), net=Sum('total')
+            ).order_by('-month')
+            for d in monthly_data:
+                report_rows.append([d['month'].strftime('%Y-%m') if d['month'] else 'N/A', d['order_count'], d['net']])
+                
+        elif report_type == 'yearly':
+            report_headers = ['Year', 'Orders', 'Net Sales']
+            yearly_data = settled.annotate(year=TruncYear('opened_at')).values('year').annotate(
+                order_count=Count('id'), net=Sum('total')
+            ).order_by('-year')
+            for d in yearly_data:
+                report_rows.append([d['year'].strftime('%Y') if d['year'] else 'N/A', d['order_count'], d['net']])
+                
+        elif report_type == 'discount':
+            report_headers = ['Discount Type', 'Orders', 'Total Discount']
+            discount_data = settled.filter(discount_amount__gt=0).values('discount_type').annotate(
+                order_count=Count('id'), total=Sum('discount_amount')
+            ).order_by('-total')
+            for d in discount_data:
+                report_rows.append([d['discount_type'], d['order_count'], d['total']])
+
+        else: # 'invoice'
+            report_headers = ['Invoice #', 'Date', 'Customer', 'Cashier', 'Type', 'Subtotal', 'Discount', 'Tax', 'Total', 'Status']
+            sort_by = request.GET.get('sort', '-opened_at')
+            if sort_by not in ['opened_at', '-opened_at', 'total', '-total']:
+                sort_by = '-opened_at'
+            
+            orders_sorted = orders.prefetch_related('payments').order_by(sort_by)
+            
+            if export_format:
+                for o in orders_sorted:
+                    report_rows.append([
+                        o.order_number or str(o.id),
+                        o.opened_at.strftime('%Y-%m-%d %H:%M'),
+                        o.customer_name or 'Guest',
+                        str(o.created_by) or 'System',
+                        o.get_type_display(),
+                        float(o.subtotal),
+                        float(o.discount_amount),
+                        float(o.tax_amount),
+                        float(o.total),
+                        o.get_status_display()
+                    ])
+            else:
+                report_rows = orders_sorted # Pass queryset directly for pagination
+
         # Audit view/export
         export_format = request.GET.get('export')
         if export_format:
-            record_audit("reports.sales.export", entity_type="report", changes={"format": export_format, "preset": preset})
-            header = ['Invoice #', 'Date & Time', 'Customer', 'Cashier', 'Order Type', 'Payment Methods', 'Subtotal', 'Discount', 'Tax', 'Grand Total', 'Status']
-            rows = []
-            for o in orders.prefetch_related('payments'):
-                pm = ", ".join([p.get_method_display() for p in o.payments.all()])
-                rows.append([
-                    o.order_number or str(o.id),
-                    o.opened_at.strftime('%Y-%m-%d %H:%M'),
-                    o.customer_name or 'Guest',
-                    str(o.created_by) or 'POS',
-                    o.get_type_display(),
-                    pm or 'N/A',
-                    o.subtotal,
-                    o.discount_amount,
-                    o.tax_amount,
-                    o.total,
-                    o.get_status_display()
-                ])
-            return generate_export_response(header, rows, export_format, 'sales_report')
+            record_audit("reports.sales.export", entity_type="report", changes={"format": export_format, "report_type": report_type, "preset": preset})
+            return generate_export_response(report_headers, report_rows, export_format, f'{report_type}_report')
 
         record_audit("reports.sales.view", entity_type="report", changes={"preset": preset})
 
@@ -345,13 +563,8 @@ class SalesReportView(TenantPermissionRequiredMixin, LoginRequiredMixin, Templat
         cat_labels = list(cat_revenue.keys())
         cat_data = list(cat_revenue.values())
 
-        # Sort and Pagination
-        sort_by = request.GET.get('sort', '-opened_at')
-        if sort_by not in ['opened_at', '-opened_at', 'total', '-total']:
-            sort_by = '-opened_at'
-        orders_sorted = orders.prefetch_related('payments').order_by(sort_by)
-        
-        paginator = Paginator(orders_sorted, 25)
+        # Pagination for dynamic rows
+        paginator = Paginator(report_rows, 25)
         page_number = request.GET.get('page')
         page_obj = paginator.get_page(page_number)
 
@@ -388,7 +601,9 @@ class SalesReportView(TenantPermissionRequiredMixin, LoginRequiredMixin, Templat
             'cat_labels': cat_labels, 'cat_data': cat_data,
             
             'page_obj': page_obj,
-            'sort': sort_by,
+            'report_headers': report_headers,
+            'report_type': report_type,
+            'sort': request.GET.get('sort', '-opened_at'),
         })
         return self.render_to_response(context)
 
@@ -628,13 +843,28 @@ class TaxReportView(TenantPermissionRequiredMixin, LoginRequiredMixin, TemplateV
 
         record_audit("reports.tax.view", entity_type="report", changes={"preset": preset})
 
-        # Aggregations
-        taxable_sales = orders.aggregate(total=Sum('taxable_amount'))['total'] or Decimal('0')
+        # Aggregations for the filtered period
+        taxable_sales = orders.filter(tax_amount__gt=0).aggregate(total=Sum('taxable_amount'))['total'] or Decimal('0')
         total_tax = orders.aggregate(total=Sum('tax_amount'))['total'] or Decimal('0')
         cgst = orders.aggregate(total=Sum('cgst'))['total'] or Decimal('0')
         sgst = orders.aggregate(total=Sum('sgst'))['total'] or Decimal('0')
         igst = orders.aggregate(total=Sum('igst'))['total'] or Decimal('0')
         cess = orders.aggregate(total=Sum('cess'))['total'] or Decimal('0')
+        
+        # Exempt Sales (orders with 0 tax)
+        exempt_sales = orders.filter(tax_amount=0).aggregate(total=Sum('subtotal'))['total'] or Decimal('0')
+        # Non-Taxable Sales (untaxed portion of partially taxed orders)
+        non_taxable_sales = orders.filter(tax_amount__gt=0).aggregate(total=Sum(F('subtotal') - F('taxable_amount')))['total'] or Decimal('0')
+
+        # Global KPIs (regardless of date filter)
+        now = timezone.now()
+        base_orders = Order.objects.filter(status=OrderStatus.SETTLED)
+        if branch_id:
+            base_orders = base_orders.filter(location_id=branch_id)
+            
+        daily_gst = base_orders.filter(opened_at__date=now.date()).aggregate(total=Sum('tax_amount'))['total'] or Decimal('0')
+        monthly_gst = base_orders.filter(opened_at__year=now.year, opened_at__month=now.month).aggregate(total=Sum('tax_amount'))['total'] or Decimal('0')
+        yearly_gst = base_orders.filter(opened_at__year=now.year).aggregate(total=Sum('tax_amount'))['total'] or Decimal('0')
 
         # Slab-wise breakdowns
         order_items = OrderItem.objects.filter(order__in=orders)
@@ -665,10 +895,16 @@ class TaxReportView(TenantPermissionRequiredMixin, LoginRequiredMixin, TemplateV
             'selected_branch': branch_id or '',
             
             'taxable_sales': taxable_sales,
+            'exempt_sales': exempt_sales,
+            'non_taxable_sales': non_taxable_sales,
             'total_tax': total_tax,
             'cgst': cgst,
             'sgst': sgst,
             'igst': igst,
+            
+            'daily_gst': daily_gst,
+            'monthly_gst': monthly_gst,
+            'yearly_gst': yearly_gst,
             'cess': cess,
             
             'slab_labels': slab_labels, 'slab_data': slab_data,
@@ -706,28 +942,525 @@ class InvoiceDetailView(TenantPermissionRequiredMixin, LoginRequiredMixin, Templ
         return context
 
 
+class TaxSummaryView(TenantPermissionRequiredMixin, LoginRequiredMixin, TemplateView):
+    template_name = "reporting/tax_summary.html"
+    permission_required = "reports.financial.view"
+
+    def get(self, request, *args, **kwargs):
+        preset = request.GET.get('preset', 'this_month')
+        start_date_str = request.GET.get('start_date')
+        end_date_str = request.GET.get('end_date')
+        start_dt, end_dt, start_date, end_date = get_date_range(preset, start_date_str, end_date_str)
+        
+        branch_id = request.GET.get('branch')
+        cashier_id = request.GET.get('cashier')
+        
+        # Base query (don't limit to SETTLED so we can calculate outstanding tax)
+        orders = Order.objects.filter(
+            opened_at__gte=start_dt,
+            opened_at__lte=end_dt
+        ).exclude(status=OrderStatus.VOIDED)
+        
+        if branch_id:
+            orders = orders.filter(location_id=branch_id)
+        if cashier_id:
+            orders = orders.filter(created_by=cashier_id)
+
+        record_audit("reports.tax_summary.view", entity_type="report", changes={"preset": preset})
+
+        # Base Aggregations
+        taxable_sales = orders.filter(tax_amount__gt=0).aggregate(total=Sum('taxable_amount'))['total'] or Decimal('0')
+        total_tax = orders.aggregate(total=Sum('tax_amount'))['total'] or Decimal('0')
+        cgst = orders.aggregate(total=Sum('cgst'))['total'] or Decimal('0')
+        sgst = orders.aggregate(total=Sum('sgst'))['total'] or Decimal('0')
+        igst = orders.aggregate(total=Sum('igst'))['total'] or Decimal('0')
+        
+        # Exempt Sales (orders with 0 tax)
+        exempt_sales = orders.filter(tax_amount=0).aggregate(total=Sum('subtotal'))['total'] or Decimal('0')
+        
+        # Outstanding Tax vs Tax Collected
+        # Tax Collected: from orders fully or partially paid. To be precise, we can approximate that 
+        # tax collected is (paid_amount / total) * tax_amount, but typically if due_amount > 0, it's outstanding.
+        # Let's simplify: if due_amount > 0, the proportion of unpaid tax is outstanding.
+        # Or even simpler: Sum tax of unpaid/partially paid vs settled.
+        tax_collected = orders.filter(due_amount=0).aggregate(total=Sum('tax_amount'))['total'] or Decimal('0')
+        outstanding_tax = orders.filter(due_amount__gt=0).aggregate(total=Sum('tax_amount'))['total'] or Decimal('0')
+        
+        # Charts
+        # 1. Tax Collection by Payment Status
+        status_labels = ["Collected", "Outstanding"]
+        status_data = [float(tax_collected), float(outstanding_tax)]
+        
+        # 2. Daily GST Timeline
+        daily_tax = list(orders.annotate(day=TruncDate('opened_at')).values('day').annotate(total=Sum('tax_amount')).order_by('day'))
+        day_labels = [d['day'].strftime('%d %b') for d in daily_tax if d['day']]
+        day_data = [float(d['total']) for d in daily_tax]
+
+        # Cashiers for filter dropdown
+        from contexts.identity.models import User
+        cashier_ids = orders.values_list('created_by', flat=True).distinct()
+        cashiers = User.objects.filter(id__in=cashier_ids)
+
+        context = self.get_context_data(**kwargs)
+        context.update({
+            'start_date': start_date.strftime('%Y-%m-%d'),
+            'end_date': end_date.strftime('%Y-%m-%d'),
+            'preset': preset,
+            'branches': Branch.objects.filter(is_active=True),
+            'selected_branch': branch_id or '',
+            'cashiers': cashiers,
+            'selected_cashier': cashier_id or '',
+            
+            'taxable_sales': taxable_sales,
+            'exempt_sales': exempt_sales,
+            'total_tax': total_tax,
+            'cgst': cgst,
+            'sgst': sgst,
+            'igst': igst,
+            'tax_collected': tax_collected,
+            'outstanding_tax': outstanding_tax,
+            
+            'status_labels': status_labels,
+            'status_data': status_data,
+            'day_labels': day_labels,
+            'day_data': day_data,
+        })
+        return self.render_to_response(context)
+
+
+class EmailShareModalView(TenantPermissionRequiredMixin, LoginRequiredMixin, TemplateView):
+    template_name = "reporting/email_modal.html"
+    permission_required = "invoices.view"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        order_id = kwargs.get('order_id')
+        order = get_object_or_404(Order.objects.select_related('invoice'), id=order_id)
+        
+        branch_name = "our store"
+        try:
+            branch = Branch.objects.get(id=order.location_id)
+            branch_name = branch.name
+        except Branch.DoesNotExist:
+            pass
+
+        customer_name = order.customer_name or "Valued Customer"
+        invoice_num = order.invoice.number if hasattr(order, 'invoice') else order.order_number
+        
+        default_subject = f"Your Invoice #{invoice_num} from {branch_name}"
+        default_message = (
+            f"Dear {customer_name},\n\n"
+            f"Thank you for visiting {branch_name}!\n"
+            f"Please find your invoice #{invoice_num} attached as a PDF.\n\n"
+            f"We look forward to serving you again."
+        )
+        
+        context.update({
+            'order': order,
+            'customer_email': order.customer_email or "",
+            'default_subject': default_subject,
+            'default_message': default_message,
+        })
+        return context
+
+
 class EmailInvoiceView(TenantPermissionRequiredMixin, LoginRequiredMixin, View):
     permission_required = "invoices.view"
 
     def post(self, request, *args, **kwargs):
         import json
         from django.http import JsonResponse
+        from contexts.notifications.services import create_notification
+        from contexts.notifications.models import ChannelType
         
         order_id = self.kwargs.get('order_id')
         order = get_object_or_404(Order, id=order_id)
         
-        # Fetch email from POST payload
         try:
             body = json.loads(request.body.decode('utf-8'))
             recipient_email = body.get('email')
+            subject = body.get('subject')
+            message_text = body.get('message_text')
         except Exception:
-            recipient_email = request.POST.get('email') or order.customer_phone
+            recipient_email = request.POST.get('email') or order.customer_email
+            subject = request.POST.get('subject', 'Invoice')
+            message_text = request.POST.get('message_text', 'Please find your invoice attached.')
             
         if not recipient_email:
             return JsonResponse({'status': 'error', 'message': 'No recipient email specified.'}, status=400)
+            
+        # Create an async notification with the PDF attachment instruction
+        create_notification(
+            tenant_id=request.tenant_id,
+            channel=ChannelType.EMAIL,
+            recipient=recipient_email,
+            context_data={
+                "subject": subject,
+                "body": message_text,
+                "_attachment_instruction": {
+                    "type": "invoice_pdf",
+                    "order_id": str(order.id)
+                }
+            }
+        )
 
         record_audit("invoice.emailed", entity_type="invoice", entity_id=order.id, changes={"recipient": recipient_email})
         return JsonResponse({
             'status': 'success',
-            'message': f'Invoice successfully emailed to {recipient_email}.'
+            'message': f'Invoice successfully queued for email delivery to {recipient_email}.'
         })
+
+
+class InvoiceListView(TenantPermissionRequiredMixin, LoginRequiredMixin, TemplateView):
+    template_name = "reporting/invoice_list.html"
+    permission_required = "invoices.view"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        qs = Invoice.objects.select_related('order').prefetch_related('order__payments').order_by('-issued_at')
+        
+        # 1. Search Query
+        query = self.request.GET.get('q')
+        if query:
+            qs = qs.filter(
+                Q(number__icontains=query) |
+                Q(order__order_number__icontains=query) |
+                Q(order__customer_phone__icontains=query) |
+                Q(order__customer_name__icontains=query)
+            )
+
+        # 2. Date Range
+        start_date_str = self.request.GET.get('start_date')
+        end_date_str = self.request.GET.get('end_date')
+        if start_date_str and end_date_str:
+            try:
+                start_dt = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+                end_dt = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+                start_aware = timezone.make_aware(datetime.combine(start_dt, time.min))
+                end_aware = timezone.make_aware(datetime.combine(end_dt, time.max))
+                qs = qs.filter(issued_at__gte=start_aware, issued_at__lte=end_aware)
+            except ValueError:
+                pass
+            
+        # 3. Branch Filter
+        branch_id = self.request.GET.get('branch_id')
+        if branch_id:
+            qs = qs.filter(location_id=branch_id)
+            
+        # 4. Status Filter
+        status = self.request.GET.get('status')
+        if status:
+            qs = qs.filter(status=status)
+            
+        # 5. Sort Order
+        sort = self.request.GET.get('sort', '-issued_at')
+        if sort in ['issued_at', '-issued_at', 'total', '-total']:
+            qs = qs.order_by(sort)
+
+        branches = Branch.objects.filter(is_active=True)
+        user_map = {str(u.id): u.get_full_name() or u.email for u in User.objects.all()}
+        branch_map = {str(b.id): b.name for b in branches}
+        
+        paginator = Paginator(qs, 25)
+        page_number = self.request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+        
+        for inv in page_obj:
+            inv.branch_name = branch_map.get(str(inv.location_id), "Unknown")
+            inv.cashier_name = user_map.get(str(inv.order.created_by), "System")
+            payments = inv.order.payments.all()
+            if payments:
+                methods = set(p.method for p in payments)
+                inv.payment_method_display = "SPLIT" if len(methods) > 1 else methods.pop()
+            else:
+                inv.payment_method_display = "UNPAID"
+
+        context.update({
+            'page_obj': page_obj,
+            'query': query or '',
+            'start_date': start_date_str or '',
+            'end_date': end_date_str or '',
+            'selected_branch': branch_id or '',
+            'selected_status': status or '',
+            'sort': sort,
+            'branches': branches,
+            'statuses': InvoiceStatus.choices,
+        })
+        return context
+
+
+class PaymentHistoryView(TenantPermissionRequiredMixin, LoginRequiredMixin, TemplateView):
+    template_name = "reporting/payment_history.html"
+    permission_required = "reports.financial.view"
+
+    def get(self, request, *args, **kwargs):
+        export_format = request.GET.get('export')
+        if export_format:
+            return self.export_data(export_format)
+        return super().get(request, *args, **kwargs)
+
+    def export_data(self, export_format):
+        qs = self.get_queryset()
+        branches = Branch.objects.filter(is_active=True)
+        user_map = {str(u.id): u.get_full_name() or u.email for u in User.objects.all()}
+        branch_map = {str(b.id): b.name for b in branches}
+        
+        record_audit("reports.financial.export", entity_type="report", changes={"format": export_format})
+        header = ['Transaction ID', 'Date & Time', 'Invoice #', 'Order #', 'Customer', 'Amount', 'Payment Method', 'Status', 'Cashier', 'Branch']
+        rows = []
+        for p in qs:
+            branch_name = branch_map.get(str(p.order.location_id), "Unknown")
+            cashier_name = user_map.get(str(p.created_by), "System")
+            invoice_num = p.order.invoice.number if hasattr(p.order, 'invoice') else "N/A"
+            rows.append([
+                p.reference or str(p.id)[:8],
+                p.captured_at.strftime('%Y-%m-%d %H:%M'),
+                invoice_num,
+                p.order.order_number,
+                p.order.customer_name or 'Guest',
+                p.amount,
+                p.method,
+                p.status,
+                cashier_name,
+                branch_name
+            ])
+        return generate_export_response(header, rows, export_format, 'payment_history')
+
+    def get_queryset(self):
+        qs = Payment.objects.select_related('order', 'order__invoice').order_by('-captured_at')
+        
+        # Search Query
+        query = self.request.GET.get('q')
+        if query:
+            qs = qs.filter(
+                Q(reference__icontains=query) |
+                Q(order__order_number__icontains=query) |
+                Q(order__customer_name__icontains=query) |
+                Q(order__customer_phone__icontains=query) |
+                Q(order__invoice__number__icontains=query)
+            )
+
+        # Date Range
+        start_date_str = self.request.GET.get('start_date')
+        end_date_str = self.request.GET.get('end_date')
+        if start_date_str and end_date_str:
+            try:
+                start_dt = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+                end_dt = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+                start_aware = timezone.make_aware(datetime.combine(start_dt, time.min))
+                end_aware = timezone.make_aware(datetime.combine(end_dt, time.max))
+                qs = qs.filter(captured_at__gte=start_aware, captured_at__lte=end_aware)
+            except ValueError:
+                pass
+                
+        # Method Filter
+        method = self.request.GET.get('method')
+        if method:
+            qs = qs.filter(method=method)
+
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        qs = self.get_queryset()
+        
+        paginator = Paginator(qs, 25)
+        page_number = self.request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+        
+        branches = Branch.objects.filter(is_active=True)
+        user_map = {str(u.id): u.get_full_name() or u.email for u in User.objects.all()}
+        branch_map = {str(b.id): b.name for b in branches}
+
+        for p in page_obj:
+            p.branch_name = branch_map.get(str(p.order.location_id), "Unknown")
+            p.cashier_name = user_map.get(str(p.created_by), "System")
+        
+        # Get total collected today
+        today = timezone.localdate()
+        today_payments = Payment.objects.filter(
+            captured_at__date=today,
+            status=PaymentStatus.CAPTURED
+        )
+        total_today = today_payments.aggregate(sum=Sum('amount'))['sum'] or Decimal('0')
+        
+        context.update({
+            'page_obj': page_obj,
+            'query': self.request.GET.get('q', ''),
+            'start_date': self.request.GET.get('start_date', ''),
+            'end_date': self.request.GET.get('end_date', ''),
+            'selected_method': self.request.GET.get('method', ''),
+            'total_today': total_today,
+            'methods': PaymentMethod.choices,
+        })
+        return context
+
+
+class WhatsAppShareModalView(TenantPermissionRequiredMixin, LoginRequiredMixin, TemplateView):
+    template_name = "reporting/whatsapp_modal.html"
+    permission_required = "invoices.view"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        order_id = kwargs.get('order_id')
+        order = get_object_or_404(Order.objects.select_related('invoice'), id=order_id)
+        
+        branch_name = "our store"
+        try:
+            branch = Branch.objects.get(id=order.location_id)
+            branch_name = branch.name
+        except Branch.DoesNotExist:
+            pass
+
+        customer_name = order.customer_name or "Valued Customer"
+        invoice_num = order.invoice.number if hasattr(order, 'invoice') else order.order_number
+        total = _fmt_inr(order.total)
+        
+        # Build secure link (using the absolute URL for the invoice detail)
+        # Assuming the domain will be determined by the host
+        domain = self.request.build_absolute_uri('/')[:-1]
+        link = f"{domain}/reporting/invoice/{order.id}/"
+        
+        default_message = (
+            f"Dear {customer_name},\n\n"
+            f"Thank you for visiting {branch_name}!\n"
+            f"Your invoice #{invoice_num} for ₹{total} is ready.\n\n"
+            f"View your secure invoice here: {link}\n\n"
+            f"We look forward to serving you again."
+        )
+        
+        context.update({
+            'order': order,
+            'customer_phone': order.customer_phone or "",
+            'default_message': default_message,
+        })
+        return context
+
+
+class WhatsAppSendActionView(TenantPermissionRequiredMixin, LoginRequiredMixin, View):
+    permission_required = "invoices.view"
+
+    def post(self, request, *args, **kwargs):
+        import json
+        from django.http import JsonResponse
+        from contexts.reporting.services.whatsapp import WhatsAppSharingService
+        
+        order_id = kwargs.get('order_id')
+        order = get_object_or_404(Order, id=order_id)
+        
+        try:
+            body = json.loads(request.body.decode('utf-8'))
+            phone_number = body.get('phone_number')
+            message_text = body.get('message_text')
+        except Exception:
+            phone_number = request.POST.get('phone_number')
+            message_text = request.POST.get('message_text')
+            
+        if not phone_number or not message_text:
+            return JsonResponse({'status': 'error', 'message': 'Phone number and message are required.'}, status=400)
+            
+        wa_link = WhatsAppSharingService.log_and_send_whatsapp(
+            tenant_id=request.tenant_id,
+            phone_number=phone_number,
+            message_text=message_text,
+            context_data={'order_id': str(order.id)}
+        )
+        
+        # Record local audit
+        record_audit("invoice.whatsapp_shared", entity_type="invoice", entity_id=order.id, changes={"phone": phone_number})
+        
+        return JsonResponse({
+            'status': 'success',
+            'redirect_url': wa_link,
+            'message': 'WhatsApp link generated and logged successfully.'
+        })
+
+
+class InvoiceHistoryModalView(TenantPermissionRequiredMixin, LoginRequiredMixin, TemplateView):
+    template_name = "reporting/invoice_history_modal.html"
+    permission_required = "invoices.view"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        order_id = kwargs.get('order_id')
+        order = get_object_or_404(Order.objects.select_related('invoice'), id=order_id)
+        
+        from contexts.audit.models import AuditLog
+        from contexts.identity.models import User
+        
+        # Get all audit logs for this order or invoice
+        entity_ids = [order.id]
+        if hasattr(order, 'invoice') and order.invoice:
+            entity_ids.append(order.invoice.id)
+            
+        logs = AuditLog.objects.filter(entity_id__in=entity_ids).order_by('-occurred_at')
+        
+        user_ids = [log.actor_id for log in logs if log.actor_id]
+        users = {str(u.id): u for u in User.objects.filter(id__in=user_ids)}
+        
+        annotated_logs = []
+        for log in logs:
+            log.actor_name = users.get(str(log.actor_id)).get_full_name() if str(log.actor_id) in users else "System"
+            annotated_logs.append(log)
+            
+        context.update({
+            'order': order,
+            'logs': annotated_logs,
+        })
+        return context
+
+
+class BillingAuditLogView(TenantPermissionRequiredMixin, LoginRequiredMixin, TemplateView):
+    template_name = "reporting/billing_audit_log.html"
+    permission_required = "reports.financial.view"
+
+    def get_queryset(self):
+        from contexts.audit.models import AuditLog
+        qs = AuditLog.objects.filter(entity_type__in=["order", "invoice", "payment"]).order_by('-occurred_at')
+        
+        action = self.request.GET.get('action')
+        if action:
+            qs = qs.filter(action=action)
+            
+        start_date_str = self.request.GET.get('start_date')
+        end_date_str = self.request.GET.get('end_date')
+        if start_date_str and end_date_str:
+            try:
+                start_dt = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+                end_dt = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+                start_aware = timezone.make_aware(datetime.combine(start_dt, time.min))
+                end_aware = timezone.make_aware(datetime.combine(end_dt, time.max))
+                qs = qs.filter(occurred_at__gte=start_aware, occurred_at__lte=end_aware)
+            except ValueError:
+                pass
+                
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        qs = self.get_queryset()
+        
+        paginator = Paginator(qs, 50)
+        page_number = self.request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+        
+        from contexts.identity.models import User
+        user_ids = set([log.actor_id for log in page_obj if log.actor_id])
+        users = {str(u.id): u for u in User.objects.filter(id__in=user_ids)}
+        
+        for log in page_obj:
+            log.actor_name = users.get(str(log.actor_id)).get_full_name() if str(log.actor_id) in users else "System"
+            
+        context.update({
+            'page_obj': page_obj,
+            'start_date': self.request.GET.get('start_date', ''),
+            'end_date': self.request.GET.get('end_date', ''),
+            'selected_action': self.request.GET.get('action', ''),
+            'actions': [
+                "order.created", "order.split", "order.merged", "order.item_voided", "order.voided",
+                "invoice.issued", "invoice.voided", "invoice.whatsapp_shared", 
+                "payment.captured", "payment.refunded"
+            ]
+        })
+        return context
+

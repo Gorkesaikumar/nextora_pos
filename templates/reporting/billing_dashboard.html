@@ -1,0 +1,271 @@
+{% extends "layouts/dashboard.html" %}
+{% load static %}
+
+{% block page_title %}Billing Dashboard{% endblock %}
+{% block page_subtitle %}Real-time financial analytics and KPI tracking{% endblock %}
+
+{% block primary_action %}
+<button onclick="window.location.reload()" class="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-neutral-600 bg-white border border-neutral-200 rounded hover:bg-neutral-50 shadow-sm transition-colors">
+  <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+  Refresh
+</button>
+{% endblock %}
+
+{% block filter_strip %}
+<div class="px-8 pb-4">
+  <form method="GET" class="flex flex-wrap gap-4 items-end bg-white p-4 rounded-card border border-neutral-200 shadow-sm">
+    <div class="w-48">
+      <label class="block text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-1">Branch filter</label>
+      <select name="branch_id" class="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-default focus:border-transparent text-sm">
+        <option value="">All Branches (Consolidated)</option>
+        {% for branch in branches %}
+        <option value="{{ branch.id }}" {% if selected_branch == branch.id|stringformat:"s" %}selected{% endif %}>{{ branch.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button type="submit" class="px-4 py-2 bg-neutral-900 text-white rounded-md text-sm font-medium hover:bg-neutral-800 transition-colors shrink-0">
+      Apply Filter
+    </button>
+  </form>
+</div>
+{% endblock %}
+
+{% block workspace %}
+<!-- Load Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div class="px-8 pb-8" hx-get="{% url 'billing:dashboard' %}?branch_id={{ selected_branch }}" hx-trigger="every 15s" hx-swap="outerHTML" id="billing-dashboard-container">
+  
+  <!-- KPI Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-8">
+    
+    <!-- Total Revenue -->
+    <div class="bg-white p-5 rounded-card shadow-sm border border-neutral-200 col-span-1 xl:col-span-2">
+      <div class="flex justify-between items-start mb-2">
+        <p class="text-sm font-semibold text-neutral-500 uppercase tracking-wide">Total Revenue Today</p>
+        <div class="p-1.5 bg-brand-subtle rounded-md text-brand-default">
+          <i data-lucide="banknote" class="w-4 h-4"></i>
+        </div>
+      </div>
+      <h3 class="text-3xl font-bold text-neutral-900 mb-1">₹{{ revenue_today|floatformat:2 }}</h3>
+      <p class="text-xs text-neutral-500">Collected from settled bills</p>
+    </div>
+
+    <!-- Total Bills -->
+    <div class="bg-white p-5 rounded-card shadow-sm border border-neutral-200">
+      <div class="flex justify-between items-start mb-2">
+        <p class="text-sm font-semibold text-neutral-500 uppercase tracking-wide">Total Bills</p>
+        <div class="p-1.5 bg-neutral-100 rounded-md text-neutral-600">
+          <i data-lucide="receipt" class="w-4 h-4"></i>
+        </div>
+      </div>
+      <h3 class="text-3xl font-bold text-neutral-900 mb-1">{{ total_bills }}</h3>
+      <p class="text-xs text-neutral-500">Invoices generated today</p>
+    </div>
+
+    <!-- Avg Bill Value -->
+    <div class="bg-white p-5 rounded-card shadow-sm border border-neutral-200">
+      <div class="flex justify-between items-start mb-2">
+        <p class="text-sm font-semibold text-neutral-500 uppercase tracking-wide">Avg Bill Value</p>
+        <div class="p-1.5 bg-neutral-100 rounded-md text-neutral-600">
+          <i data-lucide="trending-up" class="w-4 h-4"></i>
+        </div>
+      </div>
+      <h3 class="text-3xl font-bold text-neutral-900 mb-1">₹{{ avg_bill|floatformat:2 }}</h3>
+      <p class="text-xs text-neutral-500">Average ticket size</p>
+    </div>
+
+    <!-- GST Collected -->
+    <div class="bg-white p-5 rounded-card shadow-sm border border-neutral-200">
+      <div class="flex justify-between items-start mb-2">
+        <p class="text-sm font-semibold text-neutral-500 uppercase tracking-wide">GST Collected</p>
+        <div class="p-1.5 bg-semantic-warning-subtle rounded-md text-semantic-warning-dark">
+          <i data-lucide="calculator" class="w-4 h-4"></i>
+        </div>
+      </div>
+      <h3 class="text-3xl font-bold text-neutral-900 mb-1">₹{{ gst_collected|floatformat:2 }}</h3>
+      <p class="text-xs text-neutral-500">Tax liabilities today</p>
+    </div>
+
+    <!-- Cash Sales -->
+    <div class="bg-white p-5 rounded-card shadow-sm border border-neutral-200">
+      <p class="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-1">Cash Sales</p>
+      <h3 class="text-xl font-bold text-neutral-900">₹{{ cash_sales|floatformat:2 }}</h3>
+    </div>
+
+    <!-- Card Sales -->
+    <div class="bg-white p-5 rounded-card shadow-sm border border-neutral-200">
+      <p class="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-1">Card Sales</p>
+      <h3 class="text-xl font-bold text-neutral-900">₹{{ card_sales|floatformat:2 }}</h3>
+    </div>
+
+    <!-- UPI Sales -->
+    <div class="bg-white p-5 rounded-card shadow-sm border border-neutral-200">
+      <p class="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-1">UPI Sales</p>
+      <h3 class="text-xl font-bold text-neutral-900">₹{{ upi_sales|floatformat:2 }}</h3>
+    </div>
+    
+    <!-- Refunds -->
+    <div class="bg-white p-5 rounded-card shadow-sm border border-neutral-200">
+      <div class="flex justify-between items-start mb-2">
+        <p class="text-sm font-semibold text-neutral-500 uppercase tracking-wide">Refunds</p>
+        <div class="p-1.5 bg-semantic-danger-subtle rounded-md text-semantic-danger-dark">
+          <i data-lucide="undo" class="w-4 h-4"></i>
+        </div>
+      </div>
+      <h3 class="text-2xl font-bold text-semantic-danger-dark mb-1">₹{{ refund_amount|floatformat:2 }}</h3>
+      <p class="text-xs text-neutral-500">Total voided sales</p>
+    </div>
+
+    <!-- Pending Payments -->
+    <div class="bg-white p-5 rounded-card shadow-sm border border-neutral-200">
+      <div class="flex justify-between items-start mb-2">
+        <p class="text-sm font-semibold text-neutral-500 uppercase tracking-wide">Pending</p>
+        <div class="p-1.5 bg-neutral-100 rounded-md text-neutral-600">
+          <i data-lucide="clock" class="w-4 h-4"></i>
+        </div>
+      </div>
+      <h3 class="text-2xl font-bold text-neutral-900 mb-1">₹{{ pending_payments|floatformat:2 }}</h3>
+      <p class="text-xs text-neutral-500">Unsettled orders today</p>
+    </div>
+
+  </div>
+
+  <!-- Charts Grid -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    
+    <!-- Daily Revenue Chart -->
+    <div class="bg-white p-6 rounded-card shadow-sm border border-neutral-200" 
+         x-data="initChart('dailyChart', 'bar', {{ chart_daily_labels|safe }}, {{ chart_daily_data|safe }}, 'Daily Revenue', '#4f46e5')">
+      <h3 class="text-lg font-bold text-neutral-900 mb-4">Daily Revenue (Last 14 Days)</h3>
+      <div class="relative h-64 w-full">
+        <canvas id="dailyChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Hourly Sales Chart -->
+    <div class="bg-white p-6 rounded-card shadow-sm border border-neutral-200" 
+         x-data="initChart('hourlyChart', 'line', {{ chart_hourly_labels|safe }}, {{ chart_hourly_data|safe }}, 'Hourly Sales (Today)', '#10b981', true)">
+      <h3 class="text-lg font-bold text-neutral-900 mb-4">Hourly Sales Trends</h3>
+      <div class="relative h-64 w-full">
+        <canvas id="hourlyChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Monthly Revenue Chart -->
+    <div class="bg-white p-6 rounded-card shadow-sm border border-neutral-200" 
+         x-data="initChart('monthlyChart', 'bar', {{ chart_monthly_labels|safe }}, {{ chart_monthly_data|safe }}, 'Monthly Revenue', '#f59e0b')">
+      <h3 class="text-lg font-bold text-neutral-900 mb-4">Monthly Revenue (6 Months)</h3>
+      <div class="relative h-64 w-full">
+        <canvas id="monthlyChart"></canvas>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Payment Methods Doughnut -->
+        <div class="bg-white p-6 rounded-card shadow-sm border border-neutral-200"
+             x-data="initPieChart('pmChart', {{ chart_pm_labels|safe }}, {{ chart_pm_data|safe }}, ['#4f46e5', '#10b981', '#f59e0b'])">
+          <h3 class="text-lg font-bold text-neutral-900 mb-4 text-center">Payment Methods</h3>
+          <div class="relative h-48 w-full flex justify-center">
+            <canvas id="pmChart"></canvas>
+          </div>
+        </div>
+
+        <!-- GST Collection Doughnut -->
+        <div class="bg-white p-6 rounded-card shadow-sm border border-neutral-200"
+             x-data="initPieChart('gstChart', ['CGST', 'SGST', 'IGST'], {{ chart_gst_data|safe }}, ['#3b82f6', '#8b5cf6', '#ec4899'])">
+          <h3 class="text-lg font-bold text-neutral-900 mb-4 text-center">GST Collection Split</h3>
+          <div class="relative h-48 w-full flex justify-center">
+            <canvas id="gstChart"></canvas>
+          </div>
+        </div>
+    </div>
+  </div>
+
+  <script>
+    // Register global helpers for Alpine to init charts dynamically.
+    // Chart.js instances need to be destroyed before recreating on HTMX swap.
+    window.chartInstances = window.chartInstances || {};
+
+    function initChart(canvasId, type, labels, data, labelName, color, tension=false) {
+        return {
+            init() {
+                this.$nextTick(() => {
+                    const ctx = document.getElementById(canvasId);
+                    if (!ctx) return;
+                    if (window.chartInstances[canvasId]) {
+                        window.chartInstances[canvasId].destroy();
+                    }
+                    window.chartInstances[canvasId] = new Chart(ctx, {
+                        type: type,
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: labelName,
+                                data: data,
+                                backgroundColor: color + '80', // semi-transparent
+                                borderColor: color,
+                                borderWidth: 2,
+                                fill: type === 'line',
+                                tension: tension ? 0.4 : 0,
+                                borderRadius: type === 'bar' ? 4 : 0
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: false }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    grid: { color: '#f5f5f5' }
+                                },
+                                x: {
+                                    grid: { display: false }
+                                }
+                            }
+                        }
+                    });
+                });
+            }
+        }
+    }
+
+    function initPieChart(canvasId, labels, data, colors) {
+        return {
+            init() {
+                this.$nextTick(() => {
+                    const ctx = document.getElementById(canvasId);
+                    if (!ctx) return;
+                    if (window.chartInstances[canvasId]) {
+                        window.chartInstances[canvasId].destroy();
+                    }
+                    window.chartInstances[canvasId] = new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                data: data,
+                                backgroundColor: colors,
+                                borderWidth: 0,
+                                hoverOffset: 4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            cutout: '65%',
+                            plugins: {
+                                legend: { position: 'bottom' }
+                            }
+                        }
+                    });
+                });
+            }
+        }
+    }
+  </script>
+</div>
+{% endblock %}

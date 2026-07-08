@@ -99,9 +99,9 @@ def test_broadcast_reaches_subscribed_channel(in_memory_channel_layer):
         return msg
 
     msg = async_to_sync(run)()
-    assert msg["type"] == "kds_event"
+    assert msg["type"] == "tenant_event"
     assert msg["payload"] == {
-        "event": "changed", "message": "hi", "kot_number": 3, "action": "READY",
+        "event": "kds_changed", "message": "hi", "kot_number": 3, "action": "READY",
     }
 
 

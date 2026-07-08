@@ -26,6 +26,16 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_locked = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)  # Django admin access only
 
+    # Enterprise login security & token revocation fields
+    failed_login_attempts = models.PositiveIntegerField(default=0)
+    locked_until = models.DateTimeField(null=True, blank=True)
+    password_changed_at = models.DateTimeField(null=True, blank=True)
+    token_version = models.PositiveIntegerField(
+        default=1,
+        help_text="Incremented on logout-all or password change to instantly invalidate JWTs.",
+    )
+    is_email_verified = models.BooleanField(default=False)
+
     created_at = models.DateTimeField(default=timezone.now, editable=False)
     updated_at = models.DateTimeField(auto_now=True)
     last_login_ip = models.GenericIPAddressField(null=True, blank=True)
@@ -47,3 +57,12 @@ class User(AbstractBaseUser, PermissionsMixin):
     @property
     def short_name(self) -> str:
         return self.full_name.split(" ")[0] if self.full_name else self.email
+
+    @property
+    def is_currently_locked(self) -> bool:
+        """Return True if account is administratively locked or temporarily rate-locked."""
+        if self.is_locked:
+            return True
+        if self.locked_until and self.locked_until > timezone.now():
+            return True
+        return False

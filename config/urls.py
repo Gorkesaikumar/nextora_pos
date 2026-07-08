@@ -22,6 +22,7 @@ urlpatterns = [
     # --- Admin (ops only) -------------------------------------------------
     path("admin/", admin.site.urls),
     # --- API v1 -----------------------------------------------------------
+    path("api/v1/auth/", include("contexts.identity.api.urls")),
     path("api/v1/catalog/", include("contexts.catalog.api.urls")),
     path("api/v1/features/", include("contexts.features.api.urls")),
     path("api/v1/notifications/", include("contexts.notifications.api.urls")),
@@ -41,6 +42,7 @@ urlpatterns = [
     path("inventory/", include("contexts.inventory.urls")),
     path("pos/", include("contexts.ordering.urls")),
     path("dashboard/", include("contexts.reporting.urls")),
+    path("billing/", include("contexts.reporting.urls_billing")),
     path("", include("contexts.marketing.urls")),
     path("styleguide/", TemplateView.as_view(template_name="styleguide.html"), name="styleguide"),
     path("platform/", include("contexts.super_admin.urls")),

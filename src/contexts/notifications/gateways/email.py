@@ -2,7 +2,7 @@ import logging
 import uuid
 
 from django.conf import settings
-from django.core.mail import send_mail
+from django.core.mail import EmailMessage
 
 from .base import BaseNotificationProvider
 from .fake import FakeNotificationProvider
@@ -20,13 +20,20 @@ class EmailProvider(BaseNotificationProvider):
         if not to_email:
             raise ValueError("Email recipient address is missing.")
 
-        sent = send_mail(
+        msg = EmailMessage(
             subject=subject or "Notification",
-            message=body,
+            body=body,
             from_email=getattr(settings, "DEFAULT_FROM_EMAIL", "noreply@nextora.app"),
-            recipient_list=[to_email],
-            fail_silently=False,
+            to=[to_email],
         )
+
+        attachments = kwargs.get('attachments', [])
+        for attachment in attachments:
+            if isinstance(attachment, tuple) and len(attachment) == 3:
+                # Expected: (filename, content, mimetype)
+                msg.attach(*attachment)
+
+        sent = msg.send(fail_silently=False)
         if not sent:
             raise RuntimeError("Email failed to send via Django core mail.")
 

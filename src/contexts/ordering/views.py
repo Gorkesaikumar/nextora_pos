@@ -4,7 +4,7 @@ from django.views.generic import TemplateView, ListView
 from django.views import View
 from django.db.models import Q
 from django.shortcuts import render, get_object_or_404
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import never_cache
 
@@ -233,7 +233,12 @@ class POSCheckoutModalView(TenantPermissionRequiredMixin, LoginRequiredMixin, Vi
         if not order.items.exists():
             return HttpResponse("")
 
-        return render(request, "ordering/partials/checkout_modal.html", {"active_order": order})
+        import uuid
+        context = {
+            "active_order": order,
+            "idempotency_key": uuid.uuid4().hex
+        }
+        return render(request, "ordering/partials/checkout_modal.html", context)
 
 
 class POSProcessPaymentView(TenantPermissionRequiredMixin, LoginRequiredMixin, View):
@@ -244,8 +249,17 @@ class POSProcessPaymentView(TenantPermissionRequiredMixin, LoginRequiredMixin, V
         if not order_id:
             return HttpResponse("")
 
-        order = get_object_or_404(Order, id=order_id)
+        # Ensure request idempotency
+        idempotency_key = request.POST.get('idempotency_key')
+        from django.core.cache import cache
+        cache_key = f"checkout_idempotency_{idempotency_key}" if idempotency_key else None
         
+        if cache_key:
+            if not cache.add(cache_key, "PROCESSING", timeout=60):
+                # If key already exists in cache, it's a duplicate request
+                return HttpResponse("<div class='p-4 text-center text-red-600'>Duplicate request detected. Processing already in progress.</div>", status=429)
+
+        order = get_object_or_404(Order, id=order_id)
         method = request.POST.get('method', 'CASH')
         tendered = request.POST.get('tendered')
         
@@ -255,42 +269,42 @@ class POSProcessPaymentView(TenantPermissionRequiredMixin, LoginRequiredMixin, V
             tendered = order.total
 
         try:
-            # Generate KOTs for any unprinted items
-            kot_service.generate_kots(order.id)
-            
-            # 1. Capture Payment
-            payment_service.add_payment(
+            from contexts.ordering.services.checkout_service import complete_checkout_transaction
+
+            order, invoice, print_jobs = complete_checkout_transaction(
                 order_id=order.id,
-                amount=order.total,
                 method=method,
                 tendered=tendered,
-                created_by=request.user.id
-            )
-            
-            # 2. Issue Invoice & Settle
-            invoice_service.settle_and_invoice(order.id)
-
-            # 2b. Live-notify KDS screens that new tickets are on the board.
-            from django.db import transaction as _txn
-            from contexts.ordering.realtime import broadcast_kds_update
-            _tenant_id = getattr(request, "tenant_id", None)
-            _txn.on_commit(
-                lambda: broadcast_kds_update(
-                    tenant_id=_tenant_id, message="New order received."
-                )
+                performed_by_id=request.user.id if request.user.is_authenticated else None,
             )
 
-            # 3. Free up Table
+            # Post-commit notifications & table release
+            try:
+                from contexts.ordering.realtime import broadcast_kds_update
+                _tenant_id = getattr(request, "tenant_id", None)
+                broadcast_kds_update(tenant_id=_tenant_id, message="New order received.")
+            except Exception:
+                pass
+
             if order.table_id:
                 from contexts.restaurant.models.layout import DiningTable
                 from contexts.restaurant.domain.enums import TableStatus
                 DiningTable.objects.filter(id=order.table_id).update(status=TableStatus.VACANT)
-            
-            # 4. Clear session
-            del request.session['active_order_id']
-            
-            # For simplicity in this phase, we just return the success modal (which includes the empty cart OOB swap)
-            return render(request, "ordering/partials/checkout_success_modal.html")
+
+            # Clear session cart
+            if 'active_order_id' in request.session:
+                del request.session['active_order_id']
+
+            return render(
+                request,
+                "ordering/partials/checkout_success_modal.html",
+                {
+                    "print_jobs": print_jobs,
+                    "invoice": invoice,
+                    "order": order,
+                },
+            )
+
             
         except Exception as e:
             import traceback
@@ -347,18 +361,30 @@ def get_kds_metrics(kots):
         "metric_avg_prep": "14m 30s",
     }
 
-def attach_waiters_to_kots(kots):
+def attach_waiters_and_stations_to_kots(kots):
     from contexts.employees.models import EmployeeProfile
+    from contexts.restaurant.models.kitchen import KitchenStation
+
     waiters = EmployeeProfile.objects.filter(is_active=True)
-    waiter_map = {str(w.user.id): w.user.get_full_name() or w.user.email for w in waiters} # Actually, Order.waiter_id is a UUID, does it refer to User or Employee? Wait, earlier I mapped waiter.id to waiter_map. 
-    # Let's map EmployeeProfile id
     waiter_map = {str(w.id): w.user.get_full_name() or w.user.email for w in waiters}
+
+    stations = KitchenStation.objects.filter(is_active=True)
+    station_map = {str(s.id): s.name for s in stations}
+
     for kot in kots:
         if kot.order and kot.order.waiter_id and str(kot.order.waiter_id) in waiter_map:
             kot.waiter_name = waiter_map[str(kot.order.waiter_id)]
         else:
             kot.waiter_name = None
+
+        if kot.kitchen_station_id and str(kot.kitchen_station_id) in station_map:
+            kot.station_name = station_map[str(kot.kitchen_station_id)]
+        else:
+            kot.station_name = "Main Kitchen"
     return kots
+
+# Backward compatibility alias
+attach_waiters_to_kots = attach_waiters_and_stations_to_kots
 
 
 @method_decorator(never_cache, name='dispatch')
@@ -367,14 +393,22 @@ class KDSMainView(TenantPermissionRequiredMixin, LoginRequiredMixin, TemplateVie
     template_name = "ordering/kds.html"
 
     def get_context_data(self, **kwargs):
+        from contexts.restaurant.models.kitchen import KitchenStation
         context = super().get_context_data(**kwargs)
-        kots = KOT.objects.filter(
+        station_id = self.request.GET.get('station_id', '').strip()
+
+        qs = KOT.objects.filter(
             status__in=[KOTStatus.NEW, KOTStatus.PREPARING, KOTStatus.READY]
         ).prefetch_related('items', 'items__order_item').order_by('-created_at_kot')
-        context["kots"] = attach_waiters_to_kots(list(kots))
-        context.update(get_kds_metrics(kots))
-        return context
 
+        if station_id:
+            qs = qs.filter(kitchen_station_id=station_id)
+
+        context["kots"] = attach_waiters_and_stations_to_kots(list(qs))
+        context["stations"] = KitchenStation.objects.filter(is_active=True).order_by('sort_order', 'name')
+        context["selected_station_id"] = station_id
+        context.update(get_kds_metrics(qs))
+        return context
 
 
 @method_decorator(never_cache, name='dispatch')
@@ -384,15 +418,20 @@ class KDSTicketListView(TenantPermissionRequiredMixin, LoginRequiredMixin, ListV
     context_object_name = "kots"
 
     def get_queryset(self):
-        # Fetch active KOTs ordered by newest first
-        return KOT.objects.filter(
+        station_id = self.request.GET.get('station_id', '').strip()
+        qs = KOT.objects.filter(
             status__in=[KOTStatus.NEW, KOTStatus.PREPARING, KOTStatus.READY]
         ).prefetch_related('items', 'items__order_item').order_by('-created_at_kot')
+        if station_id:
+            qs = qs.filter(kitchen_station_id=station_id)
+        return qs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        kots_list = attach_waiters_to_kots(list(context["kots"]))
+        station_id = self.request.GET.get('station_id', '').strip()
+        kots_list = attach_waiters_and_stations_to_kots(list(context["kots"]))
         context["kots"] = kots_list
+        context["selected_station_id"] = station_id
         context["is_htmx"] = self.request.headers.get('HX-Request') == 'true'
         context.update(get_kds_metrics(context["kots"]))
         return context
@@ -407,7 +446,6 @@ class KDSUpdateStatusView(TenantPermissionRequiredMixin, LoginRequiredMixin, Vie
 
         kot = get_object_or_404(KOT, id=kot_id)
 
-        # Simple status machine validation
         if status == 'PREPARING' and kot.status == KOTStatus.NEW:
             kot.status = KOTStatus.PREPARING
         elif status == 'READY' and kot.status == KOTStatus.PREPARING:
@@ -415,9 +453,6 @@ class KDSUpdateStatusView(TenantPermissionRequiredMixin, LoginRequiredMixin, Vie
 
         kot.save(update_fields=['status', 'updated_at'])
 
-        # Push a live "changed" signal to every other KDS screen for this tenant.
-        # Scheduled on_commit so peers only re-fetch once the new status is
-        # durably visible. Best-effort: a layer failure won't break this action.
         tenant_id = getattr(request, "tenant_id", None)
         friendly = {"PREPARING": "Preparing", "READY": "Ready"}.get(status, status.title())
         transaction.on_commit(
@@ -429,21 +464,63 @@ class KDSUpdateStatusView(TenantPermissionRequiredMixin, LoginRequiredMixin, Vie
             )
         )
 
-        # Return the updated partial for all tickets (simpler than updating one for polling to catch it)
-        # Actually since KDS fetches all tickets on poll, we can just return the board
-        kots = KOT.objects.filter(
+        station_id = request.GET.get('station_id', '').strip()
+        qs = KOT.objects.filter(
             status__in=[KOTStatus.NEW, KOTStatus.PREPARING, KOTStatus.READY]
         ).prefetch_related('items', 'items__order_item').order_by('-created_at_kot')
+        if station_id:
+            qs = qs.filter(kitchen_station_id=station_id)
         
-        kots_list = attach_waiters_to_kots(list(kots))
+        kots_list = attach_waiters_and_stations_to_kots(list(qs))
         
         context = {
             "kots": kots_list,
             "updated_kot": kot,
             "action_status": status,
+            "selected_station_id": station_id,
             "is_htmx": True
         }
-        context.update(get_kds_metrics(kots))
+        context.update(get_kds_metrics(qs))
+        return render(request, "ordering/partials/kds_board.html", context)
+
+
+class KDSBumpItemView(TenantPermissionRequiredMixin, LoginRequiredMixin, View):
+    permission_required = "kds.update_status"
+
+    def post(self, request, item_id, *args, **kwargs):
+        from django.db import transaction
+        from contexts.ordering.realtime import broadcast_kds_update
+        from contexts.ordering.models.kot import KOTItem
+
+        kot_item = get_object_or_404(KOTItem, id=item_id)
+        kot_item.is_completed = not kot_item.is_completed
+        kot_item.save(update_fields=["is_completed", "updated_at"])
+
+        tenant_id = getattr(request, "tenant_id", None)
+        transaction.on_commit(
+            lambda: broadcast_kds_update(
+                tenant_id=tenant_id,
+                message=f"Item '{kot_item.name_snapshot}' updated in Order #{kot_item.kot.number}.",
+                kot_number=kot_item.kot.number,
+                action="ITEM_BUMPED",
+            )
+        )
+
+        station_id = request.GET.get('station_id', '').strip()
+        qs = KOT.objects.filter(
+            status__in=[KOTStatus.NEW, KOTStatus.PREPARING, KOTStatus.READY]
+        ).prefetch_related('items', 'items__order_item').order_by('-created_at_kot')
+        if station_id:
+            qs = qs.filter(kitchen_station_id=station_id)
+
+        kots_list = attach_waiters_and_stations_to_kots(list(qs))
+
+        context = {
+            "kots": kots_list,
+            "selected_station_id": station_id,
+            "is_htmx": True
+        }
+        context.update(get_kds_metrics(qs))
         return render(request, "ordering/partials/kds_board.html", context)
 
 
@@ -620,3 +697,44 @@ class TransferTableModalView(TenantPermissionRequiredMixin, LoginRequiredMixin, 
             "source_table": source_table,
             "vacant_tables": vacant_tables
         })
+
+
+class PrintQueueView(TenantPermissionRequiredMixin, LoginRequiredMixin, ListView):
+    permission_required = "ordering.view_orders"
+    template_name = "ordering/print_queue.html"
+    context_object_name = "print_jobs"
+    paginate_by = 50
+
+    def get_queryset(self):
+        from contexts.ordering.models.print_job import PrintJob
+        # Ordering by -created_at for history
+        return PrintJob.objects.filter(is_deleted=False).order_by("-created_at")
+
+
+class ManualReprintView(TenantPermissionRequiredMixin, LoginRequiredMixin, View):
+    permission_required = "ordering.manage_orders"
+
+    def post(self, request, job_id, *args, **kwargs):
+        from contexts.ordering.models.print_job import PrintJob
+        from contexts.ordering.services.printing import execute_print_job
+        from contexts.ordering.domain.enums import PrintJobStatus
+
+        job = get_object_or_404(PrintJob, id=job_id, is_deleted=False)
+        
+        # Reset retry count and mark as pending/printing
+        job.retry_count = 0
+        job.status = PrintJobStatus.PENDING
+        job.error_message = ""
+        job.save(update_fields=["retry_count", "status", "error_message", "updated_at"])
+
+        # Execute inline for immediate feedback (or could trigger celery)
+        success = execute_print_job(job)
+
+        if success:
+            from django.contrib import messages
+            messages.success(request, f"Successfully reprinted {job.get_job_type_display()} for Order #{job.order.order_number}.")
+        else:
+            from django.contrib import messages
+            messages.error(request, f"Reprint failed: {job.error_message}")
+
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/ordering/print-queue/'))

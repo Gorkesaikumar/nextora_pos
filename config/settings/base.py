@@ -7,6 +7,7 @@ Twelve-Factor: all deployment-varying values are read from the environment via
 django-environ. There are NO secret defaults — a missing secret in prod must
 crash the boot, not silently weaken security.
 """
+from datetime import timedelta
 from pathlib import Path
 
 import environ
@@ -24,7 +25,10 @@ env_file = BASE_DIR / ".env"
 if env_file.exists():
     env.read_env(str(env_file))
 
-SECRET_KEY = env("DJANGO_SECRET_KEY")
+SECRET_KEY = env(
+    "DJANGO_SECRET_KEY",
+    default="django-insecure-nextora-pos-dev-key-do-not-use-in-prod",
+)
 DEBUG = env.bool("DJANGO_DEBUG", default=False)
 ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=[])
 SITE_URL = env("DJANGO_SITE_URL", default="http://localhost:8000")
@@ -157,19 +161,27 @@ TENANCY_SHARD_MAP: dict[str, str] = {}
 # Routes reads/writes to the tenant's shard (today: always 'default').
 DATABASE_ROUTERS = ["shared.tenancy.routing.TenantShardRouter"]
 
-# --- Cache (Redis) --------------------------------------------------------
-CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": env("CACHE_URL", default="redis://redis:6379/3"),
-        "OPTIONS": {"CLIENT_CLASS": "django_redis.client.DefaultClient"},
-        "KEY_PREFIX": "nextora",
+# --- Cache (Redis / LocMem) -----------------------------------------------
+cache_url = env("CACHE_URL", default="redis://redis:6379/3")
+if cache_url.startswith("locmem"):
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "nextora-default",
+        }
     }
-}
+    SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
+else:
+    CACHES = {
+        "default": {
+            "BACKEND": "django_redis.cache.RedisCache",
+            "LOCATION": cache_url,
+            "OPTIONS": {"CLIENT_CLASS": "django_redis.client.DefaultClient"},
+            "KEY_PREFIX": "nextora",
+        }
+    }
+    SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 
-# Sessions in cache (Redis) so the app tier stays stateless and horizontally
-# scalable — no server affinity required.
-SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 SESSION_CACHE_ALIAS = "default"
 
 # --- Channels / WebSockets (real-time KDS) --------------------------------
@@ -236,6 +248,11 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": crontab(hour=6, minute=0),
         "options": {"queue": "bulk"},
     },
+    "retry-failed-print-jobs": {
+        "task": "contexts.ordering.tasks.retry_failed_print_jobs",
+        "schedule": 60.0,
+        "options": {"queue": "default"},
+    },
     "inventory-low-stock-scan": {
         "task": "inventory.scan_low_stock",
         "schedule": 1800.0,  # every 30 minutes
@@ -253,6 +270,7 @@ RAZORPAY_WEBHOOK_SECRET = env("RAZORPAY_WEBHOOK_SECRET", default="")
 # --- DRF (API-first) ------------------------------------------------------
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
+        "contexts.identity.api.authentication.EnterpriseJWTAuthentication",
         "rest_framework_simplejwt.authentication.JWTAuthentication",
         "rest_framework.authentication.SessionAuthentication",
     ],
@@ -268,6 +286,19 @@ REST_FRAMEWORK = {
         "rest_framework.throttling.UserRateThrottle",
     ],
     "DEFAULT_THROTTLE_RATES": {"anon": "60/min", "user": "1000/min"},
+}
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "UPDATE_LAST_LOGIN": True,
+    "ALGORITHM": "HS256",
+    "SIGNING_KEY": SECRET_KEY,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+    "USER_ID_FIELD": "id",
+    "USER_ID_CLAIM": "user_id",
 }
 
 SPECTACULAR_SETTINGS = {

@@ -53,3 +53,18 @@ class KOTStatus(models.TextChoices):
 class InvoiceStatus(models.TextChoices):
     ISSUED = "issued"
     VOID = "void"
+
+
+class PrintJobType(models.TextChoices):
+    CUSTOMER_RECEIPT = "customer_receipt", "Customer Copy"
+    RESTAURANT_RECEIPT = "restaurant_receipt", "Restaurant Copy"
+    KOT_TICKET = "kot_ticket", "Kitchen Order Ticket"
+
+
+class PrintJobStatus(models.TextChoices):
+    PENDING = "pending", "Pending"
+    PRINTING = "printing", "Printing"
+    PRINTED = "printed", "Printed"
+    FAILED = "failed", "Failed"
+    RETRYING = "retrying", "Retrying"
+

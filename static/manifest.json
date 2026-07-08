@@ -1,0 +1,39 @@
+{
+  "name": "Nextora POS — Enterprise SaaS Point of Sale",
+  "short_name": "Nextora POS",
+  "description": "Production-grade multi-tenant SaaS Point-of-Sale platform with 72-hour offline operation support.",
+  "start_url": "/dashboard/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0F172A",
+  "theme_color": "#0F172A",
+  "icons": [
+    {
+      "src": "/static/img/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/img/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "POS Terminal",
+      "short_name": "POS",
+      "description": "Open Touch POS Billing Terminal",
+      "url": "/pos/"
+    },
+    {
+      "name": "Kitchen Display (KDS)",
+      "short_name": "KDS",
+      "description": "Open Live Kitchen Display System",
+      "url": "/pos/kds/"
+    }
+  ]
+}

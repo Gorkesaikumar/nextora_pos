@@ -49,3 +49,20 @@ def generate_invoice_task(self, order_id: str, tenant_id: str) -> str:
         )
 
     return str(invoice.id)
+
+
+@shared_task(queue="default")
+def retry_failed_print_jobs():
+    """Background task to automatically retry RETRYING and PENDING print jobs."""
+    from contexts.ordering.models.print_job import PrintJob
+    from contexts.ordering.domain.enums import PrintJobStatus
+    from contexts.ordering.services.printing import execute_print_job
+
+    jobs_to_retry = PrintJob.objects.filter(
+        status__in=[PrintJobStatus.RETRYING, PrintJobStatus.PENDING]
+    ).order_by('created_at')[:50]
+
+    for job in jobs_to_retry:
+        with tenant_scope(job.tenant_id):
+            logger.info(f"Background retry for PrintJob {job.id}")
+            execute_print_job(job)

@@ -23,6 +23,23 @@ visibleCols = {
 
 {% block report_filters %}
   <div class="flex-1 min-w-[150px]">
+    <label class="block text-xs font-semibold text-neutral-500 mb-1">Report Type</label>
+    <select name="report_type" class="input input-sm w-full font-semibold text-brand-default bg-brand-50 border-brand-200" onchange="this.form.submit()">
+      <option value="daily" {% if report_type == 'daily' %}selected{% endif %}>Daily Sales</option>
+      <option value="weekly" {% if report_type == 'weekly' %}selected{% endif %}>Weekly Sales</option>
+      <option value="monthly" {% if report_type == 'monthly' %}selected{% endif %}>Monthly Sales</option>
+      <option value="yearly" {% if report_type == 'yearly' %}selected{% endif %}>Yearly Sales</option>
+      <option value="cashier" {% if report_type == 'cashier' %}selected{% endif %}>Cashier-wise</option>
+      <option value="branch" {% if report_type == 'branch' %}selected{% endif %}>Branch-wise</option>
+      <option value="payment" {% if report_type == 'payment' %}selected{% endif %}>Payment Methods</option>
+      <option value="discount" {% if report_type == 'discount' %}selected{% endif %}>Discounts</option>
+      <option value="refund" {% if report_type == 'refund' %}selected{% endif %}>Refunds</option>
+      <option value="customer" {% if report_type == 'customer' %}selected{% endif %}>Customer History</option>
+      <option value="invoice" {% if report_type == 'invoice' %}selected{% endif %}>Raw Invoices</option>
+    </select>
+  </div>
+
+  <div class="flex-1 min-w-[150px]">
     <label class="block text-xs font-semibold text-neutral-500 dark:text-neutral-400 mb-1">Preset Range</label>
     <select name="preset" class="input input-sm w-full" onchange="this.form.submit()">
       <option value="today" {% if preset == 'today' %}selected{% endif %}>Today</option>
@@ -265,96 +282,129 @@ visibleCols = {
 {% endblock %}
 
 {% block table_header %}
-  <tr>
-    <th x-show="visibleCols.invoice_no" class="px-4 py-3">Invoice #</th>
-    <th x-show="visibleCols.date" class="px-4 py-3">Date</th>
-    <th x-show="visibleCols.customer" class="px-4 py-3">Customer</th>
-    <th x-show="visibleCols.cashier" class="px-4 py-3">Cashier ID</th>
-    <th x-show="visibleCols.type" class="px-4 py-3">Type</th>
-    <th x-show="visibleCols.payment_method" class="px-4 py-3">Payment Method</th>
-    <th x-show="visibleCols.subtotal" class="px-4 py-3 text-right">Subtotal</th>
-    <th x-show="visibleCols.discount" class="px-4 py-3 text-right">Discount</th>
-    <th x-show="visibleCols.tax" class="px-4 py-3 text-right">Tax</th>
-    <th x-show="visibleCols.total" class="px-4 py-3 text-right">
-      <a href="?sort={% if sort == 'total' %}-total{% else %}total{% endif %}&{{ request.GET.urlencode }}" class="inline-flex items-center gap-1 hover:underline">
-        Grand Total
-        <i data-lucide="arrow-up-down" class="w-3 h-3"></i>
-      </a>
-    </th>
-    <th x-show="visibleCols.status" class="px-4 py-3 text-center">Status</th>
-    <th x-show="visibleCols.actions" class="px-4 py-3 text-center">Actions</th>
-  </tr>
+  {% if report_type == 'invoice' %}
+    <tr>
+      <th x-show="visibleCols.invoice_no" class="px-4 py-3">Invoice #</th>
+      <th x-show="visibleCols.date" class="px-4 py-3">Date</th>
+      <th x-show="visibleCols.customer" class="px-4 py-3">Customer</th>
+      <th x-show="visibleCols.cashier" class="px-4 py-3">Cashier ID</th>
+      <th x-show="visibleCols.type" class="px-4 py-3">Type</th>
+      <th x-show="visibleCols.payment_method" class="px-4 py-3">Payment Method</th>
+      <th x-show="visibleCols.subtotal" class="px-4 py-3 text-right">Subtotal</th>
+      <th x-show="visibleCols.discount" class="px-4 py-3 text-right">Discount</th>
+      <th x-show="visibleCols.tax" class="px-4 py-3 text-right">Tax</th>
+      <th x-show="visibleCols.total" class="px-4 py-3 text-right">
+        <a href="?sort={% if sort == 'total' %}-total{% else %}total{% endif %}&{{ request.GET.urlencode }}" class="inline-flex items-center gap-1 hover:underline">
+          Grand Total
+          <i data-lucide="arrow-up-down" class="w-3 h-3"></i>
+        </a>
+      </th>
+      <th x-show="visibleCols.status" class="px-4 py-3 text-center">Status</th>
+      <th x-show="visibleCols.actions" class="px-4 py-3 text-center">Actions</th>
+    </tr>
+  {% else %}
+    <tr>
+      {% for col in report_headers %}
+        <th class="px-4 py-3">{{ col }}</th>
+      {% endfor %}
+    </tr>
+  {% endif %}
 {% endblock %}
 
 {% block table_body %}
-  {% for o in page_obj %}
-    <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-700/50">
-      <td x-show="visibleCols.invoice_no" class="px-4 py-3 font-medium text-neutral-900 dark:text-white">
-        {{ o.order_number|default:o.id|truncatechars:12 }}
-      </td>
-      <td x-show="visibleCols.date" class="px-4 py-3 text-xs">{{ o.opened_at|date:"Y-m-d H:i" }}</td>
-      <td x-show="visibleCols.customer" class="px-4 py-3">{{ o.customer_name|default:"Guest" }}</td>
-      <td x-show="visibleCols.cashier" class="px-4 py-3 text-xs">{{ o.created_by|default:"System"|truncatechars:12 }}</td>
-      <td x-show="visibleCols.type" class="px-4 py-3 capitalize text-xs">{{ o.get_type_display }}</td>
-      <td x-show="visibleCols.payment_method" class="px-4 py-3 text-xs">
-        {% for p in o.payments.all %}
-          <span class="inline-block bg-neutral-100 dark:bg-neutral-700 px-1.5 py-0.5 rounded text-[10px]">{{ p.get_method_display }}</span>
-        {% empty %}
-          -
+  {% if report_type == 'invoice' %}
+    {% for o in page_obj %}
+      <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-700/50">
+        <td x-show="visibleCols.invoice_no" class="px-4 py-3 font-medium text-neutral-900 dark:text-white">
+          {{ o.order_number|default:o.id|truncatechars:12 }}
+        </td>
+        <td x-show="visibleCols.date" class="px-4 py-3 text-xs">{{ o.opened_at|date:"Y-m-d H:i" }}</td>
+        <td x-show="visibleCols.customer" class="px-4 py-3">{{ o.customer_name|default:"Guest" }}</td>
+        <td x-show="visibleCols.cashier" class="px-4 py-3 text-xs">{{ o.created_by|default:"System"|truncatechars:12 }}</td>
+        <td x-show="visibleCols.type" class="px-4 py-3 capitalize text-xs">{{ o.get_type_display }}</td>
+        <td x-show="visibleCols.payment_method" class="px-4 py-3 text-xs">
+          {% for p in o.payments.all %}
+            <span class="inline-block bg-neutral-100 dark:bg-neutral-700 px-1.5 py-0.5 rounded text-[10px]">{{ p.get_method_display }}</span>
+          {% empty %}
+            -
+          {% endfor %}
+        </td>
+        <td x-show="visibleCols.subtotal" class="px-4 py-3 text-right">₹{{ o.subtotal|floatformat:2 }}</td>
+        <td x-show="visibleCols.discount" class="px-4 py-3 text-right text-red-500">₹{{ o.discount_amount|floatformat:2 }}</td>
+        <td x-show="visibleCols.tax" class="px-4 py-3 text-right text-blue-500">₹{{ o.tax_amount|floatformat:2 }}</td>
+        <td x-show="visibleCols.total" class="px-4 py-3 text-right font-bold text-neutral-900 dark:text-white">₹{{ o.total|floatformat:2 }}</td>
+        <td x-show="visibleCols.status" class="px-4 py-3 text-center">
+          {% if o.status == 'settled' %}
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-green-50 text-green-700 border border-green-200">Settled</span>
+          {% elif o.status == 'void' %}
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-50 text-red-700 border border-red-200">Void</span>
+          {% else %}
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-neutral-50 text-neutral-700 border border-neutral-200">{{ o.get_status_display }}</span>
+          {% endif %}
+        </td>
+        <td x-show="visibleCols.actions" class="px-4 py-3 text-center" x-data="{ 
+          async sendEmail(email) {
+            if (!email) return;
+            const resp = await fetch('{% url 'reporting:email_invoice' o.id %}', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+              },
+              body: JSON.stringify({ email })
+            });
+            const res = await resp.json();
+            alert(res.message);
+          }
+        }">
+          <div class="flex items-center justify-center gap-1.5">
+            <!-- View Printable Invoice via Iframe/Modal print -->
+            <a href="{% url 'reporting:invoice_detail' o.id %}" target="_blank" class="text-brand-default hover:text-brand-hover p-1" title="View & Print Invoice">
+              <i data-lucide="receipt" class="w-4 h-4"></i>
+            </a>
+            <button @click="
+              const email = prompt('Enter recipient email:', '{{ o.customer_email }}');
+              if(email) sendEmail(email);
+            " class="text-neutral-400 hover:text-neutral-600 p-1" title="Email Receipt">
+              <i data-lucide="mail" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </td>
+      </tr>
+    {% empty %}
+      <tr>
+        <td colspan="12" class="px-4 py-8 text-center text-neutral-500">
+          <div class="flex flex-col items-center gap-2">
+            <i data-lucide="folder-open" class="w-8 h-8 text-neutral-300"></i>
+            <span>No sales records found matching filters.</span>
+          </div>
+        </td>
+      </tr>
+    {% endfor %}
+  {% else %}
+    {% for row in page_obj %}
+      <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-700/50">
+        {% for cell in row %}
+          <td class="px-4 py-3 text-neutral-900 dark:text-neutral-300 {% if cell|stringformat:'s'|length > 0 and cell.is_integer == False and cell != 'N/A' %}text-right{% endif %}">
+            {% if cell|stringformat:'s'|length > 0 and cell.is_integer == False and cell != 'N/A' and forloop.counter > 2 %}
+               {{ cell|floatformat:2 }}
+            {% else %}
+               {{ cell }}
+            {% endif %}
+          </td>
         {% endfor %}
-      </td>
-      <td x-show="visibleCols.subtotal" class="px-4 py-3 text-right">₹{{ o.subtotal|floatformat:2 }}</td>
-      <td x-show="visibleCols.discount" class="px-4 py-3 text-right text-red-500">₹{{ o.discount_amount|floatformat:2 }}</td>
-      <td x-show="visibleCols.tax" class="px-4 py-3 text-right text-blue-500">₹{{ o.tax_amount|floatformat:2 }}</td>
-      <td x-show="visibleCols.total" class="px-4 py-3 text-right font-bold text-neutral-900 dark:text-white">₹{{ o.total|floatformat:2 }}</td>
-      <td x-show="visibleCols.status" class="px-4 py-3 text-center">
-        {% if o.status == 'settled' %}
-          <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-green-50 text-green-700 border border-green-200">Settled</span>
-        {% elif o.status == 'void' %}
-          <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-50 text-red-700 border border-red-200">Void</span>
-        {% else %}
-          <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-neutral-50 text-neutral-700 border border-neutral-200">{{ o.get_status_display }}</span>
-        {% endif %}
-      </td>
-      <td x-show="visibleCols.actions" class="px-4 py-3 text-center" x-data="{ 
-        async sendEmail(email) {
-          if (!email) return;
-          const resp = await fetch('{% url 'reporting:email_invoice' o.id %}', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-CSRFToken': '{{ csrf_token }}'
-            },
-            body: JSON.stringify({ email })
-          });
-          const res = await resp.json();
-          alert(res.message);
-        }
-      }">
-        <div class="flex items-center justify-center gap-1.5">
-          <!-- View Printable Invoice via Iframe/Modal print -->
-          <a href="{% url 'reporting:invoice_detail' o.id %}" target="_blank" class="text-brand-default hover:text-brand-hover p-1" title="View & Print Invoice">
-            <i data-lucide="receipt" class="w-4 h-4"></i>
-          </a>
-          <button @click="
-            const email = prompt('Enter recipient email:', '{{ o.customer_email }}');
-            if(email) sendEmail(email);
-          " class="text-neutral-400 hover:text-neutral-600 p-1" title="Email Receipt">
-            <i data-lucide="mail" class="w-4 h-4"></i>
-          </button>
-        </div>
-      </td>
-    </tr>
-  {% empty %}
-    <tr>
-      <td colspan="12" class="px-4 py-8 text-center text-neutral-500">
-        <div class="flex flex-col items-center gap-2">
-          <i data-lucide="folder-open" class="w-8 h-8 text-neutral-300"></i>
-          <span>No sales records found matching filters.</span>
-        </div>
-      </td>
-    </tr>
-  {% endfor %}
+      </tr>
+    {% empty %}
+      <tr>
+        <td colspan="12" class="px-4 py-8 text-center text-neutral-500">
+          <div class="flex flex-col items-center gap-2">
+            <i data-lucide="folder-open" class="w-8 h-8 text-neutral-300"></i>
+            <span>No aggregated records found matching filters.</span>
+          </div>
+        </td>
+      </tr>
+    {% endfor %}
+  {% endif %}
 {% endblock %}
 
 {% block table_pagination %}

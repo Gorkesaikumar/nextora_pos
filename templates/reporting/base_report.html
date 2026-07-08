@@ -68,6 +68,9 @@
               <i data-lucide="refresh-cw" class="w-4 h-4 mr-1.5"></i> Refresh
             </button>
             {% block report_actions %}
+              <a href="?export=pdf&{{ request.GET.urlencode }}" class="btn-secondary" title="Export as PDF">
+                <i data-lucide="file-text" class="w-4 h-4 mr-1.5 text-red-600"></i> PDF
+              </a>
               <a href="?export=csv&{{ request.GET.urlencode }}" class="btn-secondary" title="Export as CSV">
                 <i data-lucide="file-spreadsheet" class="w-4 h-4 mr-1.5 text-green-600"></i> CSV
               </a>

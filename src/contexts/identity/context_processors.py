@@ -56,6 +56,13 @@ def rbac_context(request):
             'icon': 'chef-hat',
             'active': request.path.startswith('/pos/kds/'),
         })
+    if 'orders.view' in perms:
+        operations_items.append({
+            'label': 'Print Queue',
+            'url': safe_reverse('ordering:print_queue'),
+            'icon': 'printer',
+            'active': request.path.startswith('/pos/print-queue/'),
+        })
     if 'catalog.view' in perms:
         operations_items.append({
             'label': 'Menu Items',
@@ -126,6 +133,26 @@ def rbac_context(request):
         ])
     if customer_items:
         nav_groups.append({'label': 'CUSTOMERS', 'items': customer_items})
+
+    # BILLING
+    billing_items = []
+    if 'orders.view' in perms or 'reports.sales.view' in perms:
+        billing_items.extend([
+            {'label': 'Billing Dashboard', 'url': safe_reverse('billing:dashboard'), 'icon': 'layout-dashboard', 'active': request.path.startswith('/billing/dashboard/')},
+            {'label': 'Invoices', 'url': safe_reverse('billing:invoices'), 'icon': 'file-text', 'active': request.path.startswith('/billing/invoices/')},
+            {'label': 'Billing Reports', 'url': safe_reverse('billing:reports'), 'icon': 'pie-chart', 'active': request.path.startswith('/billing/reports/')},
+            {'label': 'Payment History', 'url': safe_reverse('billing:payments'), 'icon': 'history', 'active': request.path.startswith('/billing/payments/')},
+            {'label': 'GST Reports', 'url': safe_reverse('billing:gst_reports'), 'icon': 'calculator', 'active': request.path.startswith('/billing/gst-reports/')},
+            {'label': 'GST Filing', 'url': safe_reverse('billing:gst_filing'), 'icon': 'file-check', 'active': request.path.startswith('/billing/gst-filing/')},
+            {'label': 'Tax Summary', 'url': safe_reverse('billing:tax_summary'), 'icon': 'landmark', 'active': request.path.startswith('/billing/tax-summary/')},
+            {'label': 'Refund Bills', 'url': safe_reverse('billing:refunds'), 'icon': 'undo', 'active': request.path.startswith('/billing/refunds/')},
+            {'label': 'WhatsApp Sharing', 'url': safe_reverse('billing:whatsapp'), 'icon': 'message-circle', 'active': request.path.startswith('/billing/whatsapp/')},
+            {'label': 'Activity History', 'url': safe_reverse('billing:audit_log'), 'icon': 'shield-check', 'active': request.path.startswith('/billing/audit/')},
+            {'label': 'Billing Settings', 'url': safe_reverse('billing:settings'), 'icon': 'settings', 'active': request.path.startswith('/billing/settings/')},
+
+        ])
+    if billing_items:
+        nav_groups.append({'label': 'BILLING', 'items': billing_items})
 
     # REPORTS
     report_items = []

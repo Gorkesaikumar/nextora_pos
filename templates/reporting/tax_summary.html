@@ -1,0 +1,273 @@
+{% extends "reporting/base_report.html" %}
+
+{% block report_key %}tax_summary{% endblock %}
+{% block report_title %}Tax Summary{% endblock %}
+{% block report_description %}Real-time summary of tax liabilities, collections, and outstanding tax across branches and cashiers.{% endblock %}
+
+{% block col_init %}
+visibleCols = {
+  // Not using a table for this one, but base_report needs it defined.
+};
+{% endblock %}
+
+{% block report_filters %}
+  <div class="flex-1 min-w-[150px]">
+    <label class="block text-xs font-semibold text-neutral-500 mb-1">Preset Range</label>
+    <select name="preset" class="input input-sm w-full" onchange="this.form.submit()">
+      <option value="today" {% if preset == 'today' %}selected{% endif %}>Today</option>
+      <option value="yesterday" {% if preset == 'yesterday' %}selected{% endif %}>Yesterday</option>
+      <option value="last_7_days" {% if preset == 'last_7_days' %}selected{% endif %}>Last 7 Days</option>
+      <option value="last_30_days" {% if preset == 'last_30_days' %}selected{% endif %}>Last 30 Days</option>
+      <option value="this_month" {% if preset == 'this_month' %}selected{% endif %}>This Month</option>
+      <option value="last_month" {% if preset == 'last_month' %}selected{% endif %}>Last Month</option>
+      <option value="custom" {% if preset == 'custom' %}selected{% endif %}>Custom Range</option>
+    </select>
+  </div>
+
+  <template x-if="'{{ preset }}' === 'custom'">
+    <div class="flex gap-2 flex-1 min-w-[280px]">
+      <div class="flex-1">
+        <label class="block text-xs font-semibold text-neutral-500 mb-1">Start Date</label>
+        <input type="date" name="start_date" value="{{ start_date }}" class="input input-sm w-full">
+      </div>
+      <div class="flex-1">
+        <label class="block text-xs font-semibold text-neutral-500 mb-1">End Date</label>
+        <input type="date" name="end_date" value="{{ end_date }}" class="input input-sm w-full">
+      </div>
+    </div>
+  </template>
+
+  <div class="flex-1 min-w-[150px]">
+    <label class="block text-xs font-semibold text-neutral-500 mb-1">Store / Branch</label>
+    <select name="branch" class="input input-sm w-full">
+      <option value="">All Branches</option>
+      {% for b in branches %}
+        <option value="{{ b.id }}" {% if selected_branch == b.id|stringformat:"s" %}selected{% endif %}>{{ b.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="flex-1 min-w-[150px]">
+    <label class="block text-xs font-semibold text-neutral-500 mb-1">Cashier</label>
+    <select name="cashier" class="input input-sm w-full">
+      <option value="">All Cashiers</option>
+      {% for c in cashiers %}
+        <option value="{{ c.id }}" {% if selected_cashier == c.id|stringformat:"s" %}selected{% endif %}>{{ c.get_full_name|default:c.email }}</option>
+      {% endfor %}
+    </select>
+  </div>
+{% endblock %}
+
+{% block report_kpis %}
+  <div class="bg-white dark:bg-neutral-800 p-5 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center gap-4">
+    <div class="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-lg flex items-center justify-center shrink-0">
+      <i data-lucide="calculator" class="w-6 h-6"></i>
+    </div>
+    <div>
+      <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Total GST</span>
+      <h3 class="text-xl font-bold text-neutral-900 dark:text-white mt-0.5">₹{{ total_tax|floatformat:2 }}</h3>
+    </div>
+  </div>
+
+  <div class="bg-white dark:bg-neutral-800 p-5 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center gap-4">
+    <div class="w-12 h-12 bg-purple-50 dark:bg-purple-900/20 text-purple-600 rounded-lg flex items-center justify-center shrink-0">
+      <i data-lucide="landmark" class="w-6 h-6"></i>
+    </div>
+    <div>
+      <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">CGST</span>
+      <h3 class="text-xl font-bold text-neutral-900 dark:text-white mt-0.5">₹{{ cgst|floatformat:2 }}</h3>
+    </div>
+  </div>
+
+  <div class="bg-white dark:bg-neutral-800 p-5 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center gap-4">
+    <div class="w-12 h-12 bg-orange-50 dark:bg-orange-900/20 text-orange-600 rounded-lg flex items-center justify-center shrink-0">
+      <i data-lucide="landmark" class="w-6 h-6"></i>
+    </div>
+    <div>
+      <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">SGST</span>
+      <h3 class="text-xl font-bold text-neutral-900 dark:text-white mt-0.5">₹{{ sgst|floatformat:2 }}</h3>
+    </div>
+  </div>
+
+  <div class="bg-white dark:bg-neutral-800 p-5 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center gap-4">
+    <div class="w-12 h-12 bg-cyan-50 dark:bg-cyan-900/20 text-cyan-600 rounded-lg flex items-center justify-center shrink-0">
+      <i data-lucide="globe" class="w-6 h-6"></i>
+    </div>
+    <div>
+      <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">IGST</span>
+      <h3 class="text-xl font-bold text-neutral-900 dark:text-white mt-0.5">₹{{ igst|floatformat:2 }}</h3>
+    </div>
+  </div>
+
+  <div class="bg-white dark:bg-neutral-800 p-5 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center gap-4">
+    <div class="w-12 h-12 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 rounded-lg flex items-center justify-center shrink-0">
+      <i data-lucide="check-circle" class="w-6 h-6"></i>
+    </div>
+    <div>
+      <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Taxable Sales</span>
+      <h3 class="text-xl font-bold text-neutral-900 dark:text-white mt-0.5">₹{{ taxable_sales|floatformat:2 }}</h3>
+    </div>
+  </div>
+
+  <div class="bg-white dark:bg-neutral-800 p-5 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center gap-4">
+    <div class="w-12 h-12 bg-neutral-100 dark:bg-neutral-900 text-neutral-600 rounded-lg flex items-center justify-center shrink-0">
+      <i data-lucide="slash" class="w-6 h-6"></i>
+    </div>
+    <div>
+      <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Exempt Sales</span>
+      <h3 class="text-xl font-bold text-neutral-900 dark:text-white mt-0.5">₹{{ exempt_sales|floatformat:2 }}</h3>
+    </div>
+  </div>
+
+  <div class="bg-white dark:bg-neutral-800 p-5 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center gap-4">
+    <div class="w-12 h-12 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 rounded-lg flex items-center justify-center shrink-0">
+      <i data-lucide="wallet" class="w-6 h-6"></i>
+    </div>
+    <div>
+      <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Tax Collected</span>
+      <h3 class="text-xl font-bold text-neutral-900 dark:text-white mt-0.5">₹{{ tax_collected|floatformat:2 }}</h3>
+    </div>
+  </div>
+
+  <div class="bg-white dark:bg-neutral-800 p-5 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center gap-4">
+    <div class="w-12 h-12 bg-red-50 dark:bg-red-900/20 text-red-600 rounded-lg flex items-center justify-center shrink-0">
+      <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+    </div>
+    <div>
+      <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Outstanding Tax</span>
+      <h3 class="text-xl font-bold text-neutral-900 dark:text-white mt-0.5">₹{{ outstanding_tax|floatformat:2 }}</h3>
+    </div>
+  </div>
+{% endblock %}
+
+{% block report_charts %}
+  <!-- Collection Status Chart -->
+  <div class="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm p-5">
+    <h3 class="font-bold text-neutral-900 dark:text-white mb-4">Tax Collection Status</h3>
+    <div class="relative h-64 w-full">
+      <canvas id="statusChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Daily Timeline Chart -->
+  <div class="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm p-5">
+    <h3 class="font-bold text-neutral-900 dark:text-white mb-4">Daily Tax Trend</h3>
+    <div class="relative h-64 w-full">
+      <canvas id="dailyChart"></canvas>
+    </div>
+  </div>
+{% endblock %}
+
+{% block table_title %}Tax Summary Data{% endblock %}
+
+{% block table_header %}
+  <tr>
+    <th class="px-5 py-3">Metric</th>
+    <th class="px-5 py-3 text-right">Value (₹)</th>
+  </tr>
+{% endblock %}
+
+{% block table_body %}
+  <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-700/50">
+    <td class="px-5 py-3 font-medium">Total GST</td>
+    <td class="px-5 py-3 text-right">{{ total_tax|floatformat:2 }}</td>
+  </tr>
+  <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-700/50">
+    <td class="px-5 py-3 font-medium">CGST</td>
+    <td class="px-5 py-3 text-right">{{ cgst|floatformat:2 }}</td>
+  </tr>
+  <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-700/50">
+    <td class="px-5 py-3 font-medium">SGST</td>
+    <td class="px-5 py-3 text-right">{{ sgst|floatformat:2 }}</td>
+  </tr>
+  <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-700/50">
+    <td class="px-5 py-3 font-medium">IGST</td>
+    <td class="px-5 py-3 text-right">{{ igst|floatformat:2 }}</td>
+  </tr>
+  <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-700/50">
+    <td class="px-5 py-3 font-medium">Taxable Sales</td>
+    <td class="px-5 py-3 text-right">{{ taxable_sales|floatformat:2 }}</td>
+  </tr>
+  <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-700/50">
+    <td class="px-5 py-3 font-medium">Exempt Sales</td>
+    <td class="px-5 py-3 text-right">{{ exempt_sales|floatformat:2 }}</td>
+  </tr>
+  <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-700/50">
+    <td class="px-5 py-3 font-medium text-indigo-600">Tax Collected</td>
+    <td class="px-5 py-3 text-right text-indigo-600">{{ tax_collected|floatformat:2 }}</td>
+  </tr>
+  <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-700/50">
+    <td class="px-5 py-3 font-medium text-red-600">Outstanding Tax</td>
+    <td class="px-5 py-3 text-right text-red-600">{{ outstanding_tax|floatformat:2 }}</td>
+  </tr>
+{% endblock %}
+
+{% block table_pagination %}{% endblock %}
+
+{% block page_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const isDark = document.documentElement.classList.contains('dark');
+    const textColor = isDark ? '#a3a3a3' : '#52525b';
+    const gridColor = isDark ? '#404040' : '#e5e7eb';
+
+    // Status Chart
+    new Chart(document.getElementById('statusChart'), {
+      type: 'doughnut',
+      data: {
+        labels: {{ status_labels|safe }},
+        datasets: [{
+          data: {{ status_data|safe }},
+          backgroundColor: ['#4f46e5', '#ef4444'], // Indigo, Red
+          borderWidth: 0,
+          hoverOffset: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { color: textColor } }
+        },
+        cutout: '70%'
+      }
+    });
+
+    // Daily Trend Chart
+    new Chart(document.getElementById('dailyChart'), {
+      type: 'line',
+      data: {
+        labels: {{ day_labels|safe }},
+        datasets: [{
+          label: 'Daily Tax',
+          data: {{ day_data|safe }},
+          borderColor: '#10b981', // Emerald
+          backgroundColor: 'rgba(16, 185, 129, 0.1)',
+          borderWidth: 2,
+          fill: true,
+          tension: 0.3
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: { color: gridColor },
+            ticks: { color: textColor }
+          },
+          x: {
+            grid: { display: false },
+            ticks: { color: textColor }
+          }
+        }
+      }
+    });
+  });
+</script>
+{% endblock %}

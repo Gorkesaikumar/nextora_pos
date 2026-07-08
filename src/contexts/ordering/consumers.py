@@ -91,3 +91,9 @@ class TenantEventsConsumer(AsyncJsonWebsocketConsumer):
     async def _resolve_tenant(self, user, session) -> uuid.UUID | None:
         return await database_sync_to_async(resolve_ws_tenant)(user, session)
 
+
+# Backward compatibility aliases for KDS integration tests and legacy consumers
+KDSConsumer = TenantEventsConsumer
+kds_group_name = tenant_group_name
+resolve_kds_tenant = resolve_ws_tenant
+
