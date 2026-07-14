@@ -21,9 +21,16 @@
       </div>
       <div class="top-rail__spacer"></div>
       <div class="top-rail__cluster">
-        <span class="top-rail__status-pill top-rail__status-pill--ok">
-          <span class="status-rail__dot" aria-hidden="true"></span>Synced
-        </span>
+        <a href="{% url 'ordering:printer_settings' %}" class="top-rail__icon-btn" aria-label="Printer Settings" title="Printer Settings" style="text-decoration:none">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+          </svg>
+          <span style="font-size:10px;margin-left:2px;color:var(--forge-color-text-secondary)">Print</span>
+        </a>
+        <a href="{% url 'ordering:printer_settings' %}" class="top-rail__status-pill" title="Printer Settings" aria-label="Printer Settings" style="cursor:pointer;text-decoration:none">
+          <span class="status-rail__dot" aria-hidden="true"></span>
+          <span id="print-service-label">PS</span>
+        </a>
         <button type="button" class="top-rail__icon-btn" aria-label="Notifications" aria-haspopup="dialog">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 7a5 5 0 1 1 10 0v3l1 2H2l1-2V7Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M6 14a2 2 0 0 0 4 0" stroke="currentColor" stroke-width="1.5"/></svg>
         </button>

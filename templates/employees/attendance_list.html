@@ -1,0 +1,85 @@
+{% extends "layouts/dashboard.html" %}
+
+{% block page_title %}Attendance Logs{% endblock %}
+{% block page_subtitle %}<p class="text-caption text-neutral-500 mt-1">Review and manage daily attendance records.</p>{% endblock %}
+
+{% block primary_action %}
+<button hx-get="{% url 'employees:attendance_create' %}" hx-target="#dialog-container" class="btn-primary">
+  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+  Add Record
+</button>
+{% endblock %}
+
+{% block workspace %}
+<div class="card overflow-hidden bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl"
+     hx-get="{% url 'employees:attendance_list' %}"
+     hx-trigger="attendanceListChanged from:body"
+     hx-select=".card">
+  <div class="overflow-x-auto">
+    <table class="w-full text-left border-collapse">
+      <thead>
+        <tr class="bg-neutral-50 dark:bg-neutral-900/50 border-b border-neutral-150 dark:border-neutral-700 text-heading-3 text-neutral-700 dark:text-neutral-300">
+          <th class="px-5 py-3.5 font-semibold">Employee</th>
+          <th class="px-5 py-3.5 font-semibold">Date & Shift</th>
+          <th class="px-5 py-3.5 font-semibold">Check In / Out</th>
+          <th class="px-5 py-3.5 font-semibold">Status</th>
+          <th class="px-5 py-3.5 font-semibold text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-neutral-100 dark:divide-neutral-700/50">
+        {% for att in attendance_logs %}
+        <tr class="hover:bg-neutral-50/50 dark:hover:bg-neutral-800/50 transition-colors">
+          <td class="px-5 py-4">
+            <span class="text-sm font-bold text-neutral-900 dark:text-white">{{ att.employee.full_name }}</span>
+            <div class="text-xs text-neutral-500">{{ att.employee.employee_code|default:"-" }}</div>
+          </td>
+          <td class="px-5 py-4">
+            <div class="text-sm font-semibold text-neutral-900 dark:text-neutral-300">{{ att.date|date:"M d, Y" }}</div>
+            <div class="text-xs text-neutral-500">{{ att.shift.name|default:"No Shift" }}</div>
+          </td>
+          <td class="px-5 py-4 text-sm text-neutral-700 dark:text-neutral-300">
+            <div>In: {{ att.check_in|time:"g:i A" }} {% if att.is_late_entry %}<span class="text-xs text-amber-500 font-bold">(Late)</span>{% endif %}</div>
+            {% if att.check_out %}
+            <div>Out: {{ att.check_out|time:"g:i A" }} {% if att.is_early_exit %}<span class="text-xs text-amber-500 font-bold">(Early)</span>{% endif %}</div>
+            {% endif %}
+          </td>
+          <td class="px-5 py-4">
+            {% if att.status == 'present' %}
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-emerald-100 text-emerald-800">Present</span>
+            {% elif att.status == 'absent' %}
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-red-100 text-red-800">Absent</span>
+            {% elif att.status == 'half_day' %}
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-amber-100 text-amber-800">Half Day</span>
+            {% elif att.status == 'late' %}
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-amber-100 text-amber-800">Late</span>
+            {% else %}
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-neutral-100 text-neutral-800">{{ att.get_status_display }}</span>
+            {% endif %}
+            
+            {% if att.is_manual %}
+            <div class="text-[10px] text-neutral-400 mt-1">Manual Entry</div>
+            {% endif %}
+          </td>
+          <td class="px-5 py-4 text-right flex gap-3 justify-end items-center">
+            <button hx-get="{% url 'employees:attendance_update' att.id %}" hx-target="#dialog-container" class="text-xs font-semibold text-brand-default hover:text-brand-hover">
+              Edit
+            </button>
+            <button hx-post="{% url 'employees:attendance_delete' att.id %}" hx-confirm="Delete this attendance record?" class="text-xs font-semibold text-red-500 hover:text-red-700">
+              Delete
+            </button>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" class="px-5 py-8 text-center text-xs text-neutral-500">
+            No attendance records found.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div id="dialog-container"></div>
+{% endblock %}

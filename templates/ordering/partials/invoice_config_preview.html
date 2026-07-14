@@ -1,0 +1,364 @@
+{% load static %}
+<div class="receipt-preview" id="receipt-preview-container">
+  <div class="receipt-print"
+       :class="'receipt-' + (config.paper_size || '80mm')"
+       :style="'transform: scale(' + (previewZoom || 1) + '); transform-origin: top center;'"
+       style="margin: 0 auto;">
+
+    {% comment %} SECTION 1: RESTAURANT HEADER {% endcomment %}
+    <div class="receipt-header">
+
+      {% comment %} Logo {% endcomment %}
+      <div class="receipt-logo" x-show="config.show_logo && config.logo_url" x-cloak>
+        <img :src="config.logo_url" alt="Logo" style="max-width:48px;max-height:48px;object-fit:contain;">
+      </div>
+      <div class="receipt-logo" x-show="config.show_logo && !config.logo_url" x-cloak>
+        <div class="receipt-logo-box">
+          <svg style="width:18px;height:18px;color:#ccc;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+          </svg>
+        </div>
+      </div>
+
+      {% comment %} Business Name {% endcomment %}
+      <div class="receipt-business-name"
+           x-text="config.restaurant_name || 'RESTAURANT NAME'">{% if not is_preview %}{{ business_name|default:"RESTAURANT NAME" }}{% endif %}</div>
+
+      {% comment %} Receipt Header / Title Badge {% endcomment %}
+      <div class="receipt-header-title"
+           x-text="config.receipt_header || 'TAX INVOICE'">{% if not is_preview %}{{ config.receipt_header|default:"TAX INVOICE" }}{% endif %}</div>
+
+      {% comment %} GSTIN / FSSAI Badges {% endcomment %}
+      <div class="receipt-badges">
+        <span class="receipt-badge"
+              x-show="config.show_gstin && config.gstin"
+              x-text="'GSTIN: ' + config.gstin"
+              x-cloak>{% if not is_preview and business_gstin %}GSTIN: {{ business_gstin }}{% endif %}</span>
+        <span class="receipt-badge"
+              x-show="config.show_fssai && config.fssai"
+              x-text="'FSSAI: ' + config.fssai"
+              x-cloak>{% if not is_preview and business_fssai %}FSSAI: {{ business_fssai }}{% endif %}</span>
+      </div>
+
+      {% comment %} Address {% endcomment %}
+      <div class="receipt-address"
+           x-show="config.address"
+           x-text="config.address"
+           x-cloak>{% if not is_preview %}{{ business_address }}{% endif %}</div>
+
+      {% comment %} Contact — Phone | Email {% endcomment %}
+      <div class="receipt-contact"
+           x-show="config.phone || config.email"
+           x-cloak>
+        <span x-show="config.phone" x-text="config.phone" x-cloak>{% if not is_preview %}{{ business_phone }}{% endif %}</span>
+        <span x-show="config.phone && config.email" class="receipt-contact-sep" x-cloak>{% if not is_preview and business_phone and config.email %}|{% endif %}</span>
+        <span x-show="config.email" x-text="config.email" x-cloak>{% if not is_preview %}{{ config.email }}{% endif %}</span>
+      </div>
+
+      {% comment %} Website {% endcomment %}
+      <div class="receipt-website"
+           x-show="config.website"
+           x-text="config.website"
+           x-cloak>{% if not is_preview %}{{ config.website }}{% endif %}</div>
+
+    </div>
+
+    {% comment %} SECTION 2: CUSTOM HEADER TEXT {% endcomment %}
+    <div class="receipt-custom-header"
+         x-show="config.custom_header_text"
+         x-text="config.custom_header_text"
+         x-cloak>{% if not is_preview %}{{ custom_header_text }}{% endif %}</div>
+
+    <div class="receipt-separator"></div>
+
+    {% comment %} SECTION 3: ORDER INFORMATION META TABLE {% endcomment %}
+    <table class="receipt-meta" cellspacing="0" cellpadding="0">
+      <tbody>
+        <tr x-show="config.show_invoice_number" x-cloak>
+          <td class="receipt-meta-label">Invoice</td>
+          <td class="receipt-meta-value" x-text="previewData.invoice_number || 'INV-250714-0001'">{% if not is_preview %}{{ invoice_number }}{% endif %}</td>
+        </tr>
+        <tr x-show="config.show_order_number" x-cloak>
+          <td class="receipt-meta-label">Order</td>
+          <td class="receipt-meta-value" x-text="previewData.order_number || 'ORD-250714-0001'">{% if not is_preview %}{{ order_number }}{% endif %}</td>
+        </tr>
+        <tr x-show="config.show_table_number" x-cloak>
+          <td class="receipt-meta-label">Table</td>
+          <td class="receipt-meta-value" x-text="previewData.table_number || 'T7'">{% if not is_preview %}{{ table_number }}{% endif %}</td>
+        </tr>
+        <tr x-show="config.show_customer_name" x-cloak>
+          <td class="receipt-meta-label">Customer</td>
+          <td class="receipt-meta-value" x-text="previewData.customer_name || 'Rahul Sharma'">{% if not is_preview %}{{ customer_name }}{% endif %}</td>
+        </tr>
+        <tr x-show="config.show_cashier_name" x-cloak>
+          <td class="receipt-meta-label">Cashier</td>
+          <td class="receipt-meta-value" x-text="previewData.cashier_name || 'Asha Singh'">{% if not is_preview %}{{ cashier_name }}{% endif %}</td>
+        </tr>
+        <tr x-show="config.show_order_type" x-cloak>
+          <td class="receipt-meta-label">Type</td>
+          <td class="receipt-meta-value" x-text="previewData.order_type || 'DINE-IN'">{% if not is_preview %}{{ order_type }}{% endif %}</td>
+        </tr>
+        <tr>
+          <td class="receipt-meta-label">Date</td>
+          <td class="receipt-meta-value" x-text="(previewData.date || '14 Jul 2026') + ' · ' + (previewData.time || '14:30')">{% if not is_preview %}{{ date }} · {{ time }}{% endif %}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="receipt-separator"></div>
+
+    {% comment %} SECTION 4: LINE ITEMS TABLE {% endcomment %}
+    <table class="receipt-items" cellspacing="0" cellpadding="0">
+      <thead>
+        <tr>
+          <th class="receipt-col-desc">DESCRIPTION</th>
+          <th class="receipt-col-qty">QTY</th>
+          <th class="receipt-col-rate">RATE</th>
+          <th class="receipt-col-amount">AMOUNT</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if not is_preview %}
+          {% for item in items %}
+            <tr class="receipt-item-row">
+              <td class="receipt-col-desc">
+                <span class="receipt-item-name">{{ item.name }}</span>
+                {% for mod in item.modifiers %}
+                  <span class="receipt-item-modifier">
+                    + {{ mod.name }}
+                    {% if mod.price_delta and mod.price_delta != '0.00' %}
+                      ({{ currency_symbol }}{{ mod.price_delta }})
+                    {% endif %}
+                  </span>
+                {% endfor %}
+                {% if item.notes %}
+                  <span class="receipt-item-notes">Note: {{ item.notes }}</span>
+                {% endif %}
+                {% if config.show_item_hsn and item.hsn_code %}
+                  <span class="receipt-item-hsn">HSN: {{ item.hsn_code }}</span>
+                {% endif %}
+                {% if config.show_item_discount and item.line_discount and item.line_discount != '0.00' %}
+                  <span class="receipt-item-discount">Disc: -{{ currency_symbol }}{{ item.line_discount }}</span>
+                {% endif %}
+              </td>
+              <td class="receipt-col-qty">{{ item.qty }}</td>
+              <td class="receipt-col-rate">{{ currency_symbol }}{{ item.unit_price }}</td>
+              <td class="receipt-col-amount">{{ currency_symbol }}{{ item.line_total }}</td>
+            </tr>
+          {% endfor %}
+        {% endif %}
+        
+        <template x-if="is_preview">
+          <template x-for="(item, idx) in (previewData.items || [])" :key="idx">
+            <tr class="receipt-item-row">
+              <td class="receipt-col-desc">
+                <span class="receipt-item-name" x-text="item.name"></span>
+                <template x-for="(mod, midx) in (item.modifiers || [])" :key="midx">
+                  <span class="receipt-item-modifier">
+                    + <span x-text="mod.name"></span>
+                    <span x-show="mod.price_delta && mod.price_delta !== '0.00'" x-cloak>
+                      (<span x-text="getCurrency() + parseFloat(mod.price_delta || 0).toFixed(2)"></span>)
+                    </span>
+                  </span>
+                </template>
+                <span class="receipt-item-notes" x-show="item.notes" x-cloak>
+                  Note: <span x-text="item.notes"></span>
+                </span>
+                <span class="receipt-item-hsn"
+                      x-show="config.show_item_hsn && item.hsn_code"
+                      x-cloak>
+                  HSN: <span x-text="item.hsn_code"></span>
+                </span>
+                <span class="receipt-item-discount"
+                      x-show="config.show_item_discount && item.line_discount && parseFloat(item.line_discount) > 0"
+                      x-cloak>
+                  Disc: -<span x-text="getCurrency() + parseFloat(item.line_discount || 0).toFixed(2)"></span>
+                </span>
+              </td>
+              <td class="receipt-col-qty" x-text="parseFloat(item.qty || 0)"></td>
+              <td class="receipt-col-rate">
+                <span x-text="getCurrency() + parseFloat(item.unit_price || 0).toFixed(2)"></span>
+              </td>
+              <td class="receipt-col-amount">
+                <span x-text="getCurrency() + parseFloat(item.line_total || 0).toFixed(2)"></span>
+              </td>
+            </tr>
+          </template>
+        </template>
+      </tbody>
+    </table>
+
+    <div class="receipt-separator"></div>
+
+    {% comment %} SECTION 5: TOTALS TABLE {% endcomment %}
+    <table class="receipt-totals" cellspacing="0" cellpadding="0">
+      <tbody>
+        <tr>
+          <td class="receipt-total-label">Sub Total</td>
+          <td class="receipt-total-value">
+            <span x-text="getCurrency() + parseFloat(previewData.subtotal || 0).toFixed(2)">{% if not is_preview %}{{ currency_symbol }}{{ subtotal }}{% endif %}</span>
+          </td>
+        </tr>
+        <tr x-show="config.show_discount && previewData.discount_amount && parseFloat(previewData.discount_amount) > 0" x-cloak>
+          <td class="receipt-total-label">Discount</td>
+          <td class="receipt-total-value receipt-total-discount">
+            -<span x-text="getCurrency() + parseFloat(previewData.discount_amount || 0).toFixed(2)">{% if not is_preview %}{{ currency_symbol }}{{ discount_amount }}{% endif %}</span>
+          </td>
+        </tr>
+        <tr x-show="config.show_service_charge && previewData.service_charge_amount && parseFloat(previewData.service_charge_amount) > 0" x-cloak>
+          <td class="receipt-total-label">Service Charge</td>
+          <td class="receipt-total-value">
+            <span x-text="getCurrency() + parseFloat(previewData.service_charge_amount || 0).toFixed(2)">{% if not is_preview %}{{ currency_symbol }}{{ service_charge_amount }}{% endif %}</span>
+          </td>
+        </tr>
+        <tr x-show="config.show_gst_breakdown && previewData.cgst && parseFloat(previewData.cgst) > 0" x-cloak>
+          <td class="receipt-total-label">CGST</td>
+          <td class="receipt-total-value">
+            <span x-text="getCurrency() + parseFloat(previewData.cgst || 0).toFixed(2)">{% if not is_preview %}{{ currency_symbol }}{{ cgst }}{% endif %}</span>
+          </td>
+        </tr>
+        <tr x-show="config.show_gst_breakdown && previewData.sgst && parseFloat(previewData.sgst) > 0" x-cloak>
+          <td class="receipt-total-label">SGST</td>
+          <td class="receipt-total-value">
+            <span x-text="getCurrency() + parseFloat(previewData.sgst || 0).toFixed(2)">{% if not is_preview %}{{ currency_symbol }}{{ sgst }}{% endif %}</span>
+          </td>
+        </tr>
+        <tr x-show="config.show_gst_breakdown && previewData.igst && parseFloat(previewData.igst) > 0" x-cloak>
+          <td class="receipt-total-label">IGST</td>
+          <td class="receipt-total-value">
+            <span x-text="getCurrency() + parseFloat(previewData.igst || 0).toFixed(2)">{% if not is_preview %}{{ currency_symbol }}{{ igst }}{% endif %}</span>
+          </td>
+        </tr>
+        <tr x-show="previewData.round_off && parseFloat(previewData.round_off) !== 0" x-cloak>
+          <td class="receipt-total-label">Round Off</td>
+          <td class="receipt-total-value">
+            <span x-text="getCurrency() + parseFloat(previewData.round_off || 0).toFixed(2)">{% if not is_preview %}{{ currency_symbol }}{{ round_off }}{% endif %}</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="receipt-separator-double"></div>
+
+    {% comment %} SECTION 6: GRAND TOTAL {% endcomment %}
+    <table class="receipt-grand-total" cellspacing="0" cellpadding="0">
+      <tbody>
+        <tr>
+          <td class="receipt-grand-label">TOTAL</td>
+          <td class="receipt-grand-value">
+            <span x-text="getCurrency() + parseFloat(previewData.total || 0).toFixed(2)">{% if not is_preview %}{{ currency_symbol }}{{ total }}{% endif %}</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="receipt-separator-double"></div>
+
+    {% comment %} SECTION 7: PAYMENT INFORMATION {% endcomment %}
+    <table class="receipt-payment" cellspacing="0" cellpadding="0">
+      <tbody>
+        <tr x-show="config.show_payment_method" x-cloak>
+          <td class="receipt-pay-label">Paid By</td>
+          <td class="receipt-pay-value" x-text="previewData.payment_method || 'CASH'">{% if not is_preview %}{{ payment_method }}{% endif %}</td>
+        </tr>
+        <tr>
+          <td class="receipt-pay-label">Amount Paid</td>
+          <td class="receipt-pay-value">
+            <span x-text="getCurrency() + parseFloat(previewData.amount_paid || 0).toFixed(2)">{% if not is_preview %}{{ currency_symbol }}{{ amount_paid }}{% endif %}</span>
+          </td>
+        </tr>
+        <tr>
+          <td class="receipt-pay-label">Change</td>
+          <td class="receipt-pay-value">
+            <span x-text="getCurrency() + parseFloat(previewData.change_returned || 0).toFixed(2)">{% if not is_preview %}{{ currency_symbol }}{{ change_returned }}{% endif %}</span>
+          </td>
+        </tr>
+        <tr>
+          <td class="receipt-pay-label">Status</td>
+          <td class="receipt-pay-value receipt-pay-status" x-text="previewData.payment_status || 'PAID'">{% if not is_preview %}{{ payment_status }}{% endif %}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="receipt-separator"></div>
+
+    {% comment %} SECTION 8: GST TAX SUMMARY {% endcomment %}
+    <table class="receipt-tax" cellspacing="0" cellpadding="0"
+           x-show="config.show_gst_breakdown" x-cloak>
+      <thead>
+        <tr>
+          <th colspan="2" class="receipt-tax-header">TAX SUMMARY</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="receipt-tax-label">Taxable Amount</td>
+          <td class="receipt-tax-value">
+            <span x-text="getCurrency() + parseFloat(previewData.taxable_amount || 0).toFixed(2)">{% if not is_preview %}{{ currency_symbol }}{{ taxable_amount }}{% endif %}</span>
+          </td>
+        </tr>
+        <tr x-show="previewData.cgst && parseFloat(previewData.cgst) > 0" x-cloak>
+          <td class="receipt-tax-label">CGST</td>
+          <td class="receipt-tax-value">
+            <span x-text="getCurrency() + parseFloat(previewData.cgst || 0).toFixed(2)">{% if not is_preview %}{{ currency_symbol }}{{ cgst }}{% endif %}</span>
+          </td>
+        </tr>
+        <tr x-show="previewData.sgst && parseFloat(previewData.sgst) > 0" x-cloak>
+          <td class="receipt-tax-label">SGST</td>
+          <td class="receipt-tax-value">
+            <span x-text="getCurrency() + parseFloat(previewData.sgst || 0).toFixed(2)">{% if not is_preview %}{{ currency_symbol }}{{ sgst }}{% endif %}</span>
+          </td>
+        </tr>
+        <tr x-show="previewData.igst && parseFloat(previewData.igst) > 0" x-cloak>
+          <td class="receipt-tax-label">IGST</td>
+          <td class="receipt-tax-value">
+            <span x-text="getCurrency() + parseFloat(previewData.igst || 0).toFixed(2)">{% if not is_preview %}{{ currency_symbol }}{{ igst }}{% endif %}</span>
+          </td>
+        </tr>
+        <tr class="receipt-tax-total-row">
+          <td class="receipt-tax-label">Total GST</td>
+          <td class="receipt-tax-value">
+            <span x-text="getCurrency() + parseFloat(previewData.tax_amount || 0).toFixed(2)">{% if not is_preview %}{{ currency_symbol }}{{ tax_amount }}{% endif %}</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="receipt-separator" x-show="config.show_gst_breakdown" x-cloak></div>
+
+    {% comment %} SECTION 9: FOOTER {% endcomment %}
+    <div class="receipt-message"
+         x-show="config.tax_inclusive_message"
+         x-text="config.tax_inclusive_message"
+         x-cloak>{% if not is_preview %}{{ config.tax_inclusive_message }}{% endif %}</div>
+
+    <div class="receipt-footer"
+         x-show="config.custom_footer_text"
+         x-text="config.custom_footer_text"
+         x-cloak>{% if not is_preview %}{{ custom_footer_text }}{% endif %}</div>
+
+    <div class="receipt-thankyou"
+         x-text="config.thank_you_message || 'Thank you for your visit!'">{% if not is_preview %}{{ thank_you_message }}{% endif %}</div>
+
+    <div class="receipt-terms"
+         x-show="config.terms_notes"
+         x-text="config.terms_notes"
+         x-cloak>{% if not is_preview %}{{ config.terms_notes }}{% endif %}</div>
+
+    <div class="receipt-website-footer"
+         x-show="config.website"
+         x-text="config.website"
+         x-cloak>{% if not is_preview %}{{ config.website }}{% endif %}</div>
+
+    {% comment %} SECTION 10: QR CODE PLACEHOLDER {% endcomment %}
+    <div class="receipt-qr" x-show="config.show_qr_code" x-cloak>
+      <div class="receipt-qr-box" title="QR Code will appear here"></div>
+      <span class="receipt-qr-text">Scan to review</span>
+    </div>
+
+    {% comment %} SECTION 11: PREVIEW WATERMARK (hidden on print) {% endcomment %}
+    <div class="receipt-preview-marker">PREVIEW &bull; Demo Data</div>
+
+  </div>
+</div>

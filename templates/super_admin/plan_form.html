@@ -1,0 +1,415 @@
+{% extends "super_admin/layouts/platform.html" %}
+
+{% block platform_title %}{% if plan %}Edit Plan{% else %}Create Plan{% endif %}{% endblock %}
+{% block header_title %}{% if plan %}Edit Plan: {{ plan.display_name|default:plan.name }}{% else %}Create Subscription Plan{% endif %}{% endblock %}
+{% block header_subtitle %}{% if plan %}Update plan details. Changes apply immediately without redeployment.{% else %}Create a new database-driven subscription plan. It will automatically appear across Registration Wizard, Choose Plan, and Upgrade pages.{% endif %}{% endblock %}
+
+{% block header_actions %}
+<a href="{% url 'super_admin:plan_list' %}" class="inline-flex items-center gap-2 px-4 py-2 border border-neutral-200 bg-white text-neutral-700 font-semibold rounded-lg hover:bg-neutral-50 transition-all text-sm shadow-sm">
+  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" /></svg>
+  Back to Plans
+</a>
+{% endblock %}
+
+{% block content %}
+{% if messages %}
+<div class="space-y-2 mb-6">
+  {% for msg in messages %}
+  <div class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium
+    {% if msg.tags == 'error' %}bg-red-50 text-red-800 border border-red-200{% else %}bg-emerald-50 text-emerald-800 border border-emerald-200{% endif %}">
+    {{ msg }}
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<form method="POST" class="space-y-6" id="plan-form">
+  {% csrf_token %}
+
+  <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+
+    <!-- ── Left Column (main fields) ──────────────────────────────── -->
+    <div class="xl:col-span-2 space-y-6">
+
+      <!-- Section 1: Basic Information -->
+      <div class="bg-white rounded-2xl border border-neutral-200 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-neutral-100 bg-neutral-50/60 flex items-center gap-2.5">
+          <div class="w-7 h-7 rounded-lg bg-brand-600 flex items-center justify-center">
+            <svg class="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" /></svg>
+          </div>
+          <h2 class="text-sm font-bold text-neutral-800">Basic Information</h2>
+        </div>
+        <div class="p-6 space-y-5">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <label class="block text-xs font-bold uppercase text-neutral-600 mb-1.5 tracking-wide">Plan Name <span class="text-red-500">*</span></label>
+              <input type="text" name="name" id="plan-name" value="{{ plan.name|default:'' }}" required
+                     placeholder="e.g. Monthly Standard"
+                     class="block w-full rounded-lg border border-neutral-300 bg-white px-3.5 py-2.5 text-sm text-neutral-900 placeholder-neutral-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 focus:outline-none transition-all shadow-sm">
+              <p class="text-[11px] text-neutral-400 mt-1">Internal name for admin reference</p>
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase text-neutral-600 mb-1.5 tracking-wide">Display Name</label>
+              <input type="text" name="display_name" value="{{ plan.display_name|default:'' }}"
+                     placeholder="e.g. Monthly Plan"
+                     class="block w-full rounded-lg border border-neutral-300 bg-white px-3.5 py-2.5 text-sm text-neutral-900 placeholder-neutral-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 focus:outline-none transition-all shadow-sm">
+              <p class="text-[11px] text-neutral-400 mt-1">Customer-facing name (defaults to Plan Name)</p>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold uppercase text-neutral-600 mb-1.5 tracking-wide">Short Description</label>
+            <textarea name="description" rows="2"
+                      placeholder="e.g. Best value for growing restaurants — full Nextora POS access for 30 days."
+                      class="block w-full rounded-lg border border-neutral-300 bg-white px-3.5 py-2.5 text-sm text-neutral-900 placeholder-neutral-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 focus:outline-none transition-all shadow-sm resize-none">{{ plan.description|default:'' }}</textarea>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <label class="block text-xs font-bold uppercase text-neutral-600 mb-1.5 tracking-wide">Slug / Code <span class="text-red-500">*</span></label>
+              <input type="text" name="code" id="plan-code" value="{{ plan.code|default:'' }}"
+                     placeholder="monthly-standard"
+                     class="block w-full rounded-lg border border-neutral-300 bg-white px-3.5 py-2.5 font-mono text-sm text-neutral-900 placeholder-neutral-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 focus:outline-none transition-all shadow-sm"
+                     {% if plan %}readonly title="Code cannot be changed after creation"{% endif %}>
+              {% if plan %}<p class="text-[11px] text-amber-600 mt-1">Code is locked after creation</p>{% else %}<p class="text-[11px] text-neutral-400 mt-1">Auto-generated from name if left blank</p>{% endif %}
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase text-neutral-600 mb-1.5 tracking-wide">Display Order</label>
+              <input type="number" name="display_order" value="{{ plan.display_order|default:0 }}" min="0"
+                     class="block w-full rounded-lg border border-neutral-300 bg-white px-3.5 py-2.5 text-sm text-neutral-900 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 focus:outline-none transition-all shadow-sm">
+              <p class="text-[11px] text-neutral-400 mt-1">Lower number = shown first on pricing pages</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2: Duration -->
+      <div class="bg-white rounded-2xl border border-neutral-200 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-neutral-100 bg-neutral-50/60 flex items-center gap-2.5">
+          <div class="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center">
+            <svg class="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          </div>
+          <h2 class="text-sm font-bold text-neutral-800">Subscription Duration</h2>
+        </div>
+        <div class="p-6">
+          <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-5">
+            {% for value, label in billing_intervals %}
+            <label class="duration-card relative flex flex-col items-center gap-2 p-3.5 rounded-xl border-2 cursor-pointer transition-all hover:border-brand-400
+                          {% if plan.duration_type == value %}border-brand-500 bg-brand-50{% else %}border-neutral-200 bg-white{% endif %}">
+              <input type="radio" name="duration_type" value="{{ value }}" class="sr-only duration-radio"
+                     {% if plan.duration_type == value or not plan and value == 'monthly' %}checked{% endif %}>
+              <div class="w-8 h-8 rounded-lg flex items-center justify-center
+                          {% if plan.duration_type == value %}bg-brand-600{% else %}bg-neutral-100{% endif %}">
+                {% if value == 'daily' %}<svg class="w-4 h-4 {% if plan.duration_type == value %}text-white{% else %}text-neutral-500{% endif %}" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                {% elif value == 'weekly' %}<svg class="w-4 h-4 {% if plan.duration_type == value %}text-white{% else %}text-neutral-500{% endif %}" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" /></svg>
+                {% elif value == 'custom' %}<svg class="w-4 h-4 {% if plan.duration_type == value %}text-white{% else %}text-neutral-500{% endif %}" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" /></svg>
+                {% else %}<svg class="w-4 h-4 {% if plan.duration_type == value %}text-white{% else %}text-neutral-500{% endif %}" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                {% endif %}
+              </div>
+              <span class="text-xs font-bold text-neutral-700">{{ label }}</span>
+              <div class="duration-days-hint text-[10px] text-neutral-400">
+                {% if value == 'daily' %}1 Day{% elif value == 'weekly' %}7 Days{% elif value == 'monthly' %}30 Days{% elif value == 'quarterly' %}90 Days{% elif value == 'half_yearly' %}180 Days{% elif value == 'yearly' %}365 Days{% else %}Custom{% endif %}
+              </div>
+              <div class="absolute top-2 right-2 w-3 h-3 rounded-full border-2
+                          {% if plan.duration_type == value %}bg-brand-600 border-brand-600{% else %}border-neutral-300{% endif %} duration-check"></div>
+            </label>
+            {% endfor %}
+          </div>
+
+          <!-- Custom duration input -->
+          <div id="custom-days-wrapper" class="{% if plan.duration_type != 'custom' %}hidden{% endif %} border border-brand-200 bg-brand-50 rounded-xl p-4">
+            <label class="block text-xs font-bold text-brand-800 mb-2">Custom Duration (Days)</label>
+            <div class="flex items-center gap-3">
+              <input type="number" name="custom_duration_days" id="custom-days-input"
+                     value="{{ plan.duration_days|default:'' }}" min="1" max="9999"
+                     placeholder="e.g. 45"
+                     class="w-36 rounded-lg border border-brand-300 bg-white px-3.5 py-2.5 text-sm font-bold text-neutral-900 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 focus:outline-none shadow-sm">
+              <span class="text-sm text-brand-700 font-semibold">Days</span>
+            </div>
+            <p class="text-[11px] text-brand-600 mt-1">Enter exact number of days for this subscription</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 3: Pricing -->
+      <div class="bg-white rounded-2xl border border-neutral-200 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-neutral-100 bg-neutral-50/60 flex items-center gap-2.5">
+          <div class="w-7 h-7 rounded-lg bg-emerald-600 flex items-center justify-center">
+            <svg class="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          </div>
+          <h2 class="text-sm font-bold text-neutral-800">Pricing</h2>
+        </div>
+        <div class="p-6 space-y-5">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div>
+              <label class="block text-xs font-bold uppercase text-neutral-600 mb-1.5 tracking-wide">Original Price (MRP)</label>
+              <div class="relative">
+                <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-bold text-neutral-400">₹</span>
+                <input type="number" step="0.01" name="original_price" value="{{ plan.original_price|default:'0.00' }}"
+                       class="block w-full rounded-lg border border-neutral-300 bg-white pl-8 pr-3.5 py-2.5 text-sm font-bold text-neutral-900 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 focus:outline-none transition-all shadow-sm">
+              </div>
+              <p class="text-[11px] text-neutral-400 mt-1">Strike-through price shown on plan card</p>
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase text-neutral-600 mb-1.5 tracking-wide">Sale Price <span class="text-red-500">*</span></label>
+              <div class="relative">
+                <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-bold text-brand-500">₹</span>
+                <input type="number" step="0.01" name="sale_price" value="{{ plan.sale_price|default:'0.00' }}"
+                       class="block w-full rounded-lg border border-neutral-300 bg-white pl-8 pr-3.5 py-2.5 text-sm font-black text-brand-600 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 focus:outline-none transition-all shadow-sm">
+              </div>
+              <p class="text-[11px] text-neutral-400 mt-1">Effective price charged to customer</p>
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase text-neutral-600 mb-1.5 tracking-wide">Currency</label>
+              <select name="currency" class="block w-full rounded-lg border border-neutral-300 bg-white px-3.5 py-2.5 text-sm font-semibold text-neutral-900 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 focus:outline-none transition-all shadow-sm appearance-none">
+                <option value="INR" {% if not plan or plan.currency == 'INR' %}selected{% endif %}>INR — Indian Rupee (₹)</option>
+                <option value="USD" {% if plan.currency == 'USD' %}selected{% endif %}>USD — US Dollar ($)</option>
+                <option value="EUR" {% if plan.currency == 'EUR' %}selected{% endif %}>EUR — Euro (€)</option>
+                <option value="AED" {% if plan.currency == 'AED' %}selected{% endif %}>AED — UAE Dirham</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- GST Settings -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2 border-t border-neutral-100">
+            <div>
+              <label class="block text-xs font-bold uppercase text-neutral-600 mb-1.5 tracking-wide">GST / Tax Percentage (%)</label>
+              <input type="number" step="0.01" name="gst_percentage" value="{{ plan.gst_percentage|default:'18.00' }}"
+                     class="block w-full rounded-lg border border-neutral-300 bg-white px-3.5 py-2.5 text-sm text-neutral-900 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 focus:outline-none transition-all shadow-sm">
+            </div>
+            <div class="flex flex-col justify-center">
+              <label class="flex items-center gap-3 cursor-pointer group p-3.5 rounded-xl border border-neutral-200 hover:border-brand-300 hover:bg-brand-50/50 transition-all">
+                <div class="relative">
+                  <input type="checkbox" name="gst_inclusive" id="gst-inclusive-toggle"
+                         {% if not plan or plan.gst_inclusive %}checked{% endif %}
+                         class="sr-only peer">
+                  <div class="w-10 h-5 rounded-full bg-neutral-200 peer-checked:bg-brand-600 transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-brand-500"></div>
+                  <div class="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform peer-checked:translate-x-5"></div>
+                </div>
+                <div>
+                  <div class="text-sm font-bold text-neutral-800">GST Inclusive</div>
+                  <div class="text-[11px] text-neutral-400">Sale price already includes GST</div>
+                </div>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 4: Trial & Grace -->
+      <div class="bg-white rounded-2xl border border-neutral-200 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-neutral-100 bg-neutral-50/60 flex items-center gap-2.5">
+          <div class="w-7 h-7 rounded-lg bg-amber-500 flex items-center justify-center">
+            <svg class="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          </div>
+          <h2 class="text-sm font-bold text-neutral-800">Trial & Grace Period</h2>
+        </div>
+        <div class="p-6 space-y-5">
+          <!-- Trial eligible toggle -->
+          <label class="flex items-center gap-3 cursor-pointer group p-3.5 rounded-xl border border-neutral-200 hover:border-amber-300 hover:bg-amber-50/50 transition-all">
+            <div class="relative">
+              <input type="checkbox" name="trial_eligible" id="trial-eligible-toggle"
+                     {% if not plan or plan.trial_eligible %}checked{% endif %}
+                     class="sr-only peer">
+              <div class="w-10 h-5 rounded-full bg-neutral-200 peer-checked:bg-amber-500 transition-colors"></div>
+              <div class="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform peer-checked:translate-x-5"></div>
+            </div>
+            <div>
+              <div class="text-sm font-bold text-neutral-800">Eligible for Free Trial</div>
+              <div class="text-[11px] text-neutral-400">New subscribers can use this plan free before payment</div>
+            </div>
+          </label>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5" id="trial-fields">
+            <div>
+              <label class="block text-xs font-bold uppercase text-neutral-600 mb-1.5 tracking-wide">Trial Duration (Days)</label>
+              <input type="number" name="trial_days" value="{{ plan.trial_days|default:0 }}" min="0"
+                     class="block w-full rounded-lg border border-neutral-300 bg-white px-3.5 py-2.5 text-sm text-neutral-900 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 focus:outline-none transition-all shadow-sm">
+              <p class="text-[11px] text-neutral-400 mt-1">0 = plan-eligible but no trial days granted</p>
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase text-neutral-600 mb-1.5 tracking-wide">Grace Period (Days)</label>
+              <input type="number" name="grace_days" value="{{ plan.grace_days|default:7 }}" min="0"
+                     class="block w-full rounded-lg border border-neutral-300 bg-white px-3.5 py-2.5 text-sm text-neutral-900 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 focus:outline-none transition-all shadow-sm">
+              <p class="text-[11px] text-neutral-400 mt-1">Days after expiry before access is revoked</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── Right Column (settings sidebar) ────────────────────────── -->
+    <div class="space-y-6">
+
+      <!-- Plan Status -->
+      <div class="bg-white rounded-2xl border border-neutral-200 shadow-sm overflow-hidden">
+        <div class="px-5 py-4 border-b border-neutral-100 bg-neutral-50/60">
+          <h2 class="text-sm font-bold text-neutral-800">Status & Visibility</h2>
+        </div>
+        <div class="p-5 space-y-3.5">
+
+          <label class="flex items-center justify-between gap-3 cursor-pointer p-3 rounded-lg hover:bg-neutral-50 transition-colors">
+            <div>
+              <div class="text-sm font-semibold text-neutral-800">Active Plan</div>
+              <div class="text-[11px] text-neutral-400">Inactive plans are hidden from everyone</div>
+            </div>
+            <div class="relative flex-shrink-0">
+              <input type="checkbox" name="is_active" {% if not plan or plan.is_active %}checked{% endif %} class="sr-only peer">
+              <div class="w-9 h-5 rounded-full bg-neutral-200 peer-checked:bg-emerald-600 transition-colors"></div>
+              <div class="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform peer-checked:translate-x-4"></div>
+            </div>
+          </label>
+
+          <label class="flex items-center justify-between gap-3 cursor-pointer p-3 rounded-lg hover:bg-neutral-50 transition-colors">
+            <div>
+              <div class="text-sm font-semibold text-neutral-800">Visible to Customers</div>
+              <div class="text-[11px] text-neutral-400">Shows on Registration & Choose Plan pages</div>
+            </div>
+            <div class="relative flex-shrink-0">
+              <input type="checkbox" name="is_public" {% if not plan or plan.is_public %}checked{% endif %} class="sr-only peer">
+              <div class="w-9 h-5 rounded-full bg-neutral-200 peer-checked:bg-brand-600 transition-colors"></div>
+              <div class="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform peer-checked:translate-x-4"></div>
+            </div>
+          </label>
+
+          <div class="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+            <strong>Hidden plan rule:</strong> Hiding a plan does not cancel existing subscribers. They continue until expiry.
+          </div>
+        </div>
+      </div>
+
+      <!-- Display Badges -->
+      <div class="bg-white rounded-2xl border border-neutral-200 shadow-sm overflow-hidden">
+        <div class="px-5 py-4 border-b border-neutral-100 bg-neutral-50/60">
+          <h2 class="text-sm font-bold text-neutral-800">Display Badges</h2>
+          <p class="text-[11px] text-neutral-400 mt-0.5">Badges shown on customer-facing plan cards</p>
+        </div>
+        <div class="p-5 space-y-3.5">
+          <label class="flex items-center justify-between gap-3 cursor-pointer p-3 rounded-lg hover:bg-neutral-50 transition-colors">
+            <div class="flex items-center gap-2.5">
+              <span class="px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-neutral-900 text-white uppercase">Recommended</span>
+            </div>
+            <div class="relative flex-shrink-0">
+              <input type="checkbox" name="is_recommended" {% if plan.is_recommended %}checked{% endif %} class="sr-only peer">
+              <div class="w-9 h-5 rounded-full bg-neutral-200 peer-checked:bg-neutral-900 transition-colors"></div>
+              <div class="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform peer-checked:translate-x-4"></div>
+            </div>
+          </label>
+          <label class="flex items-center justify-between gap-3 cursor-pointer p-3 rounded-lg hover:bg-neutral-50 transition-colors">
+            <div class="flex items-center gap-2.5">
+              <span class="px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-indigo-600 text-white uppercase">Featured</span>
+            </div>
+            <div class="relative flex-shrink-0">
+              <input type="checkbox" name="is_featured" {% if plan.is_featured %}checked{% endif %} class="sr-only peer">
+              <div class="w-9 h-5 rounded-full bg-neutral-200 peer-checked:bg-indigo-600 transition-colors"></div>
+              <div class="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform peer-checked:translate-x-4"></div>
+            </div>
+          </label>
+          <label class="flex items-center justify-between gap-3 cursor-pointer p-3 rounded-lg hover:bg-neutral-50 transition-colors">
+            <div class="flex items-center gap-2.5">
+              <span class="px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-orange-500 text-white uppercase">Popular</span>
+            </div>
+            <div class="relative flex-shrink-0">
+              <input type="checkbox" name="is_popular" {% if plan.is_popular %}checked{% endif %} class="sr-only peer">
+              <div class="w-9 h-5 rounded-full bg-neutral-200 peer-checked:bg-orange-500 transition-colors"></div>
+              <div class="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform peer-checked:translate-x-4"></div>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Business Model Reminder -->
+      <div class="bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl p-5 text-white shadow-lg">
+        <div class="flex items-center gap-2 mb-3">
+          <svg class="w-5 h-5 text-blue-200" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          <span class="text-sm font-bold text-white">All Plans Include</span>
+        </div>
+        <ul class="space-y-1">
+          <li class="flex items-center gap-2 text-[11px] text-blue-100"><span class="w-1 h-1 rounded-full bg-blue-300"></span>Billing</li>
+          <li class="flex items-center gap-2 text-[11px] text-blue-100"><span class="w-1 h-1 rounded-full bg-blue-300"></span>Orders</li>
+          <li class="flex items-center gap-2 text-[11px] text-blue-100"><span class="w-1 h-1 rounded-full bg-blue-300"></span>Inventory</li>
+          <li class="flex items-center gap-2 text-[11px] text-blue-100"><span class="w-1 h-1 rounded-full bg-blue-300"></span>Tables</li>
+          <li class="flex items-center gap-2 text-[11px] text-blue-100"><span class="w-1 h-1 rounded-full bg-blue-300"></span>KDS</li>
+          <li class="flex items-center gap-2 text-[11px] text-blue-100"><span class="w-1 h-1 rounded-full bg-blue-300"></span>Reports</li>
+          <li class="flex items-center gap-2 text-[11px] text-blue-100"><span class="w-1 h-1 rounded-full bg-blue-300"></span>Analytics</li>
+          <li class="flex items-center gap-2 text-[11px] text-blue-100"><span class="w-1 h-1 rounded-full bg-blue-300"></span>Staff</li>
+          <li class="flex items-center gap-2 text-[11px] text-blue-100"><span class="w-1 h-1 rounded-full bg-blue-300"></span>Payroll</li>
+          <li class="flex items-center gap-2 text-[11px] text-blue-100"><span class="w-1 h-1 rounded-full bg-blue-300"></span>Settings</li>
+          <li class="flex items-center gap-2 text-[11px] text-blue-100">
+            <span class="w-1 h-1 rounded-full bg-blue-300"></span>+ All future features
+          </li>
+        </ul>
+        <div class="mt-3 pt-3 border-t border-blue-500/50 text-[11px] text-blue-200">
+          Plans differ only in duration and price. No restrictions.
+        </div>
+      </div>
+
+      <!-- Submit -->
+      <div class="bg-white rounded-2xl border border-neutral-200 shadow-sm p-5 space-y-3">
+        <button type="submit" id="btn-save-plan"
+                class="w-full inline-flex items-center justify-center gap-2 px-5 py-3 bg-blue-600 text-white text-sm font-bold rounded-xl shadow-md hover:bg-blue-700 active:scale-[0.98] transition-all">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+          {% if plan %}Update Plan{% else %}Create Plan{% endif %}
+        </button>
+        <a href="{% url 'super_admin:plan_list' %}" class="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 border border-neutral-200 text-neutral-600 text-sm font-semibold rounded-xl hover:bg-neutral-50 transition-all">
+          Cancel
+        </a>
+      </div>
+
+    </div>
+  </div>
+</form>
+
+<script>
+(function() {
+  // ── Duration card selection ───────────────────────────────────
+  const radios = document.querySelectorAll('.duration-radio');
+  const cards = document.querySelectorAll('.duration-card');
+  const customWrapper = document.getElementById('custom-days-wrapper');
+  const customInput = document.getElementById('custom-days-input');
+
+  function updateCards() {
+    cards.forEach(card => {
+      const radio = card.querySelector('.duration-radio');
+      const check = card.querySelector('.duration-check');
+      const icon = card.querySelector('.w-8.h-8');
+      if (radio.checked) {
+        card.classList.add('border-blue-500', 'bg-blue-50');
+        card.classList.remove('border-neutral-200', 'bg-white');
+        if (check) { check.classList.add('bg-blue-600', 'border-blue-600'); check.classList.remove('border-neutral-300'); }
+        if (icon) { icon.classList.add('text-white', 'bg-blue-600'); icon.classList.remove('text-neutral-500', 'bg-neutral-100'); }
+      } else {
+        card.classList.remove('border-blue-500', 'bg-blue-50');
+        card.classList.add('border-neutral-200', 'bg-white');
+        if (check) { check.classList.remove('bg-blue-600', 'border-blue-600'); check.classList.add('border-neutral-300'); }
+        if (icon) { icon.classList.remove('text-white', 'bg-blue-600'); icon.classList.add('text-neutral-500', 'bg-neutral-100'); }
+      }
+    });
+    const selected = document.querySelector('.duration-radio:checked');
+    if (selected && selected.value === 'custom') {
+      customWrapper.classList.remove('hidden');
+      customInput.required = true;
+    } else {
+      customWrapper.classList.add('hidden');
+      customInput.required = false;
+    }
+  }
+
+  radios.forEach(r => r.addEventListener('change', updateCards));
+  updateCards();
+
+  // ── Auto-generate code from name ──────────────────────────────
+  const nameInput = document.getElementById('plan-name');
+  const codeInput = document.getElementById('plan-code');
+  if (nameInput && codeInput && !codeInput.readOnly) {
+    nameInput.addEventListener('input', function() {
+      codeInput.value = this.value.toLowerCase().trim()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-');
+    });
+  }
+})();
+</script>
+{% endblock %}

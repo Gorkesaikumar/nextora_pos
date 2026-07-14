@@ -31,6 +31,8 @@ PERMISSIONS: tuple[PermissionDef, ...] = (
     PermissionDef("orders.update", "Update orders", "ordering"),
     PermissionDef("orders.void", "Void orders", "ordering"),
     PermissionDef("orders.discount", "Apply discounts", "ordering"),
+    PermissionDef("orders.manage_printers", "Manage receipt printer settings", "ordering"),
+    PermissionDef("orders.print_receipt", "Print and reprint receipts", "ordering"),
     # Kitchen display
     PermissionDef("kds.view", "View kitchen display", "kitchen"),
     PermissionDef("kds.update_status", "Update preparation status", "kitchen"),

@@ -53,7 +53,9 @@
   }
 
   /* Inputs */
-  .form-input {
+  .form-input,
+  .input-text,
+  .input {
     @apply block w-full rounded-sharp border border-neutral-200 bg-neutral-0 px-3 py-2 text-body dark:border-neutral-dark-200 dark:bg-neutral-dark-100 dark:text-neutral-dark-900 focus:border-brand-default focus:ring-1 focus:ring-brand-default disabled:border-neutral-300 disabled:bg-neutral-50 dark:disabled:border-neutral-dark-300;
   }
 

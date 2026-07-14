@@ -10,7 +10,6 @@ class KOT(TenantAwareModel):
     order = models.ForeignKey(
         "ordering.Order", on_delete=models.CASCADE, related_name="kots"
     )
-    location_id = models.UUIDField()
     kitchen_station_id = models.UUIDField(null=True, blank=True)
     number = models.PositiveIntegerField()
     status = models.CharField(

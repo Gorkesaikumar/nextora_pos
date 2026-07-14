@@ -1,3 +1,71 @@
+<script>
+function posModifierModal(config) {
+  return {
+    productName: config.productName,
+    basePrice: Number(config.basePrice) || 0,
+    isEdit: config.isEdit,
+    requiredGroups: config.requiredGroups || [],
+    modifierPrices: config.modifierPrices || {},
+    defaultModifiers: config.defaultModifiers || [],
+    selected: new Set(config.initialSelected || []),
+    notes: config.initialNotes || '',
+    qty: Number(config.initialQty) || 1,
+
+    init() {
+      if (!this.isEdit && this.selected.size === 0 && this.defaultModifiers.length > 0) {
+        this.defaultModifiers.forEach(id => this.selected.add(id));
+      }
+    },
+
+    isSelected(modId) {
+      return this.selected.has(modId);
+    },
+
+    toggleOption(groupId, modId, maxSelect) {
+      if (maxSelect === 1) {
+        const radioInputs = this.$el.querySelectorAll(`input[name="modifier_ids"]`);
+        radioInputs.forEach(input => {
+          if (input.value !== modId && input.getAttribute('@change').includes(`'${groupId}'`)) {
+            this.selected.delete(input.value);
+          }
+        });
+        this.selected.add(modId);
+      } else {
+        if (this.selected.has(modId)) {
+          this.selected.delete(modId);
+        } else {
+          this.selected.add(modId);
+        }
+      }
+    },
+
+    calculateTotal() {
+      let extra = 0;
+      this.selected.forEach(id => {
+        extra += Number(this.modifierPrices[id]) || 0;
+      });
+      return (this.basePrice + extra) * this.qty;
+    },
+
+    isValid() {
+      for (let group of this.requiredGroups) {
+        let count = 0;
+        const inputs = this.$el.querySelectorAll(`input[name="modifier_ids"]`);
+        inputs.forEach(input => {
+          if (this.selected.has(input.value) && input.getAttribute('@change').includes(`'${group.id}'`)) {
+            count++;
+          }
+        });
+        if (count < group.min) {
+          return false;
+        }
+      }
+      return true;
+    }
+  };
+}
+</script>
+
 <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-sm"
      x-data="posModifierModal({
        productName: '{{ product.name|escapejs }}',
@@ -196,70 +264,3 @@
   </div>
 </div>
 
-<script>
-function posModifierModal(config) {
-  return {
-    productName: config.productName,
-    basePrice: Number(config.basePrice) || 0,
-    isEdit: config.isEdit,
-    requiredGroups: config.requiredGroups || [],
-    modifierPrices: config.modifierPrices || {},
-    defaultModifiers: config.defaultModifiers || [],
-    selected: new Set(config.initialSelected || []),
-    notes: config.initialNotes || '',
-    qty: Number(config.initialQty) || 1,
-
-    init() {
-      if (!this.isEdit && this.selected.size === 0 && this.defaultModifiers.length > 0) {
-        this.defaultModifiers.forEach(id => this.selected.add(id));
-      }
-    },
-
-    isSelected(modId) {
-      return this.selected.has(modId);
-    },
-
-    toggleOption(groupId, modId, maxSelect) {
-      if (maxSelect === 1) {
-        const radioInputs = this.$el.querySelectorAll(`input[name="modifier_ids"]`);
-        radioInputs.forEach(input => {
-          if (input.value !== modId && input.getAttribute('@change').includes(`'${groupId}'`)) {
-            this.selected.delete(input.value);
-          }
-        });
-        this.selected.add(modId);
-      } else {
-        if (this.selected.has(modId)) {
-          this.selected.delete(modId);
-        } else {
-          this.selected.add(modId);
-        }
-      }
-    },
-
-    calculateTotal() {
-      let extra = 0;
-      this.selected.forEach(id => {
-        extra += Number(this.modifierPrices[id]) || 0;
-      });
-      return (this.basePrice + extra) * this.qty;
-    },
-
-    isValid() {
-      for (let group of this.requiredGroups) {
-        let count = 0;
-        const inputs = this.$el.querySelectorAll(`input[name="modifier_ids"]`);
-        inputs.forEach(input => {
-          if (this.selected.has(input.value) && input.getAttribute('@change').includes(`'${group.id}'`)) {
-            count++;
-          }
-        });
-        if (count < group.min) {
-          return false;
-        }
-      }
-      return true;
-    }
-  };
-}
-</script>

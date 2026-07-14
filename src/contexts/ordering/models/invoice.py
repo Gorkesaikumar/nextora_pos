@@ -12,7 +12,6 @@ class Invoice(TenantAwareModel):
     order = models.OneToOneField(
         "ordering.Order", on_delete=models.PROTECT, related_name="invoice"
     )
-    location_id = models.UUIDField()
     number = models.CharField(max_length=40)
     series = models.CharField(max_length=20, default="INV")
     financial_year = models.CharField(max_length=9)

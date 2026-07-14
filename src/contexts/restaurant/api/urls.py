@@ -2,7 +2,6 @@
 from rest_framework.routers import DefaultRouter
 
 from .views import (
-    BranchViewSet,
     CashCounterViewSet,
     DiningTableViewSet,
     HolidayViewSet,
@@ -13,7 +12,6 @@ from .views import (
 
 router = DefaultRouter()
 router.register("restaurants", RestaurantViewSet, basename="restaurant")
-router.register("branches", BranchViewSet, basename="branch")
 router.register("tables", DiningTableViewSet, basename="dining-table")
 router.register("stations", KitchenStationViewSet, basename="kitchen-station")
 router.register("printers", PrinterViewSet, basename="printer")

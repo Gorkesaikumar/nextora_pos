@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import KOT, Invoice, Order, OrderItem, Payment
+from .models import KOT, Invoice, Order, OrderItem, Payment, InvoiceConfiguration, InvoiceSnapshot
 
 
 class OrderItemInline(admin.TabularInline):
@@ -32,3 +32,24 @@ class InvoiceAdmin(admin.ModelAdmin):
 class KOTAdmin(admin.ModelAdmin):
     list_display = ["number", "order", "kitchen_station_id", "status", "printed_at"]
     list_filter = ["status"]
+
+
+@admin.register(InvoiceConfiguration)
+class InvoiceConfigurationAdmin(admin.ModelAdmin):
+    list_display = ["tenant", "restaurant_name", "paper_size", "currency_symbol"]
+    search_fields = ["tenant__name", "restaurant_name"]
+    list_filter = ["paper_size"]
+
+
+@admin.register(InvoiceSnapshot)
+class InvoiceSnapshotAdmin(admin.ModelAdmin):
+    list_display = ["invoice", "business_name", "total", "created_at"]
+    search_fields = ["business_name", "invoice__number"]
+    list_filter = ["paper_size", "created_at"]
+    readonly_fields = [
+        "invoice", "business_name", "business_address", "business_gstin",
+        "business_fssai", "items_snapshot", "subtotal", "total",
+        "cgst", "sgst", "igst", "tax_amount", "round_off",
+        "payment_methods", "amount_paid", "change_returned",
+        "customer_name", "cashier_name", "created_at",
+    ]

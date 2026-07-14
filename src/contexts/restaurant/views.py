@@ -2,160 +2,11 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView, TemplateView, View, CreateView, UpdateView, DeleteView
 from django.shortcuts import render, get_object_or_404
 
-from contexts.restaurant.models.branch import Branch
 from contexts.restaurant.models.layout import DiningTable
 
-class BranchListView(LoginRequiredMixin, ListView):
-    model = Branch
-    template_name = "restaurant/branch_list.html"
-    context_object_name = "branches"
-    
-    def get_queryset(self):
-        # Show both active and archived branches in list (use archive status badge)
-        return super().get_queryset().filter(is_deleted=False)
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        branches = list(context['branches'])
-        
-        # Aggregate dashboard metrics
-        from django.db.models import Sum, Count
-        from django.utils import timezone
-        from contexts.ordering.models.order import Order
-        from contexts.employees.models import EmployeeProfile
-        from contexts.inventory.models.warehouse import Warehouse
-        from contexts.inventory.models.item import InventoryItem
-        
-        today = timezone.localdate()
-        orders = Order.objects.filter(opened_at__date=today, status='SETTLED')
-        
-        # Today's Sales per Branch
-        sales_by_branch = {
-            str(item['location_id']): item['total_sales'] 
-            for item in orders.values('location_id').annotate(total_sales=Sum('total'))
-        }
-        
-        # Employees per Branch
-        emps = EmployeeProfile.objects.filter(is_active=True)
-        emps_by_branch = {
-            str(item['location_id']): item['count']
-            for item in emps.values('location_id').annotate(count=Count('id'))
-        }
-        
-        # Inventory Value per Branch
-        items = InventoryItem.objects.filter(is_deleted=False)
-        val_by_wh = {}
-        for item in items:
-            val = (item.quantity_on_hand or 0) * (item.average_cost or 0)
-            val_by_wh[item.warehouse_id] = val_by_wh.get(item.warehouse_id, 0) + val
-            
-        whs = Warehouse.objects.filter(is_deleted=False)
-        inv_by_branch = {}
-        for wh in whs:
-            if wh.branch_id:
-                branch_str = str(wh.branch_id)
-                inv_by_branch[branch_str] = inv_by_branch.get(branch_str, 0) + val_by_wh.get(wh.id, 0)
-                
-        # Enrich branch objects with aggregated statistics
-        for b in branches:
-            b.today_sales = sales_by_branch.get(str(b.id), 0.0)
-            b.emp_count = emps_by_branch.get(str(b.id), 0)
-            b.inv_value = inv_by_branch.get(str(b.id), 0.0)
-            
-        # Dashboard aggregates
-        context.update({
-            'total_branches': len(branches),
-            'active_branches': sum(1 for b in branches if b.is_active and not b.is_archived),
-            'total_sales_sum': sum(b.today_sales for b in branches),
-            'total_staff_sum': sum(b.emp_count for b in branches),
-            'branches': branches
-        })
-        return context
-
-
-from django.views.generic import CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from django.http import HttpResponse, HttpResponseRedirect
-from contexts.restaurant.forms import BranchForm
-
-class BranchCreateView(LoginRequiredMixin, CreateView):
-    model = Branch
-    form_class = BranchForm
-    template_name = "restaurant/partials/branch_form_modal.html"
-    success_url = reverse_lazy('restaurant:branch_list')
-
-    def form_valid(self, form):
-        form.instance.tenant_id = self.request.tenant_id
-        if not Branch.objects.filter(is_deleted=False, is_default=True).exists():
-            form.instance.is_default = True
-            
-        if form.cleaned_data.get('is_default'):
-            Branch.objects.filter(is_deleted=False).update(is_default=False)
-            
-        response = super().form_valid(form)
-        if self.request.htmx:
-            return HttpResponse(status=204, headers={'HX-Trigger': 'branchListChanged'})
-        return response
-
-
-class BranchUpdateView(LoginRequiredMixin, UpdateView):
-    model = Branch
-    form_class = BranchForm
-    template_name = "restaurant/partials/branch_form_modal.html"
-    success_url = reverse_lazy('restaurant:branch_list')
-
-    def form_valid(self, form):
-        if form.cleaned_data.get('is_default'):
-            Branch.objects.filter(is_deleted=False).exclude(id=self.object.id).update(is_default=False)
-        response = super().form_valid(form)
-        if self.request.htmx:
-            return HttpResponse(status=204, headers={'HX-Trigger': 'branchListChanged'})
-        return response
-
-
-class BranchDeleteView(LoginRequiredMixin, DeleteView):
-    model = Branch
-    success_url = reverse_lazy('restaurant:branch_list')
-
-    def delete(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        self.object.is_deleted = True
-        self.object.save()
-        if request.htmx:
-            return HttpResponse(status=204, headers={'HX-Trigger': 'branchListChanged'})
-        return HttpResponseRedirect(self.get_success_url())
-
-
-class BranchArchiveView(LoginRequiredMixin, View):
-    def post(self, request, pk, *args, **kwargs):
-        branch = get_object_or_404(Branch, id=pk)
-        branch.is_archived = True
-        branch.save()
-        if request.htmx:
-            return HttpResponse(status=204, headers={'HX-Trigger': 'branchListChanged'})
-        return HttpResponseRedirect(reverse_lazy('restaurant:branch_list'))
-
-
-class BranchToggleStatusView(LoginRequiredMixin, View):
-    def post(self, request, pk, *args, **kwargs):
-        branch = get_object_or_404(Branch, id=pk)
-        branch.is_active = not branch.is_active
-        branch.save()
-        if request.htmx:
-            return HttpResponse(status=204, headers={'HX-Trigger': 'branchListChanged'})
-        return HttpResponseRedirect(reverse_lazy('restaurant:branch_list'))
-
-
-class BranchSetDefaultView(LoginRequiredMixin, View):
-    def post(self, request, pk, *args, **kwargs):
-        Branch.objects.filter(is_deleted=False).update(is_default=False)
-        branch = get_object_or_404(Branch, id=pk)
-        branch.is_default = True
-        branch.save()
-        if request.htmx:
-            return HttpResponse(status=204, headers={'HX-Trigger': 'branchListChanged'})
-        return HttpResponseRedirect(reverse_lazy('restaurant:branch_list'))
-
 
 from contexts.catalog.models.routing import Printer
 from contexts.restaurant.forms import PrinterForm
@@ -166,18 +17,10 @@ class PrinterListView(LoginRequiredMixin, ListView):
     context_object_name = "printers"
 
     def get_queryset(self):
-        qs = super().get_queryset().filter(is_deleted=False)
-        branch_id = self.request.GET.get('branch')
-        if branch_id:
-            qs = qs.filter(location_id=branch_id)
-        return qs
+        return super().get_queryset().filter(is_deleted=False)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        branches = {b.id: b.name for b in Branch.objects.filter(is_deleted=False)}
-        for p in context['printers']:
-            p.branch_name = branches.get(p.location_id, "Global / All Branches")
-        context['branches'] = Branch.objects.filter(is_deleted=False)
         
         # Printer Dashboard Counts
         printers_list = list(context['printers'])
@@ -266,7 +109,7 @@ class TableListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         qs = super().get_queryset().filter(
             is_active=True, is_deleted=False
-        ).select_related('branch')
+        )
         
         # Search by table number
         q = self.request.GET.get('q')
@@ -278,7 +121,7 @@ class TableListView(LoginRequiredMixin, ListView):
         if status_filter:
             qs = qs.filter(status=status_filter)
             
-        return qs.order_by('branch__name', 'number')
+        return qs.order_by('number')
 
 
 from django.views.generic import CreateView, UpdateView, DeleteView
@@ -293,16 +136,6 @@ class TableCreateView(LoginRequiredMixin, CreateView):
     success_url = reverse_lazy('restaurant:table_list')
 
     def form_valid(self, form):
-        from contexts.restaurant.models.branch import Branch
-        first_branch = Branch.objects.first()
-        if not first_branch:
-            from contexts.restaurant.models.restaurant import Restaurant
-            rest = Restaurant.objects.first()
-            if not rest:
-                rest = Restaurant.objects.create(name="Default Concept", slug="default-concept", is_default=True)
-            first_branch = Branch.objects.create(restaurant=rest, name="Main Branch", code="MAIN")
-        
-        form.instance.branch = first_branch
         response = super().form_valid(form)
         if self.request.htmx:
             from django.http import HttpResponse

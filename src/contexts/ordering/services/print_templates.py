@@ -34,7 +34,7 @@ def _resolve_branch_metadata(order: Order) -> tuple[str, str, str]:
 
     try:
         from contexts.restaurant.models import Branch
-        branch = Branch.objects.filter(id=order.location_id).first()
+        branch = Branch.objects.filter(id=getattr(order, 'location_id', None)).first()
         if branch:
             if getattr(branch, "name", None):
                 business = f"{business} - {branch.name}".upper()
@@ -106,10 +106,10 @@ class CustomerReceiptTemplate(BasePrintTemplate):
         rows.append(_rule(width, "="))
         rows.append(_line("Invoice #", invoice.number, width))
         rows.append(_line("Date & Time", invoice.issued_at.strftime("%d-%m-%Y %H:%M:%S"), width))
-        
-        from contexts.ordering.services.printing import _resolve_cashier_name
+        # Cashier
+        from contexts.ordering.services.receipt_data_mapper import _resolve_cashier_name
         rows.append(_line("Cashier", _resolve_cashier_name(order)[:width - 10], width))
-
+        rows.append("-" * width)
         if order.customer_name:
             rows.append(_line("Customer", order.customer_name[:width - 10], width))
 

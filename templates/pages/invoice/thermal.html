@@ -1,45 +1,326 @@
 {% extends "layouts/invoice.html" %}
-{# Thermal receipt — 80mm preview. Driver renders bytes; this is the visual. #}
+{% load static %}
+{# Production Thermal Receipt — rendered using real transaction data from InvoiceSnapshot or live data.
+   Supports 58mm and 80mm paper widths. Uses semantic HTML tables (no arbitrary divs). #}
 
+{% block title %}Receipt {{ invoice.number }}{% endblock %}
 
-{% block title %}Receipt {{ invoice.number|default:'INV-260627-0142' }}{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/layouts/receipt.css' %}">
+{% endblock %}
 
 {% block invoice_body %}
-<section class="thermal" aria-label="Thermal receipt preview">
-  <div class="thermal__center thermal__strong">{{ tenant.name|default:'Nextora Bistro' }}</div>
-  <div class="thermal__center">{{ branch.name|default:'Andheri West' }}</div>
-  <div class="thermal__center">{{ branch.address|default:'Veera Desai Rd, Mumbai 400053' }}</div>
-  <div class="thermal__center">GSTIN: {{ tenant.gstin|default:'27ABCDE1234F1Z5' }}</div>
-  <hr class="thermal__hr">
+{% with s=snapshot order=invoice.order %}
+{% with currency=snapshot.currency_symbol|default:"₹" %}
+{% with paper_str=paper_width|default:"80mm" %}
+{% with paper="receipt-"|add:paper_str %}
 
-  <div class="thermal__row"><span>Invoice</span><span class="right">{{ invoice.number|default:'INV-260627-0142' }}</span></div>
-  <div class="thermal__row"><span>Date</span><span class="right">{{ invoice.issued_at|default:'27-Jun-2026 18:42' }}</span></div>
-  <div class="thermal__row"><span>Cashier</span><span class="right">{{ cashier|default:'Asha' }}</span></div>
-  <div class="thermal__row"><span>Order</span><span class="right">{{ order.number|default:'ORD-2611-0143' }} · T7</span></div>
-  <hr class="thermal__hr">
+<div class="receipt-print {{ paper }}" style="margin:0 auto;">
 
-  <div class="thermal__row"><span>2 × Paneer Tikka</span><span class="right">520.00</span></div>
-  <div class="thermal__row"><span style="padding-left:2mm" class="text-tertiary">+ Extra spicy, No onion</span><span></span></div>
-  <div class="thermal__row"><span>1 × Butter Chicken</span><span class="right">340.00</span></div>
-  <div class="thermal__row"><span>3 × Garlic Naan</span><span class="right">210.00</span></div>
-  <hr class="thermal__hr">
+  <!-- ============================================================ -->
+  <!-- SECTION: RESTAURANT HEADER                                    -->
+  <!-- ============================================================ -->
+  <div class="receipt-header">
+    {% if s.business_name %}
+    <div class="receipt-business-name">{{ s.business_name }}</div>
+    {% endif %}
 
-  <div class="thermal__row"><span>Subtotal</span><span class="right">1,070.00</span></div>
-  <div class="thermal__row"><span>Discount</span><span class="right">-50.00</span></div>
-  <div class="thermal__row"><span>CGST 2.5%</span><span class="right">25.50</span></div>
-  <div class="thermal__row"><span>SGST 2.5%</span><span class="right">25.50</span></div>
-  <div class="thermal__row"><span>Round-off</span><span class="right">0.00</span></div>
-  <hr class="thermal__hr">
+    <div class="receipt-header-title">TAX INVOICE</div>
 
-  <div class="thermal__row thermal__total"><span>TOTAL</span><span class="right">₹1,071.00</span></div>
-  <hr class="thermal__hr">
+    <div class="receipt-badges">
+      {% if s.business_gstin %}
+      <span class="receipt-badge">GST: {{ s.business_gstin }}</span>
+      {% endif %}
+      {% if s.business_fssai %}
+      <span class="receipt-badge">FSSAI: {{ s.business_fssai }}</span>
+      {% endif %}
+    </div>
 
-  <div class="thermal__row"><span>UPI · {{ upi_ref|default:'8421***12' }}</span><span class="right">1,071.00</span></div>
-  <hr class="thermal__hr">
+    {% if s.business_address %}
+    <div class="receipt-address">{{ s.business_address|linebreaksbr }}</div>
+    {% endif %}
 
-  <div class="thermal__center">Rupees One Thousand Seventy One Only</div>
-  <div class="thermal__center" style="margin-top:3mm">Thank you · Visit again</div>
-  <div class="thermal__qr" role="img" aria-label="QR code linking to the digital invoice">QR</div>
-  <div class="thermal__center" style="margin-top:2mm;font-size:8pt">nextora.app/i/{{ invoice.number|default:'INV-260627-0142'|slice:'-8:' }}</div>
-</section>
+    {% if s.business_phone or s.business_email %}
+    <div class="receipt-contact">
+      {% if s.business_phone %}{{ s.business_phone }}{% endif %}
+      {% if s.business_phone and s.business_email %}<span class="receipt-contact-sep">|</span>{% endif %}
+      {% if s.business_email %}{{ s.business_email }}{% endif %}
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="receipt-separator"></div>
+
+  <!-- ============================================================ -->
+  <!-- SECTION: ORDER METADATA                                       -->
+  <!-- ============================================================ -->
+  <table class="receipt-meta" cellspacing="0" cellpadding="0">
+    {% if invoice.number %}
+    <tr>
+      <td class="receipt-meta-label">Invoice</td>
+      <td class="receipt-meta-value">{{ invoice.number }}</td>
+    </tr>
+    {% endif %}
+    {% if order.order_number %}
+    <tr>
+      <td class="receipt-meta-label">Order</td>
+      <td class="receipt-meta-value">{{ order.order_number }}</td>
+    </tr>
+    {% endif %}
+    {% if s.table_number %}
+    <tr>
+      <td class="receipt-meta-label">Table</td>
+      <td class="receipt-meta-value">{{ s.table_number }}</td>
+    </tr>
+    {% endif %}
+    {% if s.customer_name %}
+    <tr>
+      <td class="receipt-meta-label">Customer</td>
+      <td class="receipt-meta-value">{{ s.customer_name }}</td>
+    </tr>
+    {% endif %}
+    {% if s.cashier_name %}
+    <tr>
+      <td class="receipt-meta-label">Cashier</td>
+      <td class="receipt-meta-value">{{ s.cashier_name }}</td>
+    </tr>
+    {% endif %}
+    {% if s.order_type_label %}
+    <tr>
+      <td class="receipt-meta-label">Type</td>
+      <td class="receipt-meta-value">{{ s.order_type_label }}</td>
+    </tr>
+    {% endif %}
+    <tr>
+      <td class="receipt-meta-label">Date</td>
+      <td class="receipt-meta-value">{{ invoice.issued_at|date:"d M Y" }} · {{ invoice.issued_at|time:"H:i" }}</td>
+    </tr>
+  </table>
+
+  <div class="receipt-separator"></div>
+
+  <!-- ============================================================ -->
+  <!-- SECTION: LINE ITEMS                                           -->
+  <!-- ============================================================ -->
+  <table class="receipt-items" cellspacing="0" cellpadding="0">
+    <thead>
+      <tr>
+        <th class="receipt-col-desc">DESCRIPTION</th>
+        <th class="receipt-col-qty">QTY</th>
+        <th class="receipt-col-rate">RATE</th>
+        <th class="receipt-col-amount">AMOUNT</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% if s.items_snapshot %}
+        {% for item in s.items_snapshot %}
+        <tr class="receipt-item-row">
+          <td class="receipt-col-desc">
+            <span class="receipt-item-name">{{ item.name }}</span>
+            {% if item.modifiers %}
+              {% for mod in item.modifiers %}
+              <span class="receipt-item-modifier">
+                + {{ mod.name }}{% if mod.price_delta and mod.price_delta != "0.00" %} ({{ currency }}{{ mod.price_delta }}){% endif %}
+              </span>
+              {% endfor %}
+            {% endif %}
+            {% if item.notes %}
+            <span class="receipt-item-notes">Note: {{ item.notes }}</span>
+            {% endif %}
+            {% if item.hsn_code %}
+            <span class="receipt-item-hsn">HSN: {{ item.hsn_code }}</span>
+            {% endif %}
+          </td>
+          <td class="receipt-col-qty">{{ item.qty }}</td>
+          <td class="receipt-col-rate">{{ currency }}{{ item.unit_price }}</td>
+          <td class="receipt-col-amount">{{ currency }}{{ item.line_total }}</td>
+        </tr>
+        {% endfor %}
+      {% else %}
+        {# Fallback: render from live order items if no snapshot #}
+        {% for item in order.ordered_items %}
+        <tr class="receipt-item-row">
+          <td class="receipt-col-desc">
+            <span class="receipt-item-name">{{ item.name_snapshot }}</span>
+            {% for mod in item.modifiers.all %}
+            <span class="receipt-item-modifier">+ {{ mod.name_snapshot }}{% if mod.price_delta and mod.price_delta > 0 %} ({{ currency }}{{ mod.price_delta }}){% endif %}</span>
+            {% endfor %}
+            {% if item.notes %}
+            <span class="receipt-item-notes">Note: {{ item.notes }}</span>
+            {% endif %}
+            {% if item.hsn_code %}
+            <span class="receipt-item-hsn">HSN: {{ item.hsn_code }}</span>
+            {% endif %}
+          </td>
+          <td class="receipt-col-qty">{{ item.qty|floatformat:"0" }}</td>
+          <td class="receipt-col-rate">{{ currency }}{{ item.unit_price|floatformat:"2" }}</td>
+          <td class="receipt-col-amount">{{ currency }}{{ item.line_total|floatformat:"2" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" class="empty-state" style="text-align:center;padding:2mm 0;color:#999;">No items</td></tr>
+        {% endfor %}
+      {% endif %}
+    </tbody>
+  </table>
+
+  <div class="receipt-separator"></div>
+
+  <!-- ============================================================ -->
+  <!-- SECTION: TOTALS                                               -->
+  <!-- ============================================================ -->
+  <table class="receipt-totals" cellspacing="0" cellpadding="0">
+    <tr>
+      <td class="receipt-total-label">Sub Total</td>
+      <td class="receipt-total-value">{{ currency }}{{ s.subtotal|floatformat:"2" }}</td>
+    </tr>
+    {% if s.discount_amount and s.discount_amount != "0.00" %}
+    <tr>
+      <td class="receipt-total-label">Discount</td>
+      <td class="receipt-total-value receipt-total-discount">-{{ currency }}{{ s.discount_amount|floatformat:"2" }}</td>
+    </tr>
+    {% endif %}
+    {% if s.service_charge_amount and s.service_charge_amount != "0.00" %}
+    <tr>
+      <td class="receipt-total-label">Service Charge</td>
+      <td class="receipt-total-value">{{ currency }}{{ s.service_charge_amount|floatformat:"2" }}</td>
+    </tr>
+    {% endif %}
+    {% if s.cgst and s.cgst != "0.00" %}
+    <tr>
+      <td class="receipt-total-label">CGST</td>
+      <td class="receipt-total-value">{{ currency }}{{ s.cgst|floatformat:"2" }}</td>
+    </tr>
+    {% endif %}
+    {% if s.sgst and s.sgst != "0.00" %}
+    <tr>
+      <td class="receipt-total-label">SGST</td>
+      <td class="receipt-total-value">{{ currency }}{{ s.sgst|floatformat:"2" }}</td>
+    </tr>
+    {% endif %}
+    {% if s.igst and s.igst != "0.00" %}
+    <tr>
+      <td class="receipt-total-label">IGST</td>
+      <td class="receipt-total-value">{{ currency }}{{ s.igst|floatformat:"2" }}</td>
+    </tr>
+    {% endif %}
+    <tr>
+      <td class="receipt-total-label">Round Off</td>
+      <td class="receipt-total-value">{{ currency }}{{ s.round_off|floatformat:"2" }}</td>
+    </tr>
+  </table>
+
+  <div class="receipt-separator-thick"></div>
+
+  <!-- ============================================================ -->
+  <!-- SECTION: GRAND TOTAL                                          -->
+  <!-- ============================================================ -->
+  <table class="receipt-grand-total" cellspacing="0" cellpadding="0">
+    <tr>
+      <td class="receipt-grand-label">TOTAL</td>
+      <td class="receipt-grand-value">{{ currency }}{{ s.total|floatformat:"2" }}</td>
+    </tr>
+  </table>
+
+  <div class="receipt-separator-thick"></div>
+
+  <!-- ============================================================ -->
+  <!-- SECTION: PAYMENT INFORMATION                                  -->
+  <!-- ============================================================ -->
+  <table class="receipt-payment" cellspacing="0" cellpadding="0">
+    <tr>
+      <td class="receipt-pay-label">Paid By</td>
+      <td class="receipt-pay-value">{{ s.payment_methods|default:"CASH" }}</td>
+    </tr>
+    <tr>
+      <td class="receipt-pay-label">Amount Paid</td>
+      <td class="receipt-pay-value">{{ currency }}{{ s.amount_paid|floatformat:"2" }}</td>
+    </tr>
+    <tr>
+      <td class="receipt-pay-label">Change</td>
+      <td class="receipt-pay-value">{{ currency }}{{ s.change_returned|floatformat:"2" }}</td>
+    </tr>
+    <tr>
+      <td class="receipt-pay-label">Status</td>
+      <td class="receipt-pay-value receipt-pay-status">{{ s.payment_status_label|default:"Paid" }}</td>
+    </tr>
+  </table>
+
+  <div class="receipt-separator"></div>
+
+  <!-- ============================================================ -->
+  <!-- SECTION: TAX SUMMARY                                          -->
+  <!-- ============================================================ -->
+  <table class="receipt-tax" cellspacing="0" cellpadding="0">
+    <thead>
+      <tr><th colspan="2" class="receipt-tax-header">TAX SUMMARY</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="receipt-tax-label">Taxable Amount</td>
+        <td class="receipt-tax-value">{{ currency }}{{ s.taxable_amount|floatformat:"2" }}</td>
+      </tr>
+      {% if s.cgst and s.cgst != "0.00" %}
+      <tr>
+        <td class="receipt-tax-label">CGST</td>
+        <td class="receipt-tax-value">{{ currency }}{{ s.cgst|floatformat:"2" }}</td>
+      </tr>
+      {% endif %}
+      {% if s.sgst and s.sgst != "0.00" %}
+      <tr>
+        <td class="receipt-tax-label">SGST</td>
+        <td class="receipt-tax-value">{{ currency }}{{ s.sgst|floatformat:"2" }}</td>
+      </tr>
+      {% endif %}
+      {% if s.igst and s.igst != "0.00" %}
+      <tr>
+        <td class="receipt-tax-label">IGST</td>
+        <td class="receipt-tax-value">{{ currency }}{{ s.igst|floatformat:"2" }}</td>
+      </tr>
+      {% endif %}
+      <tr class="receipt-tax-total-row">
+        <td class="receipt-tax-label">Total GST</td>
+        <td class="receipt-tax-value">{{ currency }}{{ s.tax_amount|floatformat:"2" }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  {% if s.tax_inclusive_message or s.custom_footer_text or s.thank_you_message or s.terms_notes %}
+  <div class="receipt-separator"></div>
+  {% endif %}
+
+  <!-- ============================================================ -->
+  <!-- SECTION: FOOTER                                               -->
+  <!-- ============================================================ -->
+
+  {% if s.tax_inclusive_message %}
+  <div class="receipt-message">{{ s.tax_inclusive_message }}</div>
+  {% endif %}
+
+  {% if s.custom_footer_text %}
+  <div class="receipt-footer">{{ s.custom_footer_text|linebreaksbr }}</div>
+  {% endif %}
+
+  {% if s.thank_you_message %}
+  <div class="receipt-thankyou">{{ s.thank_you_message }}</div>
+  {% else %}
+  <div class="receipt-thankyou">Thank you for your visit!</div>
+  {% endif %}
+
+  {% if s.terms_notes %}
+  <div class="receipt-terms">{{ s.terms_notes|linebreaksbr }}</div>
+  {% endif %}
+
+  <!-- ============================================================ -->
+  <!-- SECTION: REPRINT / DUPLICATE MARK                             -->
+  <!-- ============================================================ -->
+  {% if is_reprint %}
+  <div class="receipt-duplicate">*** DUPLICATE / REPRINT ***</div>
+  {% endif %}
+
+</div>
+
+{% endwith %}
+{% endwith %}
+{% endwith %}
+{% endwith %}
 {% endblock %}

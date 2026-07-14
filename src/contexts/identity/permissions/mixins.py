@@ -37,7 +37,7 @@ class TenantPermissionRequiredMixin(AccessMixin):
         location_id = getattr(self.request, 'branch_id', None)
 
         for perm in perms:
-            if not has_permission(self.request.user, perm, tenant_id, location_id):
+            if not has_permission(self.request.user, perm, tenant_id):
                 return False
         return True
 

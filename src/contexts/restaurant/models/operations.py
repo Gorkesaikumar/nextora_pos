@@ -12,10 +12,7 @@ GSTIN_PATTERN = re.compile(r"^\d{2}[A-Z]{5}\d{4}[A-Z]\d[Z][A-Z\d]$")
 
 
 class CashCounter(TenantAwareModel):
-    """A physical cash register / POS terminal at a branch."""
-    branch = models.ForeignKey(
-        "restaurant.Branch", on_delete=models.CASCADE, related_name="cash_counters"
-    )
+    """A physical cash register / POS terminal."""
     name = models.CharField(max_length=100)
     code = models.CharField(max_length=20, blank=True)
     is_active = models.BooleanField(default=True)
@@ -25,24 +22,21 @@ class CashCounter(TenantAwareModel):
         ordering = ["name"]
         constraints = [
             models.UniqueConstraint(
-                fields=["branch", "name"],
+                fields=["tenant", "name"],
                 condition=models.Q(is_deleted=False),
-                name="uq_r_counter__branch_name",
+                name="uq_r_counter__tenant_name",
             ),
         ]
 
     def __str__(self) -> str:
-        return f"{self.name} ({self.branch.code})"
+        return self.name
 
 
 class BusinessHours(TenantAwareModel):
-    """Structured per-day operating hours for a branch.
+    """Structured per-day operating hours.
 
-    One row per day of the week (max 7 per branch). Validated: open < close.
+    One row per day of the week (max 7 per tenant). Validated: open < close.
     """
-    branch = models.ForeignKey(
-        "restaurant.Branch", on_delete=models.CASCADE, related_name="business_hours"
-    )
     day_of_week = models.PositiveSmallIntegerField(
         choices=DayOfWeek.choices,
         help_text="ISO 8601 day: 1=Monday … 7=Sunday"
@@ -51,7 +45,7 @@ class BusinessHours(TenantAwareModel):
     close_time = models.TimeField()
     is_closed = models.BooleanField(
         default=False,
-        help_text="If true, branch is closed on this day (open/close times ignored)"
+        help_text="If true, closed on this day (open/close times ignored)"
     )
 
     class Meta(TenantAwareModel.Meta):
@@ -59,9 +53,9 @@ class BusinessHours(TenantAwareModel):
         ordering = ["day_of_week"]
         constraints = [
             models.UniqueConstraint(
-                fields=["branch", "day_of_week"],
+                fields=["tenant", "day_of_week"],
                 condition=models.Q(is_deleted=False),
-                name="uq_r_hours__branch_day",
+                name="uq_r_hours__tenant_day",
             ),
         ]
 
@@ -79,10 +73,7 @@ class BusinessHours(TenantAwareModel):
 
 
 class Holiday(TenantAwareModel):
-    """A branch-specific holiday / closure date."""
-    branch = models.ForeignKey(
-        "restaurant.Branch", on_delete=models.CASCADE, related_name="holidays"
-    )
+    """A holiday / closure date."""
     date = models.DateField()
     name = models.CharField(max_length=200)
     is_full_day = models.BooleanField(default=True)
@@ -100,9 +91,9 @@ class Holiday(TenantAwareModel):
         ordering = ["date"]
         constraints = [
             models.UniqueConstraint(
-                fields=["branch", "date"],
+                fields=["tenant", "date"],
                 condition=models.Q(is_deleted=False),
-                name="uq_r_holiday__branch_date",
+                name="uq_r_holiday__tenant_date",
             ),
         ]
 
@@ -110,14 +101,10 @@ class Holiday(TenantAwareModel):
         return f"{self.name} ({self.date})"
 
 
-class BranchGSTProfile(TenantAwareModel):
-    """Per-branch GST registration (mandatory for Indian operations).
-
-    Regulatory requirement: each physical establishment must have its own
-    GSTIN. This entity captures the complete registration details.
-    """
-    branch = models.OneToOneField(
-        "restaurant.Branch", on_delete=models.CASCADE, related_name="gst_profile"
+class RestaurantGSTProfile(TenantAwareModel):
+    """Per-restaurant GST registration (mandatory for Indian operations)."""
+    restaurant = models.OneToOneField(
+        "restaurant.Restaurant", on_delete=models.CASCADE, related_name="gst_profile"
     )
     gstin = models.CharField(
         max_length=15,
@@ -137,9 +124,9 @@ class BranchGSTProfile(TenantAwareModel):
         db_table = "restaurant_gst_profile"
         constraints = [
             models.UniqueConstraint(
-                fields=["branch"],
+                fields=["restaurant"],
                 condition=models.Q(is_deleted=False),
-                name="uq_r_gst__branch",
+                name="uq_r_gst__restaurant",
             ),
         ]
 
@@ -161,15 +148,14 @@ class BranchGSTProfile(TenantAwareModel):
         return f"{self.gstin} ({self.legal_name})"
 
 
-class BranchSettings(TenantAwareModel):
-    """Per-branch configuration settings.
+class RestaurantSettings(TenantAwareModel):
+    """Per-restaurant configuration settings.
 
-    Replaces the relevant parts of the old TenantConfiguration God Object.
-    Non-GST settings that vary by branch: invoice formatting, order flow
+    Non-GST settings: invoice formatting, order flow
     preferences, display options, etc.
     """
-    branch = models.OneToOneField(
-        "restaurant.Branch", on_delete=models.CASCADE, related_name="settings"
+    restaurant = models.OneToOneField(
+        "restaurant.Restaurant", on_delete=models.CASCADE, related_name="settings"
     )
     # Invoice / billing
     invoice_prefix = models.CharField(max_length=10, default="INV")
@@ -203,11 +189,11 @@ class BranchSettings(TenantAwareModel):
         db_table = "restaurant_settings"
         constraints = [
             models.UniqueConstraint(
-                fields=["branch"],
+                fields=["restaurant"],
                 condition=models.Q(is_deleted=False),
-                name="uq_r_settings__branch",
+                name="uq_r_settings__restaurant",
             ),
         ]
 
     def __str__(self) -> str:
-        return f"Settings: {self.branch.code}"
+        return f"Settings for {self.restaurant.name}"

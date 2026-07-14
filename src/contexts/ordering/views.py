@@ -14,8 +14,16 @@ from contexts.catalog.models.product import Product
 from contexts.catalog.models.modifier import Modifier, ModifierGroup
 from contexts.ordering.models.order import Order, OrderItem
 from contexts.ordering.services import order_service
-from contexts.restaurant.models.branch import Branch
 from contexts.ordering.domain.enums import OrderType, OrderStatus, ItemStatus
+from contexts.ordering.views_invoice_config import (
+    InvoiceConfigurationView,
+    InvoiceConfigurationSaveView,
+    InvoiceConfigurationPreviewView,
+    InvoiceConfigurationTestPrintView,
+    InvoiceConfigurationResetView,
+    InvoiceReprintView,
+    InvoiceSnapshotDetailView,
+)
 
 
 class POSMainView(LoginRequiredMixin, TemplateView):
@@ -163,16 +171,8 @@ def _get_or_create_active_order(request):
         except Order.DoesNotExist:
             del request.session['active_order_id']
             
-    # Create new order on the fly. We'll pick the first available branch for this demo.
-    branch = Branch.objects.first()
-    if not branch:
-        # Fallback if no branches exist
-        branch_id = uuid.uuid4()
-    else:
-        branch_id = branch.id
-
+    # Create new order on the fly. No branches anymore.
     order = order_service.create_order(
-        location_id=branch_id,
         order_type=OrderType.TAKEAWAY, # Default walk-in
         created_by=request.user.id
     )
@@ -490,23 +490,28 @@ class POSProcessPaymentView(TenantPermissionRequiredMixin, LoginRequiredMixin, V
                 # If key already exists in cache, it's a duplicate request
                 return HttpResponse("<div class='p-4 text-center text-red-600'>Duplicate request detected. Processing already in progress.</div>", status=429)
 
-        order = get_object_or_404(Order, id=order_id)
-        method = request.POST.get('method', 'CASH')
-        tendered = request.POST.get('tendered')
-        
-        if tendered:
-            tendered = Decimal(tendered)
-        else:
-            tendered = order.total
-
         try:
-            from contexts.ordering.services.checkout_service import complete_checkout_transaction
+            order = get_object_or_404(Order, id=order_id)
+            method = request.POST.get('method', 'CASH')
+            tendered = request.POST.get('tendered')
+            
+            if tendered:
+                tendered = Decimal(tendered)
+            else:
+                tendered = order.total
 
-            order, invoice, print_jobs = complete_checkout_transaction(
+            from contexts.ordering.services.checkout_service import complete_checkout_transaction
+            import uuid
+            
+            # Use the provided key or generate a new one for the service
+            service_idempotency_key = request.POST.get('idempotency_key', str(uuid.uuid4().hex))
+
+            order, invoice, print_jobs, print_result = complete_checkout_transaction(
                 order_id=order.id,
                 method=method,
                 tendered=tendered,
                 performed_by_id=request.user.id if request.user.is_authenticated else None,
+                idempotency_key=service_idempotency_key,
             )
 
             # Post-commit notifications & table release
@@ -525,29 +530,35 @@ class POSProcessPaymentView(TenantPermissionRequiredMixin, LoginRequiredMixin, V
             # Clear session cart
             if 'active_order_id' in request.session:
                 del request.session['active_order_id']
+                
+            # Clear idempotency key on success so it doesn't get stuck
+            if cache_key:
+                cache.delete(cache_key)
 
             return render(
                 request,
                 "ordering/partials/checkout_success_modal.html",
                 {
                     "print_jobs": print_jobs,
+                    "print_result": print_result,
                     "invoice": invoice,
                     "order": order,
                 },
             )
 
-            
         except Exception as e:
+            if cache_key:
+                cache.delete(cache_key)
             import traceback
             with open("debug_payment_error.log", "a") as f:
                 f.write("=== PAYMENT ERROR ===\n")
                 f.write(traceback.format_exc() + "\n")
-            
+
             return render(
                 request,
                 "ordering/partials/checkout_error_modal.html",
                 {"error_message": str(e)},
-                status=400,
+                status=200,  # Return 200 so HTMX swaps the error modal
             )
 
 
@@ -591,10 +602,10 @@ def get_kds_metrics(kots):
     }
 
 def attach_waiters_and_stations_to_kots(kots):
-    from contexts.employees.models import EmployeeProfile
+    from contexts.employees.models import EmployeeProfile, EmployeeStatus
     from contexts.restaurant.models.kitchen import KitchenStation
 
-    waiters = EmployeeProfile.objects.filter(is_active=True)
+    waiters = EmployeeProfile.objects.filter(status=EmployeeStatus.ACTIVE)
     waiter_map = {str(w.id): w.user.full_name or w.user.email for w in waiters}
 
     stations = KitchenStation.objects.filter(is_active=True)
@@ -758,6 +769,205 @@ from contexts.restaurant.domain.enums import TableStatus
 from contexts.ordering.domain.enums import OrderStatus, OrderType
 
 
+# ── Print Service Integration Views ─────────────────────────────────────────
+
+class POSPrinterSettingsView(TenantPermissionRequiredMixin, LoginRequiredMixin, TemplateView):
+    """Printer Settings page — shows available printers from Print Service."""
+    permission_required = "orders.view"
+    template_name = "ordering/printer_settings.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        from contexts.ordering.services.print_service_client import PrintServiceClient
+
+        client = PrintServiceClient()
+
+        # Check Print Service health
+        health_result = client.check_health()
+        context["service_online"] = health_result.success
+
+        # Fetch POS-compatible printers
+        printers_data = []
+        if health_result.success:
+            printer_result = client.list_pos_printers()
+            if printer_result.success:
+                printers_data = printer_result.data.get("printers", [])
+
+        context["printers"] = printers_data
+        context["total_printers"] = len(printers_data)
+
+        # Get current configuration
+        from contexts.ordering.models.pos_config import POSPrinterConfig
+        terminal_id = self.request.GET.get("terminal_id")
+        config = None
+        if terminal_id:
+            try:
+                config = POSPrinterConfig.objects.filter(
+                    terminal_id=terminal_id, is_active=True
+                ).first()
+            except Exception:
+                pass
+        if not config:
+            config = POSPrinterConfig.objects.filter(
+                is_active=True, terminal_id__isnull=True
+            ).first()
+
+        context["config"] = config
+        return context
+
+
+class POSPrinterSelectView(TenantPermissionRequiredMixin, LoginRequiredMixin, View):
+    """Select and save the POS receipt printer configuration."""
+    permission_required = "orders.update"
+
+    def post(self, request, *args, **kwargs):
+        from contexts.ordering.models.pos_config import POSPrinterConfig
+
+        printer_name = request.POST.get("printer_name", "").strip()
+        printer_display_name = request.POST.get("printer_display_name", printer_name).strip()
+        connection_type = request.POST.get("connection_type", "").strip()
+        auto_print = request.POST.get("auto_print", "true") == "true"
+        paper_width = request.POST.get("paper_width", "80mm")
+        terminal_id = request.POST.get("terminal_id", "").strip()
+
+        import uuid
+        terminal_uuid = uuid.UUID(terminal_id) if terminal_id else None
+
+        config, created = POSPrinterConfig.objects.update_or_create(
+            tenant_id=request.tenant_id,
+            terminal_id=terminal_uuid,
+            defaults={
+                "printer_name": printer_name,
+                "printer_display_name": printer_display_name,
+                "connection_type": connection_type,
+                "auto_print": auto_print,
+                "paper_width": paper_width,
+                "is_active": True,
+            },
+        )
+
+        from django.contrib import messages
+        if printer_name:
+            messages.success(request, f"Printer '{printer_display_name}' configured successfully.")
+        else:
+            messages.info(request, "Printer selection cleared.")
+
+        return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/ordering/printer-settings/"))
+
+
+class POSTestPrintView(TenantPermissionRequiredMixin, LoginRequiredMixin, View):
+    """Send a test print to the configured printer via Print Service.
+
+    Uses the /print endpoint with diagnostic=True which goes through the
+    full print queue pipeline (validation -> rendering -> queue -> worker
+    -> physical print). This is the same proven path used by real receipts.
+    """
+    permission_required = "orders.update"
+
+    def post(self, request, *args, **kwargs):
+        from contexts.ordering.services.print_service_client import PrintServiceClient
+
+        printer_name = request.POST.get("printer_name", "").strip()
+        if not printer_name:
+            from django.http import JsonResponse
+            return JsonResponse({"success": False, "error": "No printer selected."}, status=400)
+
+        client = PrintServiceClient()
+        # Use print_test_page() which calls POST /print/test
+        # This uses EscposRenderer (template-based rendering) which was
+        # confirmed working during physical printer testing.
+        result = client.print_test_page(printer_name=printer_name)
+
+        from django.http import JsonResponse
+        if result.success:
+            return JsonResponse({
+                "success": True,
+                "printer": printer_name,
+                "job_id": result.data.get("job_id", ""),
+                "message": f"Test print submitted to '{printer_name}'. The print queue is processing it.",
+            })
+        else:
+            return JsonResponse({
+                "success": False,
+                "error": result.error or "Print Service returned an error.",
+            }, status=500)
+
+
+class POSPrintServiceStatusView(TenantPermissionRequiredMixin, LoginRequiredMixin, View):
+    """HTMX endpoint returning Print Service connection status as HTML."""
+    permission_required = "orders.view"
+
+    def get(self, request, *args, **kwargs):
+        from contexts.ordering.services.print_service_client import PrintServiceClient
+
+        client = PrintServiceClient()
+        health = client.check_health()
+
+        is_online = health.success
+
+        html = (
+            f'<span id="print-service-status" class="status-rail__signal" '
+            f'hx-get="{request.path}" hx-trigger="every:60s" hx-swap="outerHTML">'
+        )
+        if is_online:
+            html += (
+                '<span class="status-rail__dot status-rail__signal--ok" aria-hidden="true"></span>'
+                ' Print Service  ● Connected'
+            )
+        else:
+            html += (
+                '<span class="status-rail__dot" aria-hidden="true" style="background:#DC2626"></span>'
+                ' Print Service  ● Offline'
+            )
+        html += '</span>'
+
+        from django.http import HttpResponse
+        return HttpResponse(html)
+
+
+class POSPrintReceiptView(TenantPermissionRequiredMixin, LoginRequiredMixin, View):
+    """Manually print a receipt for a completed order (reprint)."""
+    permission_required = "orders.update"
+
+    def post(self, request, order_id, *args, **kwargs):
+        from contexts.ordering.models import Order, Invoice
+        from contexts.ordering.domain.enums import OrderStatus
+        from contexts.ordering.services.printing import dispatch_to_print_service
+        from contexts.ordering.services.print_service_client import PrintServiceClient
+
+        import uuid
+        try:
+            order_uuid = uuid.UUID(order_id)
+        except (ValueError, AttributeError):
+            from django.http import JsonResponse
+            return JsonResponse({"success": False, "error": "Invalid order ID."}, status=400)
+
+        order = get_object_or_404(Order, id=order_uuid)
+        if order.status != OrderStatus.SETTLED:
+            from django.http import JsonResponse
+            return JsonResponse({"success": False, "error": "Order is not settled."}, status=400)
+
+        invoice = Invoice.objects.filter(order=order).first()
+        if not invoice:
+            from django.http import JsonResponse
+            return JsonResponse({"success": False, "error": "No invoice found for this order."}, status=400)
+
+        # Build receipt payload
+        import uuid as _uuid
+        idempotency_key = f"reprint-{str(_uuid.uuid4().hex)}"
+        print_result = dispatch_to_print_service(
+            order=order,
+            invoice=invoice,
+            idempotency_key=idempotency_key,
+        )
+
+        from django.http import JsonResponse
+        return JsonResponse(print_result)
+
+
+# ── End Print Service Views ────────────────────────────────────────────────
+
+
 @method_decorator(never_cache, name='dispatch')
 class POSTableMapView(TenantPermissionRequiredMixin, LoginRequiredMixin, View):
     permission_required = "orders.view"
@@ -775,13 +985,7 @@ class POSSelectTableView(TenantPermissionRequiredMixin, LoginRequiredMixin, View
         
         if table.status == TableStatus.VACANT:
             # Create a new order for this table
-            # NOTE: We assume a default location_id for now as in POSAddToCartView
-            location_id = "00000000-0000-0000-0000-000000000000" 
-            if hasattr(request, 'tenant_id') and getattr(request, 'branch_id', None):
-                location_id = request.branch_id
-                
             order = Order.objects.create(
-                location_id=location_id,
                 table_id=table.id,
                 type=OrderType.DINE_IN,
                 created_by=request.user.id
@@ -826,8 +1030,8 @@ class POSTableMainView(TenantPermissionRequiredMixin, LoginRequiredMixin, Templa
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         
-        from contexts.employees.models import EmployeeProfile
-        waiters = EmployeeProfile.objects.filter(is_active=True)
+        from contexts.employees.models import EmployeeProfile, EmployeeStatus
+        waiters = EmployeeProfile.objects.filter(status=EmployeeStatus.ACTIVE)
         waiter_map = {str(w.id): w.user.full_name or w.user.email for w in waiters}
         
         tables = DiningTable.objects.filter(is_active=True, is_deleted=False).order_by('number')
@@ -850,12 +1054,7 @@ class POSTableActionView(TenantPermissionRequiredMixin, LoginRequiredMixin, View
         table = get_object_or_404(DiningTable, id=table_id)
         
         if table.status == TableStatus.VACANT:
-            location_id = "00000000-0000-0000-0000-000000000000" 
-            if hasattr(request, 'tenant_id') and getattr(request, 'branch_id', None):
-                location_id = request.branch_id
-                
             order = Order.objects.create(
-                location_id=location_id,
                 table_id=table.id,
                 type=OrderType.DINE_IN,
                 created_by=request.user.id

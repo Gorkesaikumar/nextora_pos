@@ -6,8 +6,6 @@ from shared.tenancy.models import TenantAwareModel
 
 
 class Printer(TenantAwareModel):
-    # location_id is a soft reference to a branch (tenants.Location, added later).
-    location_id = models.UUIDField(null=True, blank=True)
     code = models.CharField(max_length=40)
     name = models.CharField(max_length=120)
     kind = models.CharField(
@@ -48,7 +46,6 @@ class Printer(TenantAwareModel):
 
 
 class KitchenStation(TenantAwareModel):
-    location_id = models.UUIDField(null=True, blank=True)
     code = models.CharField(max_length=40)
     name = models.CharField(max_length=120)        # "Grill", "Bar", "Tandoor"
     is_active = models.BooleanField(default=True)

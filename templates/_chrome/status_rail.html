@@ -12,13 +12,25 @@
     <span class="status-rail__signal">
       Active orders: <strong class="tabular">{{ active_orders_count|default:0 }}</strong>
     </span>
+    <!-- Print Service Status Indicator -->
+    <span id="print-service-status" class="status-rail__signal"
+          hx-get="{% url 'ordering:print_service_status' %}"
+          hx-trigger="load every:60s"
+          hx-swap="outerHTML">
+      <span class="status-rail__dot status-rail__dot--checking" aria-hidden="true"></span>
+      Print Service · Checking...
+    </span>
   {% endblock %}
 
   <span class="status-rail__spacer"></span>
 
   {% block status_rail_right %}
     <span class="status-rail__signal">
-      Printer: {{ printer_state|default:'Ready' }}
+      <a href="{% url 'ordering:printer_settings' %}" 
+         class="hover:text-brand-default transition-colors no-underline"
+         title="Printer Settings">
+        Printer: {{ printer_state|default:'Ready' }}
+      </a>
     </span>
     <span class="status-rail__signal status-rail__signal--ok">
       Synced {{ last_sync|default:'12s ago' }}

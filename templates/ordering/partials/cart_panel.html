@@ -95,8 +95,8 @@
                     {% if item.modifiers.exists %}
                     <button type="button"
                             class="text-[10px] font-semibold text-brand-default hover:underline"
-                            hx-get="{% url 'ordering:pos_edit_modifier_modal' item.id %}"
-                            hx-target="body" hx-swap="beforeend">Customize</button>
+                            hx-get="{% if request.resolver_match.kwargs.tenant_id %}{% url 'ordering:pos_edit_modifier_modal_tenant' request.resolver_match.kwargs.tenant_id item.id %}{% else %}{% url 'ordering:pos_edit_modifier_modal' item.id %}{% endif %}"
+                            hx-target="#pos-modal-container" hx-swap="innerHTML">Customize</button>
                     {% endif %}
                   </div>
                   {% if item.modifiers.all %}
@@ -150,9 +150,9 @@
                 <span class="text-caption text-neutral-500 dark:text-neutral-dark-500">₹{{ item.unit_price|floatformat:2 }} each</span>
                 <button type="button"
                         class="text-[11px] font-semibold text-brand-default hover:underline flex items-center gap-1"
-                        hx-get="{% url 'ordering:pos_edit_modifier_modal' item.id %}"
-                        hx-target="body"
-                        hx-swap="beforeend">
+                        hx-get="{% if request.resolver_match.kwargs.tenant_id %}{% url 'ordering:pos_edit_modifier_modal_tenant' request.resolver_match.kwargs.tenant_id item.id %}{% else %}{% url 'ordering:pos_edit_modifier_modal' item.id %}{% endif %}"
+                        hx-target="#pos-modal-container"
+                        hx-swap="innerHTML">
                   <span>Customize</span>
                 </button>
               </div>

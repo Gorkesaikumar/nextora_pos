@@ -130,32 +130,7 @@ class TableStatus(models.TextChoices):
     RESERVED = "reserved", "Reserved"
 
 
-class Branch(TenantAwareModel):
-    name = models.CharField(max_length=255)
-    code = models.CharField(max_length=50)
-    address = models.TextField(blank=True)
-    phone = models.CharField(max_length=50, blank=True)
-    working_hours = models.JSONField(default=dict, blank=True)
-    is_active = models.BooleanField(default=True)
-
-    class Meta(TenantAwareModel.Meta):
-        db_table = "tenant_branch"
-        constraints = [
-            models.UniqueConstraint(
-                fields=["tenant", "code"],
-                name="uq_branch__tenant_code"
-            )
-        ]
-
-    def __str__(self) -> str:
-        return f"{self.name} ({self.code})"
-
-
-
-
-
 class Table(TenantAwareModel):
-    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name="tables", null=True, blank=True)
     number = models.CharField(max_length=50)
     capacity = models.PositiveIntegerField(default=4)
     status = models.CharField(
@@ -169,18 +144,17 @@ class Table(TenantAwareModel):
         db_table = "tenant_table"
         constraints = [
             models.UniqueConstraint(
-                fields=["branch", "number"],
-                name="uq_table__branch_number"
+                fields=["tenant", "number"],
+                name="uq_table__tenant_number"
             )
         ]
         ordering = ["number"]
 
     def __str__(self) -> str:
-        return f"Table {self.number} ({self.branch.name})"
+        return f"Table {self.number}"
 
 
 class CashCounter(TenantAwareModel):
-    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name="cash_counters")
     name = models.CharField(max_length=100)
     is_active = models.BooleanField(default=True)
 
@@ -188,11 +162,10 @@ class CashCounter(TenantAwareModel):
         db_table = "tenant_cash_counter"
 
     def __str__(self) -> str:
-        return f"{self.name} - {self.branch.name}"
+        return self.name
 
 
 class Holiday(TenantAwareModel):
-    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name="holidays")
     date = models.DateField()
     name = models.CharField(max_length=255)
 
@@ -200,8 +173,8 @@ class Holiday(TenantAwareModel):
         db_table = "tenant_holiday"
         constraints = [
             models.UniqueConstraint(
-                fields=["branch", "date"],
-                name="uq_holiday__branch_date"
+                fields=["tenant", "date"],
+                name="uq_holiday__tenant_date"
             )
         ]
         ordering = ["date"]

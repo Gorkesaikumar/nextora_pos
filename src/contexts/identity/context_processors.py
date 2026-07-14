@@ -10,7 +10,7 @@ def rbac_context(request):
     tenant_id = getattr(request, 'tenant_id', None)
     location_id = getattr(request, 'branch_id', None)
 
-    perms = get_permission_codes(request.user, tenant_id, location_id)
+    perms = get_permission_codes(request.user, tenant_id)
 
     def safe_reverse(viewname):
         if tenant_id:
@@ -46,58 +46,64 @@ def rbac_context(request):
 
     # OPERATIONS
     operations_items = []
+    
+    resolver = getattr(request, 'resolver_match', None)
+    app_name = resolver.app_name if resolver else ''
+    url_name = resolver.url_name if resolver else ''
+    view_name = resolver.view_name if resolver else ''
+    
     if 'orders.view' in perms or 'orders.create' in perms:
         operations_items.append({
             'label': 'Orders',
             'url': safe_reverse('ordering:pos_main'),
             'icon': 'receipt',
-            'active': request.path.startswith('/pos/') and '/kds/' not in request.path and '/tables/' not in request.path and '/print-queue/' not in request.path,
+            'active': app_name == 'ordering' and url_name.startswith('pos_') and 'table' not in url_name and 'checkout' not in url_name and 'payment' not in url_name and 'printer' not in url_name,
         })
     if 'branches.view' in perms:
         operations_items.append({
             'label': 'Tables',
             'url': safe_reverse('ordering:pos_tables_main'),
             'icon': 'armchair',
-            'active': request.path.startswith('/pos/') and '/tables/' in request.path,
+            'active': app_name == 'ordering' and 'table' in url_name,
         })
     if 'kds.view' in perms:
         operations_items.append({
             'label': 'KOT / Kitchen',
             'url': safe_reverse('ordering:kds_main'),
             'icon': 'chef-hat',
-            'active': request.path.startswith('/pos/') and '/kds/' in request.path,
+            'active': app_name == 'ordering' and 'kds' in url_name,
         })
     if 'orders.view' in perms:
         operations_items.append({
             'label': 'Print Queue',
             'url': safe_reverse('ordering:print_queue'),
             'icon': 'printer',
-            'active': request.path.startswith('/pos/') and '/print-queue/' in request.path,
+            'active': app_name == 'ordering' and 'print_queue' in url_name,
         })
     if 'catalog.view' in perms:
         operations_items.append({
             'label': 'Menu Items',
             'url': safe_reverse('catalog:product_list'),
             'icon': 'utensils-crossed',
-            'active': '/dashboard/catalog/' in request.path and '/products' in request.path,
+            'active': app_name == 'catalog' and 'product' in url_name,
         })
         operations_items.append({
             'label': 'Modifiers',
             'url': safe_reverse('catalog:modifier_group_list'),
             'icon': 'list-plus',
-            'active': '/dashboard/catalog/' in request.path and '/modifiers' in request.path,
+            'active': app_name == 'catalog' and 'modifier' in url_name and 'analytics' not in url_name,
         })
         operations_items.append({
             'label': 'Combo Offers',
             'url': safe_reverse('catalog:combo_list'),
             'icon': 'tags',
-            'active': '/dashboard/catalog/' in request.path and '/combos/' in request.path,
+            'active': app_name == 'catalog' and 'combo' in url_name,
         })
         operations_items.append({
             'label': 'Tables',
             'url': safe_reverse('restaurant:table_list'),
             'icon': 'grid',
-            'active': '/dashboard/restaurant/' in request.path and ('/tables/' in request.path or '/floors/' in request.path),
+            'active': app_name == 'restaurant' and ('table' in url_name or 'floor' in url_name) and 'printer' not in url_name,
         })
     
     if operations_items:
@@ -111,25 +117,19 @@ def rbac_context(request):
                 'label': 'Inventory',
                 'url': safe_reverse('inventory:item_list'),
                 'icon': 'package',
-                'active': '/inventory/' in request.path and ('/items/' in request.path or request.path.endswith('/inventory/')),
+                'active': app_name == 'inventory' and 'item' in url_name,
             },
             {
                 'label': 'Purchase',
                 'url': safe_reverse('inventory:purchase_list'),
                 'icon': 'shopping-cart',
-                'active': '/inventory/' in request.path and '/purchases/' in request.path,
-            },
-            {
-                'label': 'Suppliers',
-                'url': safe_reverse('inventory:supplier_list'),
-                'icon': 'users',
-                'active': '/inventory/' in request.path and '/suppliers/' in request.path,
+                'active': app_name == 'inventory' and 'purchase' in url_name,
             },
             {
                 'label': 'Stock Adjustments',
                 'url': safe_reverse('inventory:adjustment_list'),
                 'icon': 'sliders-horizontal',
-                'active': '/inventory/' in request.path and '/adjustments/' in request.path,
+                'active': app_name == 'inventory' and 'adjustment' in url_name,
             },
         ])
     if inventory_items:
@@ -139,8 +139,8 @@ def rbac_context(request):
     customer_items = []
     if 'customers.view' in perms:
         customer_items.extend([
-            {'label': 'Customers', 'url': '#', 'icon': 'users-2', 'active': '/customers/' in request.path},
-            {'label': 'Loyalty & Offers', 'url': '#', 'icon': 'heart-handshake', 'active': '/loyalty/' in request.path},
+            {'label': 'Customers', 'url': '#', 'icon': 'users-2', 'active': app_name == 'customers'},
+            {'label': 'Loyalty & Offers', 'url': '#', 'icon': 'heart-handshake', 'active': app_name == 'loyalty'},
         ])
     if customer_items:
         nav_groups.append({'label': 'CUSTOMERS', 'items': customer_items})
@@ -149,17 +149,17 @@ def rbac_context(request):
     billing_items = []
     if 'orders.view' in perms or 'reports.sales.view' in perms:
         billing_items.extend([
-            {'label': 'Billing Dashboard', 'url': safe_reverse('billing:dashboard'), 'icon': 'layout-dashboard', 'active': '/dashboard/' in request.path and '/billing/' in request.path},
-            {'label': 'Invoices', 'url': safe_reverse('billing:invoices'), 'icon': 'file-text', 'active': '/invoices/' in request.path},
-            {'label': 'Billing Reports', 'url': safe_reverse('billing:reports'), 'icon': 'pie-chart', 'active': '/reports/' in request.path and '/billing/' in request.path},
-            {'label': 'Payment History', 'url': safe_reverse('billing:payments'), 'icon': 'history', 'active': '/payments/' in request.path},
-            {'label': 'GST Reports', 'url': safe_reverse('billing:gst_reports'), 'icon': 'calculator', 'active': '/gst-reports/' in request.path},
-            {'label': 'GST Filing', 'url': safe_reverse('billing:gst_filing'), 'icon': 'file-check', 'active': '/gst-filing/' in request.path},
-            {'label': 'Tax Summary', 'url': safe_reverse('billing:tax_summary'), 'icon': 'landmark', 'active': '/tax-summary/' in request.path},
-            {'label': 'Refund Bills', 'url': safe_reverse('billing:refunds'), 'icon': 'undo', 'active': '/refunds/' in request.path},
-            {'label': 'WhatsApp Sharing', 'url': safe_reverse('billing:whatsapp'), 'icon': 'message-circle', 'active': '/whatsapp/' in request.path},
-            {'label': 'Activity History', 'url': safe_reverse('billing:audit_log'), 'icon': 'shield-check', 'active': '/audit/' in request.path},
-            {'label': 'Billing Settings', 'url': safe_reverse('billing:settings'), 'icon': 'settings', 'active': '/settings/' in request.path and '/billing/' in request.path},
+            {'label': 'Billing Dashboard', 'url': safe_reverse('billing:dashboard'), 'icon': 'layout-dashboard', 'active': app_name == 'billing' and 'dashboard' in url_name},
+            {'label': 'Invoices', 'url': safe_reverse('billing:invoices'), 'icon': 'file-text', 'active': app_name == 'billing' and 'invoices' in url_name},
+            {'label': 'Billing Reports', 'url': safe_reverse('billing:reports'), 'icon': 'pie-chart', 'active': app_name == 'billing' and 'reports' in url_name},
+            {'label': 'Payment History', 'url': safe_reverse('billing:payments'), 'icon': 'history', 'active': app_name == 'billing' and 'payment' in url_name},
+            {'label': 'GST Reports', 'url': safe_reverse('billing:gst_reports'), 'icon': 'calculator', 'active': app_name == 'billing' and 'gst' in url_name and 'report' in url_name},
+            {'label': 'GST Filing', 'url': safe_reverse('billing:gst_filing'), 'icon': 'file-check', 'active': app_name == 'billing' and 'gst' in url_name and 'filing' in url_name},
+            {'label': 'Tax Summary', 'url': safe_reverse('billing:tax_summary'), 'icon': 'landmark', 'active': app_name == 'billing' and 'tax' in url_name},
+            {'label': 'Refund Bills', 'url': safe_reverse('billing:refunds'), 'icon': 'undo', 'active': app_name == 'billing' and 'refund' in url_name},
+            {'label': 'WhatsApp Sharing', 'url': safe_reverse('billing:whatsapp'), 'icon': 'message-circle', 'active': app_name == 'billing' and 'whatsapp' in url_name},
+            {'label': 'Activity History', 'url': safe_reverse('billing:audit_log'), 'icon': 'shield-check', 'active': app_name == 'billing' and 'audit' in url_name},
+            {'label': 'Billing Settings', 'url': safe_reverse('billing:settings'), 'icon': 'settings', 'active': app_name == 'billing' and 'setting' in url_name},
 
         ])
     if billing_items:
@@ -169,43 +169,101 @@ def rbac_context(request):
     report_items = []
     if 'reports.sales.view' in perms:
         report_items.extend([
-            {'label': 'Sales Report', 'url': safe_reverse('reporting:sales'), 'icon': 'bar-chart-3', 'active': '/reports/sales/' in request.path},
-            {'label': 'Item Report', 'url': safe_reverse('reporting:items'), 'icon': 'pie-chart', 'active': '/reports/items/' in request.path},
-            {'label': 'Modifier Analytics', 'url': safe_reverse('catalog:modifier_analytics'), 'icon': 'list-tree', 'active': '/modifiers/analytics/' in request.path},
-            {'label': 'Inventory Report', 'url': safe_reverse('reporting:inventory'), 'icon': 'clipboard-list', 'active': '/reports/inventory/' in request.path},
-            {'label': 'Tax Report', 'url': safe_reverse('reporting:tax'), 'icon': 'file-text', 'active': '/reports/tax/' in request.path},
+            {'label': 'Sales Report', 'url': safe_reverse('reporting:sales'), 'icon': 'bar-chart-3', 'active': app_name == 'reporting' and 'sales' in url_name},
+            {'label': 'Item Report', 'url': safe_reverse('reporting:items'), 'icon': 'pie-chart', 'active': app_name == 'reporting' and 'item' in url_name},
+            {'label': 'Modifier Analytics', 'url': safe_reverse('catalog:modifier_analytics'), 'icon': 'list-tree', 'active': app_name == 'catalog' and 'modifier_analytics' in url_name},
+            {'label': 'Inventory Report', 'url': safe_reverse('reporting:inventory'), 'icon': 'clipboard-list', 'active': app_name == 'reporting' and 'inventory' in url_name},
+            {'label': 'Tax Report', 'url': safe_reverse('reporting:tax'), 'icon': 'file-text', 'active': app_name == 'reporting' and 'tax' in url_name},
+            {'label': 'HR Reports', 'url': safe_reverse('employees:reports'), 'icon': 'briefcase', 'active': app_name == 'employees' and 'report' in url_name},
         ])
     if report_items:
         nav_groups.append({'label': 'REPORTS', 'items': report_items})
 
     # SETTINGS
     settings_items = []
-    if 'branches.view' in perms:
-        settings_items.append({
-            'label': 'Branches',
-            'url': safe_reverse('restaurant:branch_list'),
-            'icon': 'store',
-            'active': '/dashboard/restaurant/' in request.path and '/branches/' in request.path,
-        })
     if 'users.view' in perms:
         settings_items.append({
-            'label': 'Users',
+            'label': 'Invoice Config',
+            'url': safe_reverse('ordering:invoice_config'),
+            'icon': 'file-cog',
+            'active': app_name == 'ordering' and 'invoice' in url_name,
+            'permission': 'orders.update',
+        })
+        # Check if user has orders.update permission for Invoice Config
+        if 'orders.update' not in perms:
+            settings_items.pop()
+        settings_items.append({
+            'label': 'HRMS Dashboard',
+            'url': safe_reverse('employees:dashboard'),
+            'icon': 'layout-dashboard',
+            'active': app_name == 'employees' and 'dashboard' in url_name,
+        })
+        settings_items.append({
+            'label': 'Staff Directory',
             'url': safe_reverse('employees:employee_list'),
-            'icon': 'user-cog',
-            'active': '/dashboard/staff/' in request.path and '/directory/' in request.path,
+            'icon': 'users',
+            'active': app_name == 'employees' and 'employee' in url_name,
+        })
+        settings_items.append({
+            'label': 'Staff Documents',
+            'url': safe_reverse('employees:document_list'),
+            'icon': 'files',
+            'active': app_name == 'employees' and 'document' in url_name,
         })
         settings_items.extend([
+            {
+                'label': 'Departments',
+                'url': safe_reverse('employees:department_list'),
+                'icon': 'building',
+                'active': app_name == 'employees' and 'department' in url_name,
+            },
+            {
+                'label': 'Designations',
+                'url': safe_reverse('employees:designation_list'),
+                'icon': 'briefcase',
+                'active': app_name == 'employees' and 'designation' in url_name,
+            },
+            {
+                'label': 'Shifts & Rules',
+                'url': safe_reverse('employees:shift_list'),
+                'icon': 'clock',
+                'active': app_name == 'employees' and 'shift' in url_name,
+            },
+            {
+                'label': 'Weekly Offs',
+                'url': safe_reverse('employees:weeklyoff_list'),
+                'icon': 'calendar-off',
+                'active': app_name == 'employees' and 'weeklyoff' in url_name,
+            },
+            {
+                'label': 'Attendance Logs',
+                'url': safe_reverse('employees:attendance_list'),
+                'icon': 'clock-4',
+                'active': app_name == 'employees' and 'attendance' in url_name,
+            },
+            {
+                'label': 'Leave Requests',
+                'url': safe_reverse('employees:leave_list'),
+                'icon': 'calendar-clock',
+                'active': app_name == 'employees' and 'leave' in url_name,
+            },
+            {
+                'label': 'Payroll & Payouts',
+                'url': safe_reverse('employees:payroll_list'),
+                'icon': 'banknote',
+                'active': app_name == 'employees' and 'payroll' in url_name,
+            },
             {
                 'label': 'Roles & Permissions',
                 'url': safe_reverse('employees:role_list'),
                 'icon': 'shield-check',
-                'active': '/dashboard/staff/' in request.path and '/roles/' in request.path
+                'active': app_name == 'employees' and 'role' in url_name,
             },
             {
                 'label': 'Printers',
                 'url': safe_reverse('restaurant:printer_list'),
                 'icon': 'printer',
-                'active': '/dashboard/restaurant/' in request.path and '/printers/' in request.path
+                'active': app_name == 'restaurant' and 'printer' in url_name,
             },
         ])
     

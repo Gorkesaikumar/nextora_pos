@@ -1,13 +1,5 @@
 """Restaurant services package."""
-from .branch_service import (
-    create_branch,
-    open_branch,
-    pause_branch,
-    permanently_close_branch,
-    resume_branch,
-    update_gst_profile,
-)
-from .hours_service import check_branch_open_status, set_business_hours
+from .hours_service import check_restaurant_open_status, set_business_hours
 from .restaurant_service import (
     activate_restaurant,
     close_restaurant,
@@ -27,14 +19,8 @@ from .table_service import (
 )
 
 __all__ = [
-    "create_branch",
-    "open_branch",
-    "pause_branch",
-    "resume_branch",
-    "permanently_close_branch",
-    "update_gst_profile",
     "set_business_hours",
-    "check_branch_open_status",
+    "check_restaurant_open_status",
     "create_restaurant",
     "activate_restaurant",
     "suspend_restaurant",

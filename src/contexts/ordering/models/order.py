@@ -15,7 +15,6 @@ _MONEY = {"max_digits": 12, "decimal_places": 2, "default": 0}
 
 
 class Order(TenantAwareModel):
-    location_id = models.UUIDField()
     order_number = models.CharField(max_length=30, blank=True)
     offline_reference_id = models.CharField(max_length=100, null=True, blank=True, db_index=True)
     table_id = models.UUIDField(null=True, blank=True)
@@ -87,7 +86,7 @@ class Order(TenantAwareModel):
         db_table = "order"
         indexes = [
             models.Index(
-                fields=["tenant", "location_id", "status"],
+                fields=["tenant", "status"],
                 name="ix_order__open",
                 condition=models.Q(status="open", is_deleted=False),
             ),

@@ -51,7 +51,6 @@ def RequirePermission(code: str) -> type[BasePermission]:  # noqa: N802 (factory
                 request.user,
                 code,
                 get_current_tenant(),
-                _request_location(request),
             )
 
     _RequirePermission.__name__ = f"RequirePermission[{code}]"
@@ -71,7 +70,7 @@ def require_permission(code: str) -> Callable:
             if tenant_id is None:
                 raise TenantNotResolved("No tenant in context for permission check.")
             if not has_permission(
-                request.user, code, tenant_id, _request_location(request)
+                request.user, code, tenant_id
             ):
                 raise PermissionError(f"Missing required permission: {code}")
             return func(request, *args, **kwargs)

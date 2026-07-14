@@ -51,7 +51,7 @@ class RoleAdmin(admin.ModelAdmin):
 
 @admin.register(Membership)
 class MembershipAdmin(admin.ModelAdmin):
-    list_display = ["user", "tenant", "role", "location_id", "is_active"]
+    list_display = ["user", "tenant", "role", "is_active"]
     list_filter = ["is_active"]
     search_fields = ["user__email"]
     autocomplete_fields = ["user", "role"]

@@ -121,26 +121,35 @@ should not invite navigation away.
 
         {# Steps #}
         <nav class="mt-12 flex-1" aria-label="Setup progress">
-          <ol class="space-y-2">
-            {% for s in 1|rjust:4 %}{% endfor %}
+          <ol class="relative border-l-2 border-neutral-800 ml-4 space-y-6">
             <template x-for="(s, i) in steps" :key="i">
-              <li>
+              <li class="relative pl-8">
+                <!-- Connector glow for completed/active steps -->
+                <div class="absolute -left-[2px] top-0 bottom-[-24px] w-[2px] transition-colors duration-500"
+                     :class="s.id < step ? 'bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.6)]' : 'bg-transparent'"
+                     x-show="i < steps.length - 1"></div>
+
+                <!-- Custom Circle -->
+                <div class="absolute -left-[17px] top-1 flex items-center justify-center w-8 h-8 rounded-full border-2 text-[11px] font-bold shrink-0 transition-all duration-300 z-10 bg-neutral-900"
+                      :class="step === s.id ? 'border-brand-500 text-brand-500 shadow-[0_0_12px_rgba(99,102,241,0.4)] scale-110'
+                            : s.id < step ? 'border-indigo-500 bg-indigo-500 text-white'
+                            : 'border-neutral-700 text-neutral-500'">
+                  <span x-show="s.id >= step" x-text="s.id"></span>
+                  <i data-lucide="check" class="w-4 h-4 text-white" x-show="s.id < step" x-cloak></i>
+                </div>
+
                 <button type="button" @click="goTo(s.id)"
                         :disabled="!canJumpTo(s.id)"
-                        :class="step === s.id ? 'bg-white/10 text-white ring-1 ring-white/20' : (s.id < step || isStepValid(s.id)) ? 'text-white hover:bg-white/5' : 'text-neutral-500 cursor-not-allowed'"
-                        class="w-full flex items-center gap-4 p-3.5 rounded-xl text-left transition-all duration-200">
-                  {# Step indicator circle #}
-                  <span class="flex items-center justify-center w-8 h-8 rounded-full border-2 text-xs font-bold shrink-0 transition-colors"
-                        :class="step === s.id ? 'bg-white text-neutral-900 border-white shadow-[0_0_15px_rgba(255,255,255,0.3)]'
-                              : s.id < step ? 'bg-indigo-500 text-white border-indigo-500'
-                              : 'bg-transparent border-neutral-700 text-neutral-500'">
-                    <span x-show="s.id >= step" x-text="s.id"></span>
-                    <i data-lucide="check" class="w-4 h-4" x-show="s.id < step" x-cloak></i>
-                  </span>
+                        class="w-full text-left transition-all duration-300 group outline-none focus:ring-0"
+                        :class="step === s.id ? 'opacity-100 translate-x-1' : (s.id < step || isStepValid(s.id)) ? 'opacity-80 hover:opacity-100 hover:translate-x-1 cursor-pointer' : 'opacity-40 cursor-not-allowed'">
+                  
                   <span class="flex flex-col leading-tight min-w-0">
-                    <span class="text-[10px] font-bold tracking-[0.16em] uppercase opacity-60 mb-0.5" x-text="`Step 0${s.id}`"></span>
-                    <span class="text-sm font-semibold truncate" x-text="s.title"></span>
+                    <span class="text-[10px] font-extrabold tracking-[0.2em] uppercase mb-1 transition-colors duration-300"
+                          :class="step === s.id ? 'text-brand-400' : 'text-neutral-500'" x-text="`Step 0${s.id}`"></span>
+                    <span class="text-[15px] font-bold tracking-wide transition-colors duration-300"
+                          :class="step === s.id ? 'text-white' : 'text-neutral-300 group-hover:text-white'" x-text="s.title"></span>
                   </span>
+                  
                 </button>
               </li>
             </template>

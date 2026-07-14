@@ -13,7 +13,7 @@ from django.core.exceptions import ValidationError
 from django.utils.text import slugify
 
 from contexts.billing.domain.enums import BillingInterval
-from contexts.billing.models import Plan
+from contexts.billing.models import Plan, SubscriptionCoupon
 
 User = get_user_model()
 
@@ -118,11 +118,29 @@ class PlanForm(forms.Form):
         choices=[(BillingInterval.MONTHLY, "Monthly"), (BillingInterval.YEARLY, "Yearly")],
         initial=BillingInterval.MONTHLY,
     )
+    coupon_code = forms.CharField(max_length=50, required=False, strip=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         active = Plan.objects.filter(is_active=True, is_public=True).order_by("name")
         self.fields["plan_code"].choices = [(p.code, p.name) for p in active]
+
+    def clean_coupon_code(self):
+        code = self.cleaned_data.get("coupon_code", "").strip().upper()
+        if not code:
+            return ""
+            
+        try:
+            coupon = SubscriptionCoupon.objects.get(code=code)
+        except SubscriptionCoupon.DoesNotExist:
+            raise ValidationError("Invalid coupon code.")
+            
+        is_valid, msg = coupon.is_valid_now(tenant_status="new")
+        if not is_valid:
+            raise ValidationError(msg)
+            
+        # We don't have the chosen plan ID directly here (it's plan_code), but we can validate against plan later.
+        return code
 
 
 class BranchForm(forms.Form):

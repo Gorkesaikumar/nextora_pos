@@ -124,6 +124,7 @@
     });
   </script>
   {% block head_extra %}{% endblock %}
+  {% block extra_head %}{% endblock %}
 </head>
 <body x-data="{ sidebarOpen: $persist(false) }" x-init="$watch('sidebarOpen', val => document.documentElement.classList.toggle('sidebar-expanded', val))">
   <a href="#main" class="skip-link">Skip to main content</a>

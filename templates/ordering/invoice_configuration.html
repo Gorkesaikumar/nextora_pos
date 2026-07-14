@@ -1,0 +1,1231 @@
+{% extends "layouts/dashboard.html" %}
+{% load static %}
+
+{% block title %}Invoice Configuration · Nextora{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/layouts/receipt.css' %}">
+<style>
+  /* ── Toggle Switches ─────────────────────────────────────────── */
+  .npos-toggle {
+    position: relative;
+    width: 40px;
+    height: 22px;
+    flex-shrink: 0;
+  }
+  .npos-toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+  }
+  .npos-toggle .track {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background: #d1d5db;
+    transition: background 0.2s ease;
+    border-radius: 22px;
+  }
+  .npos-toggle .track::before {
+    content: '';
+    position: absolute;
+    height: 16px;
+    width: 16px;
+    left: 3px;
+    bottom: 3px;
+    background: #fff;
+    transition: transform 0.2s ease;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  .npos-toggle input:checked + .track { background: #4F6EF7; }
+  .npos-toggle input:checked + .track::before { transform: translateX(18px); }
+  .npos-toggle input:focus-visible + .track { box-shadow: 0 0 0 3px rgba(79,110,247,0.3); }
+
+  /* ── Config Cards ────────────────────────────────────────────── */
+  .cfg-card {
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .cfg-card:focus-within {
+    border-color: #a5b4fc;
+    box-shadow: 0 0 0 3px rgba(79,110,247,0.06), 0 1px 4px rgba(0,0,0,0.07);
+  }
+  .cfg-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 20px;
+    border-bottom: 1px solid #f3f4f6;
+  }
+  .cfg-card-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: #eef1fe;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .cfg-card-icon svg { color: #4F6EF7; width: 16px; height: 16px; }
+  .cfg-card-title { font-size: 14px; font-weight: 600; color: #111827; }
+  .cfg-card-subtitle { font-size: 11px; color: #9ca3af; margin-top: 1px; }
+  .cfg-card-body { padding: 20px; }
+
+  /* ── Form Inputs ─────────────────────────────────────────────── */
+  .npos-input {
+    width: 100%;
+    height: 36px;
+    padding: 0 10px;
+    font-size: 13px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #fff;
+    color: #111;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    font-family: inherit;
+    box-sizing: border-box;
+  }
+  .npos-input:focus {
+    border-color: #4F6EF7;
+    box-shadow: 0 0 0 3px rgba(79,110,247,0.12);
+  }
+  .npos-input::placeholder { color: #d1d5db; }
+
+  textarea.npos-input {
+    height: auto;
+    min-height: 72px;
+    padding: 8px 10px;
+    resize: vertical;
+    line-height: 1.5;
+  }
+
+  select.npos-input {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%236b7280'%3E%3Cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z' clip-rule='evenodd'/%3E%3C/svg%3E");
+    background-position: right 8px center;
+    background-repeat: no-repeat;
+    background-size: 16px;
+    padding-right: 32px;
+  }
+
+  .npos-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 5px;
+  }
+
+  /* ── Paper Size Selector ─────────────────────────────────────── */
+  .paper-option {
+    flex: 1;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 10px 8px;
+    cursor: pointer;
+    text-align: center;
+    transition: border-color 0.15s, background 0.15s;
+    user-select: none;
+  }
+  .paper-option.active {
+    border-color: #4F6EF7;
+    background: #eef1fe;
+  }
+  .paper-option svg { color: #9ca3af; margin-bottom: 4px; }
+  .paper-option.active svg { color: #4F6EF7; }
+  .paper-option-label { font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 2px; }
+  .paper-option-sub { font-size: 10px; color: #9ca3af; }
+
+  /* ── Visibility Toggles Grid ─────────────────────────────────── */
+  .vis-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 12px;
+    border-radius: 8px;
+    background: #f9fafb;
+    border: 1px solid #f3f4f6;
+    transition: border-color 0.12s, background 0.12s;
+  }
+  .vis-item:hover { background: #f3f4f6; border-color: #e5e7eb; }
+  .vis-label { font-size: 12.5px; font-weight: 500; color: #374151; }
+
+  /* ── Preview Panel ───────────────────────────────────────────── */
+  .preview-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .preview-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .preview-tool-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s;
+    color: #6b7280;
+  }
+  .preview-tool-btn:hover { background: #f9fafb; border-color: #d1d5db; color: #374151; }
+  .preview-tool-btn svg { width: 13px; height: 13px; }
+
+  .preview-chrome {
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    overflow: hidden;
+  }
+  .preview-chrome-bar {
+    background: #f9fafb;
+    border-bottom: 1px solid #f3f4f6;
+    padding: 8px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .preview-dots { display: flex; gap: 4px; }
+  .preview-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+  }
+  .preview-paper-badge {
+    font-size: 9px;
+    font-family: 'Courier New', monospace;
+    font-weight: 700;
+    color: #9ca3af;
+    background: #f3f4f6;
+    padding: 2px 7px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .preview-scroll-body {
+    max-height: 78vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  /* ── Toast Notifications ──────────────────────────────────────── */
+  @keyframes toast-slide-up {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .toast-enter { animation: toast-slide-up 0.22s ease-out; }
+
+  /* ── Section divider ─────────────────────────────────────────── */
+  .section-grid { display: grid; gap: 16px; }
+  .section-grid-2 { grid-template-columns: 1fr 1fr; }
+  .section-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+  @media (max-width: 640px) {
+    .section-grid-2, .section-grid-3 { grid-template-columns: 1fr; }
+  }
+
+  /* ── File Upload ─────────────────────────────────────────────── */
+  .file-upload-zone {
+    border: 2px dashed #d1d5db;
+    border-radius: 8px;
+    padding: 14px 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .file-upload-zone:hover { border-color: #4F6EF7; background: #eef1fe; }
+  .file-upload-zone input[type=file] { display: none; }
+</style>
+{% endblock %}
+
+{% block page_title %}Invoice Configuration{% endblock %}
+{% block page_subtitle %}
+  <p class="text-sm text-neutral-500 mt-0.5">Customize your restaurant receipts — every change updates the preview instantly.</p>
+{% endblock %}
+
+{% block primary_action %}
+<div class="flex items-center gap-2"
+     x-data="{ saving: false, printing: false, isDirty: false }"
+     @save-state.window="saving = $event.detail"
+     @print-state.window="printing = $event.detail"
+     @dirty-state.window="isDirty = $event.detail">
+  {# Test Print Button #}
+  <button type="button" id="btn-test-print"
+          class="inline-flex items-center gap-2 h-9 px-4 text-sm font-medium
+                 border border-neutral-200 rounded-lg text-neutral-600
+                 bg-white hover:bg-neutral-50 hover:border-neutral-300
+                 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          @click="$dispatch('request-print')"
+          :disabled="printing">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+    </svg>
+    <span class="hidden sm:inline" x-text="printing ? 'Printing…' : 'Test Print'">Test Print</span>
+  </button>
+
+  {# Save Changes Button #}
+  <button type="button" id="btn-save-config"
+          class="inline-flex items-center gap-2 h-9 px-5 text-sm font-semibold
+                 rounded-lg text-white bg-brand-default hover:bg-brand-hover
+                 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+          @click="$dispatch('request-save')"
+          :disabled="saving || !isDirty">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+    </svg>
+    <span class="hidden sm:inline" x-text="saving ? 'Saving…' : (isDirty ? 'Save Changes *' : 'Saved')">Save Changes</span>
+  </button>
+</div>
+{% endblock %}
+
+{% block workspace %}
+{# ─── Alpine.js Root Component ─────────────────────────────────────────────── #}
+<div class="grid grid-cols-1 xl:grid-cols-5 gap-6 px-6 pb-12"
+     x-data="invoiceConfig()"
+     x-init="init()"
+     @request-save.window="saveConfig()"
+     @request-print.window="testPrint()">
+
+  {# ================================================================ #}
+  {# LEFT COLUMN: CONFIGURATION FORM                                  #}
+  {# ================================================================ #}
+  <div class="xl:col-span-3">
+    <form id="invoice-config-form"
+          method="POST"
+          enctype="multipart/form-data"
+          action="{% if 'tenant_id' in request.resolver_match.kwargs %}{% url 'ordering:invoice_config_save_tenant' tenant_id=request.resolver_match.kwargs.tenant_id %}{% else %}{% url 'ordering:invoice_config_save' %}{% endif %}"
+          class="space-y-6"
+          @input="isDirty = true"
+          @change="isDirty = true">
+      {% csrf_token %}
+
+      {# ── SECTION 1: BUSINESS DETAILS ─────────────────────────────── #}
+      <div class="cfg-card">
+        <div class="cfg-card-header">
+          <div class="cfg-card-icon">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+            </svg>
+          </div>
+          <div>
+            <div class="cfg-card-title">Business Details</div>
+            <div class="cfg-card-subtitle">Information displayed at the top of every receipt</div>
+          </div>
+        </div>
+        <div class="cfg-card-body">
+          <div class="section-grid section-grid-2">
+
+            {# Restaurant Name #}
+            <div>
+              <label class="npos-label" for="id_restaurant_name">
+                Restaurant Name
+                <span class="text-red-400 ml-0.5">*</span>
+              </label>
+              <input class="npos-input" type="text" id="id_restaurant_name" name="restaurant_name"
+                     placeholder="e.g. Manasa Restaurant"
+                     x-model="config.restaurant_name"
+                     @input="syncField('restaurant_name', $event.target.value); fieldErrors.restaurant_name = ''"
+                     @blur="if (!config.restaurant_name.trim()) fieldErrors.restaurant_name = 'Restaurant name is required.'"
+                     :class="fieldErrors.restaurant_name ? 'border-red-400 focus:border-red-400' : ''"
+                     value="{{ config_instance.restaurant_name|default:'' }}">
+              <p class="text-[11px] text-red-500 mt-1" x-show="fieldErrors.restaurant_name"
+                 x-text="fieldErrors.restaurant_name" x-cloak></p>
+            </div>
+
+            {# Receipt Header #}
+            <div>
+              <label class="npos-label" for="id_receipt_header">Receipt Header</label>
+              <input class="npos-input" type="text" id="id_receipt_header" name="receipt_header"
+                     placeholder="e.g. TAX INVOICE"
+                     x-model="config.receipt_header"
+                     @input="syncField('receipt_header', $event.target.value)"
+                     value="{{ config_instance.receipt_header|default:'' }}">
+            </div>
+
+            {# Address — full width #}
+            <div style="grid-column: 1 / -1;">
+              <label class="npos-label" for="id_address">Address</label>
+              <textarea class="npos-input" id="id_address" name="address"
+                        placeholder="Full restaurant address"
+                        rows="3"
+                        x-model="config.address"
+                        @input="syncField('address', $event.target.value)">{{ config_instance.address|default:'' }}</textarea>
+            </div>
+
+            {# GSTIN #}
+            <div>
+              <label class="npos-label" for="id_gstin">GSTIN</label>
+              <input class="npos-input" type="text" id="id_gstin" name="gstin"
+                     placeholder="e.g. 29ABCDE1234F1Z5"
+                     x-model="config.gstin"
+                     maxlength="15"
+                     @input="config.gstin = $event.target.value.toUpperCase(); syncField('gstin', config.gstin); fieldErrors.gstin = ''"
+                     @blur="validateGstin(config.gstin)"
+                     :class="fieldErrors.gstin ? 'border-red-400 focus:border-red-400' : (config.gstin && config.gstin.length === 15 ? 'border-green-400' : '')"
+                     value="{{ config_instance.gstin|default:'' }}">
+              <p class="text-[11px] mt-1"
+                 :class="fieldErrors.gstin ? 'text-red-500' : 'text-neutral-400'"
+                 x-show="fieldErrors.gstin || config.gstin"
+                 x-text="fieldErrors.gstin || (config.gstin && config.gstin.length > 0 && config.gstin.length < 15 ? config.gstin.length + '/15 characters' : '')"
+                 x-cloak></p>
+            </div>
+
+            {# FSSAI #}
+            <div>
+              <label class="npos-label" for="id_fssai">FSSAI License</label>
+              <input class="npos-input" type="text" id="id_fssai" name="fssai"
+                     placeholder="14-digit FSSAI number"
+                     x-model="config.fssai"
+                     @input="syncField('fssai', $event.target.value)"
+                     value="{{ config_instance.fssai|default:'' }}">
+            </div>
+
+            {# Phone #}
+            <div>
+              <label class="npos-label" for="id_phone">Phone</label>
+              <input class="npos-input" type="tel" id="id_phone" name="phone"
+                     placeholder="+91 98765 43210"
+                     x-model="config.phone"
+                     @input="syncField('phone', $event.target.value); fieldErrors.phone = ''"
+                     @blur="validatePhone(config.phone)"
+                     :class="fieldErrors.phone ? 'border-red-400 focus:border-red-400' : ''"
+                     value="{{ config_instance.phone|default:'' }}">
+              <p class="text-[11px] text-red-500 mt-1" x-show="fieldErrors.phone"
+                 x-text="fieldErrors.phone" x-cloak></p>
+            </div>
+
+            {# Email #}
+            <div>
+              <label class="npos-label" for="id_email">Email</label>
+              <input class="npos-input" type="email" id="id_email" name="email"
+                     placeholder="info@restaurant.com"
+                     x-model="config.email"
+                     @input="syncField('email', $event.target.value); fieldErrors.email = ''"
+                     @blur="validateEmail(config.email)"
+                     :class="fieldErrors.email ? 'border-red-400 focus:border-red-400' : ''"
+                     value="{{ config_instance.email|default:'' }}">
+              <p class="text-[11px] text-red-500 mt-1" x-show="fieldErrors.email"
+                 x-text="fieldErrors.email" x-cloak></p>
+            </div>
+
+            {# Website — full width #}
+            <div style="grid-column: 1 / -1;">
+              <label class="npos-label" for="id_website">Website</label>
+              <input class="npos-input" type="url" id="id_website" name="website"
+                     placeholder="https://www.restaurant.com"
+                     x-model="config.website"
+                     @input="syncField('website', $event.target.value)"
+                     value="{{ config_instance.website|default:'' }}">
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      {# ── SECTION 2: RECEIPT APPEARANCE ───────────────────────────── #}
+      <div class="cfg-card">
+        <div class="cfg-card-header">
+          <div class="cfg-card-icon">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+          </div>
+          <div>
+            <div class="cfg-card-title">Receipt Appearance</div>
+            <div class="cfg-card-subtitle">Paper size, logo, header/footer text, and display preferences</div>
+          </div>
+        </div>
+        <div class="cfg-card-body">
+          <div class="space-y-5">
+
+            {# Paper Size — Visual Selector #}
+            <div>
+              <label class="npos-label">Paper Size</label>
+              {# Hidden input that Alpine syncs #}
+              <input type="hidden" name="paper_size" :value="config.paper_size">
+              <div class="flex gap-3 mt-1">
+                <div class="paper-option"
+                     :class="config.paper_size === '58mm' ? 'active' : ''"
+                     @click="setPaperSize('58mm')">
+                  <svg style="width:20px;height:20px;display:block;margin:0 auto 4px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                  </svg>
+                  <div class="paper-option-label">58mm</div>
+                  <div class="paper-option-sub">Compact</div>
+                </div>
+                <div class="paper-option"
+                     :class="config.paper_size === '80mm' ? 'active' : ''"
+                     @click="setPaperSize('80mm')">
+                  <svg style="width:24px;height:24px;display:block;margin:0 auto 4px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                  </svg>
+                  <div class="paper-option-label">80mm</div>
+                  <div class="paper-option-sub">Standard</div>
+                </div>
+              </div>
+            </div>
+
+            {# Logo Upload + Toggle #}
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <label class="npos-label" style="margin-bottom:0;">Restaurant Logo</label>
+                <label class="flex items-center gap-2 cursor-pointer select-none">
+                  <span class="text-xs text-neutral-500">Show on receipt</span>
+                  <div class="npos-toggle">
+                    <input type="checkbox" id="id_show_logo" name="show_logo"
+                           :checked="config.show_logo"
+                           @change="syncBool('show_logo', $event.target.checked)"
+                           {% if config_instance.show_logo %}checked{% endif %}>
+                    <span class="track"></span>
+                  </div>
+                </label>
+              </div>
+              {# Hidden file input — triggered by clicking the upload zone #}
+              <input type="file" id="logo-file-input" name="logo" accept="image/png,image/jpeg,image/jpg,image/webp"
+                     x-ref="logoInput" style="display:none;"
+                     @change="handleLogoUpload($event)">
+              {# Upload zone — shows current logo or placeholder #}
+              <div class="file-upload-zone"
+                   :class="uploadingLogo ? 'opacity-60 pointer-events-none' : ''"
+                   @click="!uploadingLogo && $refs.logoInput.click()"
+                   role="button" tabindex="0" aria-label="Upload restaurant logo">
+                {# Uploading spinner #}
+                <div x-show="uploadingLogo" x-cloak style="padding:8px 0;">
+                  <svg class="animate-spin w-5 h-5 mx-auto text-brand-default" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                  </svg>
+                  <p class="text-xs text-neutral-500 mt-1">Uploading logo…</p>
+                </div>
+                {# Logo preview or placeholder #}
+                <div x-show="!uploadingLogo" x-cloak>
+                  <template x-if="config.logo_url">
+                    <div class="flex items-center justify-center gap-3">
+                      <img :src="config.logo_url" alt="Logo"
+                           class="w-12 h-12 object-contain rounded border border-neutral-200"
+                           @error="config.logo_url = ''">
+                      <div class="text-left">
+                        <p class="text-xs font-medium text-neutral-700">Logo uploaded</p>
+                        <p class="text-[10px] text-neutral-400 mt-0.5">Click to change</p>
+                      </div>
+                    </div>
+                  </template>
+                  <template x-if="!config.logo_url">
+                    <div>
+                      <svg class="w-6 h-6 mx-auto text-neutral-300 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                      </svg>
+                      <p class="text-xs text-neutral-500">Click to upload logo</p>
+                      <p class="text-[10px] text-neutral-400 mt-0.5">PNG, JPG, WEBP · Max 2MB · 200×200px recommended</p>
+                    </div>
+                  </template>
+                </div>
+              </div>
+              {# Upload error message #}
+              <p class="text-[11px] text-red-500 mt-1.5"
+                 x-show="logoError" x-text="logoError" x-cloak></p>
+            </div>
+
+            {# Custom Header Text #}
+            <div>
+              <label class="npos-label" for="id_custom_header_text">Custom Header Text</label>
+              <textarea class="npos-input" id="id_custom_header_text" name="custom_header_text"
+                        placeholder="e.g. Home Delivery: +91 98765 43210"
+                        rows="2"
+                        x-model="config.custom_header_text"
+                        @input="syncField('custom_header_text', $event.target.value)">{{ config_instance.custom_header_text|default:'' }}</textarea>
+              <p class="text-[10px] text-neutral-400 mt-1">Appears between business info and line items.</p>
+            </div>
+
+            {# Custom Footer Text #}
+            <div>
+              <label class="npos-label" for="id_custom_footer_text">Custom Footer Text</label>
+              <textarea class="npos-input" id="id_custom_footer_text" name="custom_footer_text"
+                        placeholder="e.g. Prices include applicable taxes"
+                        rows="2"
+                        x-model="config.custom_footer_text"
+                        @input="syncField('custom_footer_text', $event.target.value)">{{ config_instance.custom_footer_text|default:'' }}</textarea>
+            </div>
+
+            {# Thank You Message + Tax Inclusive Message #}
+            <div class="section-grid section-grid-2">
+              <div>
+                <label class="npos-label" for="id_thank_you_message">Thank-you Message</label>
+                <input class="npos-input" type="text" id="id_thank_you_message" name="thank_you_message"
+                       placeholder="Thank you for your visit!"
+                       x-model="config.thank_you_message"
+                       @input="syncField('thank_you_message', $event.target.value)"
+                       value="{{ config_instance.thank_you_message|default:'Thank you for your visit!' }}">
+              </div>
+              <div>
+                <label class="npos-label" for="id_tax_inclusive_message">Tax-Inclusive Note</label>
+                <input class="npos-input" type="text" id="id_tax_inclusive_message" name="tax_inclusive_message"
+                       placeholder="All prices include GST"
+                       x-model="config.tax_inclusive_message"
+                       @input="syncField('tax_inclusive_message', $event.target.value)"
+                       value="{{ config_instance.tax_inclusive_message|default:'' }}">
+              </div>
+            </div>
+
+            {# Terms / Notes #}
+            <div>
+              <label class="npos-label" for="id_terms_notes">Terms / Notes</label>
+              <textarea class="npos-input" id="id_terms_notes" name="terms_notes"
+                        placeholder="No returns after 24 hours. Subject to Nizamabad jurisdiction."
+                        rows="2"
+                        x-model="config.terms_notes"
+                        @input="syncField('terms_notes', $event.target.value)">{{ config_instance.terms_notes|default:'' }}</textarea>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      {# ── SECTION 3: FIELD VISIBILITY ─────────────────────────────── #}
+      <div class="cfg-card">
+        <div class="cfg-card-header">
+          <div class="cfg-card-icon">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+            </svg>
+          </div>
+          <div>
+            <div class="cfg-card-title">Field Visibility</div>
+            <div class="cfg-card-subtitle">Toggle which fields appear on printed receipts</div>
+          </div>
+        </div>
+        <div class="cfg-card-body">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+
+            {% with vis_fields=form %}
+            {% for field in vis_fields %}
+              {% if field.name|slice:":5" == "show_" and field.name != "show_logo" %}
+              <label class="vis-item cursor-pointer">
+                <span class="vis-label">{{ field.label }}</span>
+                <div class="npos-toggle">
+                  <input type="checkbox"
+                         name="{{ field.html_name }}"
+                         x-model="config.{{ field.html_name }}">
+                  <span class="track"></span>
+                </div>
+              </label>
+              {% endif %}
+            {% endfor %}
+            {% endwith %}
+
+          </div>
+        </div>
+      </div>
+
+      {# ── SECTION 4: NUMBER & DATE FORMATTING ─────────────────────── #}
+      <div class="cfg-card">
+        <div class="cfg-card-header">
+          <div class="cfg-card-icon">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+            </svg>
+          </div>
+          <div>
+            <div class="cfg-card-title">Number &amp; Date Formatting</div>
+            <div class="cfg-card-subtitle">Currency symbol, date format, and time format</div>
+          </div>
+        </div>
+        <div class="cfg-card-body">
+          <div class="section-grid section-grid-3">
+
+            {# Currency Symbol #}
+            <div>
+              <label class="npos-label" for="id_currency_symbol">Currency</label>
+              <select class="npos-input" id="id_currency_symbol" name="currency_symbol"
+                      x-model="config.currency_symbol"
+                      @change="syncField('currency_symbol', $event.target.value)">
+                <option value="₹" {% if config_instance.currency_symbol == '₹' %}selected{% endif %}>₹ (INR)</option>
+                <option value="$" {% if config_instance.currency_symbol == '$' %}selected{% endif %}>$ (USD)</option>
+                <option value="€" {% if config_instance.currency_symbol == '€' %}selected{% endif %}>€ (EUR)</option>
+                <option value="£" {% if config_instance.currency_symbol == '£' %}selected{% endif %}>£ (GBP)</option>
+              </select>
+            </div>
+
+            {# Date Format #}
+            <div>
+              <label class="npos-label" for="id_date_format">Date Format</label>
+              <select class="npos-input" id="id_date_format" name="date_format"
+                      x-model="config.date_format"
+                      @change="syncField('date_format', $event.target.value)">
+                <option value="d/m/Y"  {% if config_instance.date_format == 'd/m/Y'  %}selected{% endif %}>DD/MM/YYYY</option>
+                <option value="d M Y"  {% if config_instance.date_format == 'd M Y'  %}selected{% endif %}>DD Mon YYYY</option>
+                <option value="Y-m-d"  {% if config_instance.date_format == 'Y-m-d'  %}selected{% endif %}>YYYY-MM-DD</option>
+                <option value="m/d/Y"  {% if config_instance.date_format == 'm/d/Y'  %}selected{% endif %}>MM/DD/YYYY</option>
+              </select>
+            </div>
+
+            {# Time Format #}
+            <div>
+              <label class="npos-label" for="id_time_format">Time Format</label>
+              <select class="npos-input" id="id_time_format" name="time_format"
+                      x-model="config.time_format"
+                      @change="syncField('time_format', $event.target.value)">
+                <option value="H:i"   {% if config_instance.time_format == 'H:i'   %}selected{% endif %}>24-hour (14:30)</option>
+                <option value="h:i A" {% if config_instance.time_format == 'h:i A' %}selected{% endif %}>12-hour (02:30 PM)</option>
+              </select>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </form>
+  </div>
+
+  {# ================================================================ #}
+  {# RIGHT COLUMN: LIVE RECEIPT PREVIEW                                #}
+  {# ================================================================ #}
+  <div class="xl:col-span-2">
+    <div class="sticky top-6">
+
+      {# Preview Header #}
+      <div class="preview-panel-header">
+        <div>
+          <h3 class="text-sm font-semibold text-neutral-900">Receipt Preview</h3>
+          <p class="text-[11px] text-neutral-400 mt-0.5">Updates in real-time · Demo transaction data</p>
+        </div>
+        <div class="preview-toolbar">
+
+          {# Zoom Out #}
+          <button class="preview-tool-btn" @click="zoomOut()" title="Zoom out (−10%)"
+                  :disabled="previewZoom <= 0.5" :class="previewZoom <= 0.5 ? 'opacity-40 cursor-not-allowed' : ''">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"/>
+            </svg>
+          </button>
+
+          {# Reset Zoom #}
+          <button class="preview-tool-btn" @click="resetZoom()" title="Reset zoom (100%)"
+                  :class="previewZoom === 1 ? 'opacity-40 cursor-not-allowed' : 'text-brand-default border-brand-default/30 bg-brand-default/5 hover:bg-brand-default/10'"
+                  :disabled="previewZoom === 1">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
+            </svg>
+          </button>
+
+          {# Zoom In #}
+          <button class="preview-tool-btn" @click="zoomIn()" title="Zoom in (+10%)"
+                  :disabled="previewZoom >= 1.6" :class="previewZoom >= 1.6 ? 'opacity-40 cursor-not-allowed' : ''">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/>
+            </svg>
+          </button>
+
+          {# Dark mode toggle #}
+          <button class="preview-tool-btn"
+                  @click="togglePreviewBackground()"
+                  :title="darkPreview ? 'Light background' : 'Dark background'">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+            </svg>
+          </button>
+
+          {# Reset to saved #}
+          <button class="preview-tool-btn"
+                  @click="reloadFromServer()"
+                  title="Reload saved settings">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+          </button>
+
+        </div>
+      </div>
+
+      {# Preview Chrome Panel #}
+      <div class="preview-chrome">
+        {# Chrome Bar #}
+        <div class="preview-chrome-bar">
+          <div class="preview-dots">
+            <span class="preview-dot bg-red-400"></span>
+            <span class="preview-dot bg-yellow-400"></span>
+            <span class="preview-dot bg-green-400"></span>
+          </div>
+          <span class="preview-paper-badge" x-text="(config.paper_size || '80mm') + ' paper'">80mm paper</span>
+        </div>
+
+        {# Scrollable Preview Body #}
+        <div class="preview-scroll-body"
+             :style="darkPreview ? 'background:#1a1a2e;' : ''">
+          {% include "ordering/partials/invoice_config_preview.html" %}
+        </div>
+      </div>
+
+      {# Preview Actions #}
+      <div class="flex gap-3 mt-4">
+        <button type="button"
+                class="flex-1 h-9 text-xs font-semibold border border-neutral-200 rounded-lg
+                       text-neutral-600 hover:bg-neutral-50 hover:border-neutral-300
+                       transition-colors flex items-center justify-center gap-1.5"
+                @click="togglePreviewBackground()">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+          </svg>
+          <span x-text="darkPreview ? 'Light Mode' : 'Dark Mode'">Dark Mode</span>
+        </button>
+
+        <button type="button"
+                class="flex-1 h-9 text-xs font-semibold border border-neutral-200 rounded-lg
+                       text-neutral-600 hover:bg-red-50 hover:border-red-200 hover:text-red-600
+                       transition-colors flex items-center justify-center gap-1.5"
+                @click="resetToDefaults()">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+          <span>Reset to Defaults</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+</div>{# /grid #}
+
+{# Toast container #}
+<div id="toast-container" class="fixed top-4 right-4 z-[9999] space-y-2 pointer-events-none"></div>
+{% endblock %}
+
+{% block scripts %}
+{{ config_json|json_script:"cfg-data" }}
+{{ preview_json|json_script:"prev-data" }}
+
+<script>
+function invoiceConfig() {
+  return {
+    // ─── State ─────────────────────────────────────────────────────
+    config: {},
+    previewData: {},
+    isDirty: false,
+    saving: false,
+    printing: false,
+    darkPreview: false,
+    previewZoom: 1,
+    uploadingLogo: false,
+    logoError: '',
+    fieldErrors: {},
+
+    // ─── Initialization ─────────────────────────────────────────────
+    init() {
+      // Broadcast state to the isolated header buttons
+      this.$watch('saving', val => window.dispatchEvent(new CustomEvent('save-state', {detail: val})));
+      this.$watch('printing', val => window.dispatchEvent(new CustomEvent('print-state', {detail: val})));
+      this.$watch('isDirty', val => window.dispatchEvent(new CustomEvent('dirty-state', {detail: val})));
+
+      try {
+        const cfgEl = document.getElementById('cfg-data');
+        if (cfgEl) this.config = JSON.parse(cfgEl.textContent) || {};
+      } catch(e) { console.warn('[InvoiceConfig] Config parse error', e); }
+
+      try {
+        const prevEl = document.getElementById('prev-data');
+        if (prevEl) this.previewData = JSON.parse(prevEl.textContent) || {};
+      } catch(e) { console.warn('[InvoiceConfig] Preview data parse error', e); }
+
+      // Ensure defaults for all config fields
+      const defaults = {
+        restaurant_name: '',
+        receipt_header: 'TAX INVOICE',
+        address: '',
+        gstin: '',
+        fssai: '',
+        phone: '',
+        email: '',
+        website: '',
+        paper_size: '80mm',
+        show_logo: true,
+        custom_header_text: '',
+        custom_footer_text: '',
+        thank_you_message: 'Thank you for your visit!',
+        tax_inclusive_message: '',
+        terms_notes: '',
+        show_customer_name: true,
+        show_table_number: true,
+        show_cashier_name: true,
+        show_order_type: true,
+        show_gst_breakdown: true,
+        show_discount: true,
+        show_payment_method: true,
+        show_order_number: true,
+        show_invoice_number: true,
+        show_qr_code: false,
+        show_fssai: false,
+        show_gstin: true,
+        show_service_charge: true,
+        show_item_hsn: false,
+        show_item_discount: true,
+        currency_symbol: '₹',
+        date_format: 'd M Y',
+        time_format: 'H:i',
+      };
+      this.config = Object.assign({}, defaults, this.config);
+
+      // Fallback preview data
+      if (!this.previewData || !this.previewData.items || !this.previewData.items.length) {
+        this.previewData = {
+          invoice_number: 'INV-250714-0001',
+          order_number: 'ORD-250714-0001',
+          table_number: 'T7',
+          customer_name: 'Rahul Sharma',
+          cashier_name: 'Asha Singh',
+          order_type: 'DINE-IN',
+          date: '14 Jul 2026',
+          time: '14:30',
+          items: [
+            { name: 'Mutton Biryani', qty: '2', unit_price: '250.00', line_discount: '0.00', line_total: '500.00', hsn_code: '2106', modifiers: [], notes: '' },
+            { name: 'Paneer Butter Masala', qty: '1', unit_price: '350.00', line_discount: '0.00', line_total: '390.00', hsn_code: '2106', modifiers: [{ name: 'Extra Cheese', price_delta: '40.00' }], notes: 'Less spicy' },
+            { name: 'Garlic Naan', qty: '3', unit_price: '70.00', line_discount: '50.00', line_total: '160.00', hsn_code: '1905', modifiers: [], notes: '' },
+          ],
+          subtotal: '890.00',
+          discount_amount: '50.00',
+          service_charge_amount: '44.50',
+          taxable_amount: '884.50',
+          cgst: '22.11',
+          sgst: '22.11',
+          igst: '0.00',
+          cess: '0.00',
+          tax_amount: '44.22',
+          round_off: '0.28',
+          total: '979.00',
+          payment_method: 'CASH',
+          amount_paid: '1000.00',
+          change_returned: '21.00',
+          payment_status: 'PAID',
+        };
+      }
+    },
+
+    // ─── Reactive Field Sync ─────────────────────────────────────────
+    // Called by @input on text fields — updates Alpine state immediately
+    syncField(field, value) {
+      this.config[field] = value;
+    },
+
+    // Called by @change on checkboxes
+    syncBool(field, checked) {
+      this.config[field] = checked;
+    },
+
+    // Paper size: update config and hidden input
+    setPaperSize(size) {
+      this.config.paper_size = size;
+    },
+
+    // ─── Helpers ─────────────────────────────────────────────────────
+    getCurrency() {
+      return this.config.currency_symbol || '₹';
+    },
+
+    // ─── Save Configuration (AJAX) ───────────────────────────────────
+    saveConfig() {
+      if (!this._validateBeforeSave()) {
+        this.showToast('error', 'Please fix the errors before saving.');
+        return;
+      }
+      this.saving = true;
+      const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+      fetch(document.getElementById('invoice-config-form').action, {
+        method: 'POST',
+        body: JSON.stringify(this.config),
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRFToken': csrfToken
+        },
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          this.isDirty = false;
+          this.showToast('success', '✓ Invoice configuration saved successfully!');
+          if (data.config) Object.assign(this.config, data.config);
+        } else {
+          const errs = data.errors
+            ? Object.values(data.errors).flat().join(' · ')
+            : (data.error || 'Save failed.');
+          this.showToast('error', errs);
+        }
+      })
+      .catch(() => this.showToast('error', 'Network error — please try again.'))
+      .finally(() => { this.saving = false; });
+    },
+
+    // ─── Test Print (AJAX) ───────────────────────────────────────────
+    testPrint() {
+      this.printing = true;
+      const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+      const testPrintUrl = "{% if 'tenant_id' in request.resolver_match.kwargs %}{% url 'ordering:invoice_config_test_print_tenant' tenant_id=request.resolver_match.kwargs.tenant_id %}{% else %}{% url 'ordering:invoice_config_test_print' %}{% endif %}";
+      fetch(testPrintUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrfToken,
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+        body: JSON.stringify({ config: this.config }),
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          this.showToast('success', '🖨 Test receipt sent to printer!');
+        } else {
+          this.showToast('error', data.error || 'Print failed — check printer settings.');
+        }
+      })
+      .catch(() => this.showToast('error', 'Print Service unavailable at port 8989.'))
+      .finally(() => { this.printing = false; });
+    },
+
+    // ─── Reset to Defaults ───────────────────────────────────────────
+    resetToDefaults() {
+      if (!confirm('Reset all invoice configuration to factory defaults?\n\nThis cannot be undone.')) return;
+      const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+      fetch('{% url "ordering:invoice_config_reset" %}', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': csrfToken,
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success && data.config) {
+          Object.assign(this.config, data.config);
+          // Sync form inputs to reflect new defaults
+          this._syncFormFromConfig();
+          this.isDirty = false;
+          this.showToast('success', 'Reset to factory defaults.');
+        } else {
+          this.showToast('error', 'Reset failed.');
+        }
+      })
+      .catch(() => this.showToast('error', 'Reset failed.'));
+    },
+
+    // Reload from server (discards unsaved changes)
+    reloadFromServer() {
+      window.location.reload();
+    },
+
+    // Sync visible form inputs from config state after reset
+    _syncFormFromConfig() {
+      const textFields = ['restaurant_name','receipt_header','address','gstin','fssai',
+                          'phone','email','website','custom_header_text','custom_footer_text',
+                          'thank_you_message','tax_inclusive_message','terms_notes',
+                          'currency_symbol','date_format','time_format'];
+      textFields.forEach(name => {
+        const el = document.querySelector(`[name="${name}"]`);
+        if (el) el.value = this.config[name] || '';
+      });
+    },
+
+    // ─── Logo Upload Handler ─────────────────────────────────────────
+    // Immediately POSTs the logo to the save endpoint so it persists
+    // and shows a live local preview in the receipt viewer.
+    handleLogoUpload(event) {
+      const file = event.target.files[0];
+      this.logoError = '';
+      if (!file) return;
+
+      // Client-side validation
+      const allowed = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+      if (!allowed.includes(file.type)) {
+        this.logoError = 'Invalid file type. Use PNG, JPG, or WEBP.';
+        event.target.value = '';
+        return;
+      }
+      if (file.size > 2 * 1024 * 1024) {
+        this.logoError = 'File too large. Maximum size is 2 MB.';
+        event.target.value = '';
+        return;
+      }
+
+      // Show instant local preview via FileReader (no network call yet)
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this._pendingLogoDataUrl = e.target.result;
+        // Show in preview immediately (will be replaced by server URL after save)
+        this.config.logo_url = e.target.result;
+      };
+      reader.readAsDataURL(file);
+
+      // Upload to server immediately so it persists
+      this.uploadingLogo = true;
+      const form = document.getElementById('invoice-config-form');
+      const formData = new FormData(form);
+      // Ensure the selected file is included (it's already in the form via the ref)
+      // but re-append explicitly to be safe:
+      formData.set('logo', file);
+
+      const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+      fetch(form.action, {
+        method: 'POST',
+        body: formData,
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          // Replace local blob URL with real server URL
+          if (data.config && data.config.logo_url) {
+            this.config.logo_url = data.config.logo_url;
+          }
+          this._pendingLogoDataUrl = null;
+          this.showToast('success', '✓ Logo uploaded and saved!');
+        } else {
+          // Revert preview if server rejected it
+          this.config.logo_url = '';
+          this._pendingLogoDataUrl = null;
+          const msg = data.errors && data.errors.logo
+            ? data.errors.logo[0]
+            : (data.error || 'Logo upload failed.');
+          this.logoError = msg;
+          this.showToast('error', msg);
+        }
+      })
+      .catch(() => {
+        this.logoError = 'Network error — logo not saved. Try again.';
+        this.showToast('error', 'Network error during logo upload.');
+        this.config.logo_url = '';
+      })
+      .finally(() => {
+        this.uploadingLogo = false;
+        event.target.value = ''; // reset input so same file can be re-selected
+      });
+    },
+
+    // ─── Validation Helpers ─────────────────────────────────────────
+    validateGstin(val) {
+      if (!val) { this.fieldErrors.gstin = ''; return true; }
+      const gstPattern = /^\d{2}[A-Z]{5}\d{4}[A-Z]\d[Z][A-Z\d]$/;
+      if (!gstPattern.test(val)) {
+        this.fieldErrors.gstin = 'Invalid GSTIN. Format: 29ABCDE1234F1Z5 (15 characters)';
+        return false;
+      }
+      this.fieldErrors.gstin = '';
+      return true;
+    },
+
+    validatePhone(val) {
+      if (!val) { this.fieldErrors.phone = ''; return true; }
+      // Accept digits, spaces, +, -, (, ) — at least 7 chars
+      const phonePattern = /^[\d\s+\-().]{7,20}$/;
+      if (!phonePattern.test(val)) {
+        this.fieldErrors.phone = 'Enter a valid phone number.';
+        return false;
+      }
+      this.fieldErrors.phone = '';
+      return true;
+    },
+
+    validateEmail(val) {
+      if (!val) { this.fieldErrors.email = ''; return true; }
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailPattern.test(val)) {
+        this.fieldErrors.email = 'Enter a valid email address.';
+        return false;
+      }
+      this.fieldErrors.email = '';
+      return true;
+    },
+
+    // Front-end save validation gate
+    _validateBeforeSave() {
+      let ok = true;
+      if (!this.config.restaurant_name || !this.config.restaurant_name.trim()) {
+        this.fieldErrors.restaurant_name = 'Restaurant name is required.';
+        ok = false;
+      }
+      if (this.config.gstin) ok = this.validateGstin(this.config.gstin) && ok;
+      if (this.config.phone) ok = this.validatePhone(this.config.phone) && ok;
+      if (this.config.email) ok = this.validateEmail(this.config.email) && ok;
+      return ok;
+    },
+
+    // ─── Preview Controls ────────────────────────────────────────
+    togglePreviewBackground() {
+      this.darkPreview = !this.darkPreview;
+    },
+
+    zoomIn() {
+      if (this.previewZoom < 1.6)
+        this.previewZoom = Math.round((this.previewZoom + 0.1) * 10) / 10;
+    },
+
+    zoomOut() {
+      this.previewZoom = Math.max(0.5, (this.previewZoom || 1) - 0.1);
+    },
+
+    // ─── Toast Notifications ─────────────────────────────────────────
+    showToast(type, message) {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+
+      const isSuccess = type === 'success';
+      const bg = isSuccess
+        ? 'background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;'
+        : 'background:#fef2f2;border:1px solid #fecaca;color:#991b1b;';
+      const icon = isSuccess
+        ? '<svg style="width:16px;height:16px;flex-shrink:0;color:#22c55e;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>'
+        : '<svg style="width:16px;height:16px;flex-shrink:0;color:#ef4444;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>';
+
+      const toast = document.createElement('div');
+      toast.style.cssText = `
+        display:flex;align-items:center;gap:10px;padding:12px 16px;
+        border-radius:10px;${bg}
+        box-shadow:0 4px 12px rgba(0,0,0,0.1);min-width:300px;max-width:420px;
+        pointer-events:all;
+      `;
+      toast.className = 'toast-enter';
+      toast.innerHTML = `${icon}<span style="font-size:13px;font-weight:500;line-height:1.4;">${message}</span>`;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-6px)';
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    },
+  };
+}
+</script>
+{% endblock %}

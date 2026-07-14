@@ -29,7 +29,6 @@ def _locked(order_id: uuid.UUID) -> Order:
 
 def create_order(
     *,
-    location_id: uuid.UUID,
     order_type: str,
     table_id: uuid.UUID | None = None,
     is_interstate: bool = False,
@@ -37,9 +36,8 @@ def create_order(
     created_by: uuid.UUID | None = None,
 ) -> Order:
     with transaction.atomic():
-        number = sequences.next_number(location_id, "order")
+        number = sequences.next_number(None, "order")
         order = Order.objects.create(
-            location_id=location_id,
             order_number=f"{number:04d}",
             table_id=table_id,
             type=order_type,
@@ -387,8 +385,7 @@ def split_order(order_id: uuid.UUID, moves: list[dict]) -> Order:
         raise OrderNotOpen(str(order_id))
 
     target = Order.objects.create(
-        location_id=source.location_id,
-        order_number=f"{sequences.next_number(source.location_id, 'order'):04d}",
+        order_number=f"{sequences.next_number(None, 'order'):04d}",
         type=source.type, is_interstate=source.is_interstate,
         service_charge_rate=source.service_charge_rate,
         table_id=source.table_id, split_from=source,

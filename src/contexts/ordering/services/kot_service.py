@@ -26,9 +26,9 @@ def generate_kots(order_id: uuid.UUID) -> list[KOT]:
 
     kots: list[KOT] = []
     for station_id, items in by_station.items():
-        number = sequences.next_number(order.location_id, "kot")
+        number = sequences.next_number(getattr(order, 'location_id', None), "kot")
         kot = KOT.objects.create(
-            order=order, location_id=order.location_id,
+            order=order, 
             kitchen_station_id=station_id, number=number,
         )
         for item in items:

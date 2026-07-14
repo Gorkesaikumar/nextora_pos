@@ -38,6 +38,22 @@ def evaluate_order_combos(order: Order):
     # Helper to check if order has customer with specific criteria
     customer = order.customer if hasattr(order, 'customer') else None
     
+    from contexts.catalog.models.product import Product
+    
+    cart_product_qtys = {}
+    for item in available_items:
+        pid = str(item.product_id)
+        cart_product_qtys[pid] = cart_product_qtys.get(pid, Decimal("0")) + item.qty
+        
+    product_ids = [item.product_id for item in available_items]
+    products_map = {str(p.id): str(p.category_id) for p in Product.objects.filter(id__in=product_ids) if p.category_id}
+    
+    cart_category_qtys = {}
+    for item in available_items:
+        cat_id = products_map.get(str(item.product_id))
+        if cat_id:
+            cart_category_qtys[cat_id] = cart_category_qtys.get(cat_id, Decimal("0")) + item.qty
+            
     for combo in all_combos:
         if not combo.is_currently_available:
             ineligible.append({"combo": combo, "reason": "Not available at this time"})
@@ -55,7 +71,34 @@ def evaluate_order_combos(order: Order):
             ineligible.append({"combo": combo, "reason": f"Requires {combo.min_cart_items} items. Current Cart: {cart_items_count} items. Add {shortfall} more."})
             continue
             
-        # 3. Customer Eligibility
+        # 3. Specific Product Eligibility
+        if combo.eligibility_products:
+            product_reqs_met = True
+            for req in combo.eligibility_products:
+                req_prod_id = str(req.get('product_id'))
+                req_qty = Decimal(str(req.get('min_qty', 1)))
+                if cart_product_qtys.get(req_prod_id, Decimal("0")) < req_qty:
+                    product_reqs_met = False
+                    # Fetch product name for better message if we want, but keeping it simple for now
+                    ineligible.append({"combo": combo, "reason": f"Requires {req_qty} of specific item to unlock."})
+                    break
+            if not product_reqs_met:
+                continue
+                
+        # 4. Specific Category Eligibility
+        if combo.eligibility_categories:
+            category_reqs_met = True
+            for req in combo.eligibility_categories:
+                req_cat_id = str(req.get('category_id'))
+                req_qty = Decimal(str(req.get('min_qty', 1)))
+                if cart_category_qtys.get(req_cat_id, Decimal("0")) < req_qty:
+                    category_reqs_met = False
+                    ineligible.append({"combo": combo, "reason": f"Requires {req_qty} item(s) from a specific category to unlock."})
+                    break
+            if not category_reqs_met:
+                continue
+            
+        # 5. Customer Eligibility
         if combo.customer_eligibility != "all":
             if not customer:
                 ineligible.append({"combo": combo, "reason": "Requires a registered customer."})
@@ -81,13 +124,10 @@ def evaluate_order_combos(order: Order):
                     ineligible.append({"combo": combo, "reason": "Valid for Loyalty members only."})
                     continue
 
-        # 4. Usage Limits
+        # 6. Usage Limits
         if combo.usage_limit_type != "unlimited" and combo.usage_limit_value > 0:
             if combo.usage_limit_type == "once_per_order":
                 # Ensure we don't apply it multiple times in the SAME order
-                # This is handled mostly by the Greedy matching algorithm, but if they want strict 1 max
-                pass # The greedy matcher will apply it once if we break out early, or we can enforce it.
-                # Actually, the user says "Usage Limit", if it's already in the order, we block it.
                 if OrderCombo.objects.filter(order=order, combo_offer_id=combo.id).exists():
                      ineligible.append({"combo": combo, "reason": "Offer already applied to this order."})
                      continue

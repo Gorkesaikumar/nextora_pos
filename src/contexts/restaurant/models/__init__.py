@@ -1,9 +1,8 @@
-from .branch import Branch
 from .kitchen import KitchenStation, Printer
 from .layout import DiningTable
 from .operations import (
-    BranchGSTProfile,
-    BranchSettings,
+    RestaurantGSTProfile,
+    RestaurantSettings,
     BusinessHours,
     CashCounter,
     Holiday,
@@ -12,11 +11,10 @@ from .restaurant import Restaurant
 
 __all__ = [
     "Restaurant",
-    "Branch",
     "DiningTable",
     "CashCounter",
-    "BranchSettings",
-    "BranchGSTProfile",
+    "RestaurantSettings",
+    "RestaurantGSTProfile",
     "BusinessHours",
     "Holiday",
     "KitchenStation",

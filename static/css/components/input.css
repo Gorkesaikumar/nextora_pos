@@ -17,6 +17,7 @@
 }
 
 .input,
+.input-text,
 .textarea,
 .select {
   width: 100%;
@@ -30,13 +31,16 @@
   transition: border-color var(--forge-duration-standard, 150ms) ease-out;
 }
 .input::placeholder,
+.input-text::placeholder,
 .textarea::placeholder { color: var(--forge-color-text-placeholder); }
 
 .input:hover,
+.input-text:hover,
 .textarea:hover,
 .select:hover { border-color: var(--forge-color-border-strong); }
 
 .input:focus-visible,
+.input-text:focus-visible,
 .textarea:focus-visible,
 .select:focus-visible {
   border-color: var(--forge-color-border-focus);

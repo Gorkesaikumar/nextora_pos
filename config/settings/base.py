@@ -55,6 +55,7 @@ THIRD_PARTY_APPS = [
     "drf_spectacular",
     "django_celery_beat",
     "django_celery_results",
+    "django_htmx",
 ]
 
 # First-party bounded contexts. The shared kernel must load first so its base
@@ -89,6 +90,7 @@ MIDDLEWARE = [
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
+    "django_htmx.middleware.HtmxMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "contexts.identity.middleware.NoCacheAuthenticatedMiddleware",
@@ -259,6 +261,20 @@ CELERY_BEAT_SCHEDULE = {
         "options": {"queue": "bulk"},
     },
 }
+
+# --- Nextora Print Service Integration ---------------------------------
+NEXTORA_PRINT_SERVICE_URL = env(
+    "NEXTORA_PRINT_SERVICE_URL",
+    default="http://127.0.0.1:8989",
+)
+NEXTORA_PRINT_SERVICE_TIMEOUT = env.int(
+    "NEXTORA_PRINT_SERVICE_TIMEOUT",
+    default=5,
+)
+NEXTORA_AUTO_PRINT_RECEIPT = env.bool(
+    "NEXTORA_AUTO_PRINT_RECEIPT",
+    default=True,
+)
 
 # --- Billing / Subscriptions ----------------------------------------------
 BILLING_GATEWAY = env("BILLING_GATEWAY", default="fake")  # "fake" | "razorpay"

@@ -27,9 +27,32 @@
             hx-target="#pos-modal-container"
             hx-swap="innerHTML"
             class="space-y-6"
-            x-data="{ processing: false }"
-            @submit="if (processing) { $event.preventDefault(); return false; } processing = true;"
-            @htmx:after-request="if($event.detail.failed) processing = false"
+            x-data="{ 
+              processing: false,
+              progressText: 'Complete Payment',
+              steps: ['Processing Payment...', 'Payment Processing...', 'Generating Invoice...', 'Sending to Printer...', 'Printing Receipt...'],
+              stepIndex: 0,
+              interval: null,
+              startProgress() {
+                this.processing = true;
+                this.stepIndex = 0;
+                this.progressText = this.steps[0];
+                this.interval = setInterval(() => {
+                  if (this.stepIndex < this.steps.length - 1) {
+                    this.stepIndex++;
+                    this.progressText = this.steps[this.stepIndex];
+                  }
+                }, 800);
+              },
+              stopProgress() {
+                this.processing = false;
+                clearInterval(this.interval);
+                this.progressText = 'Complete Payment';
+              }
+            }"
+            @submit="if (processing) { $event.preventDefault(); return false; }"
+            @htmx:before-request="startProgress()"
+            @htmx:after-request="if($event.detail.failed) stopProgress();"
             novalidate>
         {% csrf_token %}
         <input type="hidden" name="idempotency_key" value="{{ idempotency_key }}">
@@ -72,15 +95,20 @@
           </div>
         </div>
         
-        <div class="pt-2">
-            <button type="submit" class="btn-primary w-full h-14 text-heading-3 shadow-md flex items-center justify-center gap-2"
+        <div class="pt-2 flex gap-3">
+            <button type="button" class="btn-secondary w-1/3 h-14 text-heading-3 shadow-sm flex items-center justify-center"
+                    onclick="document.getElementById('pos-modal-container').innerHTML = '';"
+                    :disabled="processing">
+              Cancel
+            </button>
+            <button type="submit" class="btn-primary flex-1 h-14 text-heading-3 shadow-md flex items-center justify-center gap-2"
                     :disabled="processing"
                     :class="processing ? 'opacity-50 cursor-not-allowed' : ''">
               <svg x-show="processing" x-cloak class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-              <span x-text="processing ? 'Processing...' : 'Complete Payment'">Complete Payment</span>
+              <span x-text="progressText">Complete Payment</span>
             </button>
         </div>
       </form>

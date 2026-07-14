@@ -23,7 +23,7 @@ from .models import (
 # ---------------------------------------------------------------------------
 @admin.register(Warehouse)
 class WarehouseAdmin(admin.ModelAdmin):
-    list_display = ["code", "name", "branch_id", "is_default", "is_active"]
+    list_display = ["code", "name", "is_default", "is_active"]
     search_fields = ["code", "name"]
     list_filter = ["is_active", "is_default"]
 

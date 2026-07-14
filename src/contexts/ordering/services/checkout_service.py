@@ -13,11 +13,12 @@ executing the strict 13-step lifecycle:
 9. Record Payment
 10. Save Audit Log
 11. Commit Transaction
-12. Print Receipts (strictly after successful transaction commit)
+12. Print Receipts (strictly after successful transaction commit, via Print Service)
 13. Clear Cart (session clear & table release handled cleanly post-commit)
 
 Prevents duplicate invoices and duplicate payments via database-level idempotency checks.
 If any database step fails, the entire transaction rolls back.
+Printing failure NEVER rolls back the transaction.
 """
 import uuid
 from decimal import Decimal
@@ -35,7 +36,7 @@ from contexts.ordering.services import (
 from contexts.ordering.services.printing import (
     PrintJob,
     create_order_print_jobs,
-    dispatch_print_jobs_on_commit,
+    dispatch_to_print_service,
 )
 
 
@@ -46,11 +47,17 @@ def complete_checkout_transaction(
     tendered: Decimal | None = None,
     performed_by_id: uuid.UUID | None = None,
     paper_width: str = "80mm",
-) -> tuple[Order, Invoice, list[PrintJob]]:
+    idempotency_key: str = "",
+) -> tuple[Order, Invoice, list[PrintJob], dict]:
     """Execute complete checkout payment and settlement in a single atomic database transaction.
 
     If any database step fails, rolls back the entire transaction.
-    Printing is dispatched via transaction.on_commit only after a successful commit.
+    Printing is dispatched via Print Service only after a successful commit.
+    Printing failure NEVER rolls back the sale.
+
+    Returns:
+        tuple of (order, invoice, print_jobs, print_result)
+        print_result contains the Print Service response or error info.
     """
     # Acquire exclusive row lock on the order
     order = Order.objects.select_for_update().get(id=order_id)
@@ -59,7 +66,11 @@ def complete_checkout_transaction(
     if order.status == OrderStatus.SETTLED:
         existing_invoice = Invoice.objects.filter(order=order).first()
         existing_jobs = list(order.print_jobs.all())
-        return order, existing_invoice, existing_jobs
+        return order, existing_invoice, existing_jobs, {
+            "success": True,
+            "message": "Order already settled. No action taken.",
+            "already_settled": True,
+        }
 
     # 1. Validate Cart
     active_items = list(order.items.filter(status="active"))
@@ -101,8 +112,6 @@ def complete_checkout_transaction(
     order.refresh_from_db()
 
     # 4. Create Sale + 5. Create Invoice + 6. Generate Invoice Number
-    # settle_and_invoice checks order.due_amount == 0 (now satisfied after payment above),
-    # creates the Invoice, generates gapless Invoice Number, and sets order.status = SETTLED.
     invoice = invoice_service.settle_and_invoice(order.id)
 
     # 7. Generate KOT Number
@@ -156,6 +165,17 @@ def complete_checkout_transaction(
         },
     )
 
+    # ── Create immutable InvoiceSnapshot ──────────────────────────────────
+    # This preserves receipt-time data (business name, address, GSTIN, items,
+    # financials) so that changing configuration never mutates old invoices.
+    try:
+        from contexts.ordering.models.invoice_config import create_invoice_snapshot
+        create_invoice_snapshot(invoice)
+    except Exception as snapshot_err:
+        # Snapshot creation is non-critical — the invoice already exists.
+        # Log and continue; the receipt can still render from live data.
+        logger.warning("Failed to create InvoiceSnapshot: %s", snapshot_err)
+
     # Prepare PrintJobs inside the transaction so they are committed atomically
     print_jobs = create_order_print_jobs(
         order=order,
@@ -166,7 +186,56 @@ def complete_checkout_transaction(
 
     # 11. Commit Transaction (automatic upon normal exit of transaction.atomic)
 
-    # 12. Print Receipts (strictly after successful database commit)
-    transaction.on_commit(lambda: dispatch_print_jobs_on_commit(print_jobs))
+    # 12. Print Receipts — via Print Service (strictly after successful database commit)
+    # The print_result is stored so it can be displayed to the user.
+    # Printing failure is logged but does NOT roll back the transaction.
+    print_result = _dispatch_print_after_commit(order, invoice, idempotency_key)
 
-    return order, invoice, print_jobs
+    return order, invoice, print_jobs, print_result
+
+
+def _dispatch_print_after_commit(
+    order: Order,
+    invoice: Invoice,
+    idempotency_key: str = "",
+) -> dict:
+    """Dispatch the receipt to the Print Service after transaction commit.
+
+    This runs inside transaction.on_commit so it only executes after
+    the database transaction successfully commits. If the Print Service
+    is offline or the printer is unavailable, the sale is NOT rolled back.
+    """
+    # Check auto-print setting
+    auto_print = True
+    try:
+        from contexts.ordering.models.pos_config import POSPrinterConfig
+        config = None
+        terminal_id = getattr(order, "terminal_id", None)
+        if terminal_id:
+            config = POSPrinterConfig.objects.filter(
+                terminal_id=terminal_id,
+                is_active=True,
+            ).first()
+        
+        # Fallback to the first active printer for the tenant
+        if not config:
+            config = POSPrinterConfig.objects.filter(is_active=True).first()
+            
+        if config is not None:
+            auto_print = config.auto_print
+    except Exception:
+        pass
+
+    if not auto_print:
+        return {
+            "success": True,
+            "message": "Auto-print is disabled. Use Print Receipt to print.",
+            "auto_print_disabled": True,
+        }
+
+    # Perform the actual print dispatch
+    return dispatch_to_print_service(
+        order=order,
+        invoice=invoice,
+        idempotency_key=idempotency_key,
+    )

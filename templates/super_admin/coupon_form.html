@@ -1,0 +1,197 @@
+{% extends "super_admin/layouts/platform.html" %}
+
+{% block platform_title %}Create SaaS Coupon{% endblock %}
+{% block header_title %}{% if coupon %}Edit Coupon: {{ coupon.code }}{% else %}Create Promotional Coupon{% endif %}{% endblock %}
+{% block header_subtitle %}Configure promotional discount codes, validity periods, and usage limits.{% endblock %}
+
+{% block content %}
+
+{% if messages %}
+<div class="space-y-2 mb-6 max-w-4xl">
+  {% for msg in messages %}
+  <div class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium shadow-sm bg-red-50 text-red-800 border border-red-200">
+    {{ msg }}
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<form method="POST" class="max-w-4xl" id="coupon-form">
+  {% csrf_token %}
+  
+  <div class="space-y-6">
+    
+    <!-- 1. Basic Information -->
+    <div class="bg-white rounded-2xl border border-neutral-200 overflow-hidden shadow-sm">
+      <div class="px-6 py-4 border-b border-neutral-100 bg-neutral-50/50">
+        <h3 class="text-sm font-bold text-neutral-900">1. Basic Information</h3>
+      </div>
+      <div class="p-6 space-y-5">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div>
+            <label class="block text-xs font-bold text-neutral-700 uppercase tracking-wide mb-1.5">Coupon Name</label>
+            <input type="text" name="name" value="{{ coupon.name|default:'' }}" required placeholder="e.g. Grand Opening 50" class="w-full px-4 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl text-sm font-semibold text-neutral-900 focus:bg-white focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all outline-none">
+            <p class="text-[10px] text-neutral-500 mt-1.5">Internal name for this promotion.</p>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-neutral-700 uppercase tracking-wide mb-1.5">Coupon Code <span class="text-red-500">*</span></label>
+            <input type="text" name="code" value="{{ coupon.code|default:'' }}" required placeholder="e.g. WELCOME50" class="w-full px-4 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl text-sm font-bold text-neutral-900 uppercase focus:bg-white focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all outline-none">
+            <p class="text-[10px] text-neutral-500 mt-1.5">The exact code customers will type during checkout.</p>
+          </div>
+        </div>
+        
+        <div>
+          <label class="block text-xs font-bold text-neutral-700 uppercase tracking-wide mb-1.5">Public Description</label>
+          <input type="text" name="description" value="{{ coupon.description|default:'' }}" placeholder="e.g. Get 50% off your first 3 months!" class="w-full px-4 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl text-sm text-neutral-900 focus:bg-white focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all outline-none">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-neutral-700 uppercase tracking-wide mb-1.5">Internal Notes</label>
+          <input type="text" name="internal_notes" value="{{ coupon.internal_notes|default:'' }}" placeholder="Private notes for admins only" class="w-full px-4 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl text-sm text-neutral-900 focus:bg-white focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all outline-none">
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Discount Details -->
+    <div class="bg-white rounded-2xl border border-neutral-200 overflow-hidden shadow-sm">
+      <div class="px-6 py-4 border-b border-neutral-100 bg-neutral-50/50">
+        <h3 class="text-sm font-bold text-neutral-900">2. Discount Details</h3>
+      </div>
+      <div class="p-6 space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div>
+            <label class="block text-xs font-bold text-neutral-700 uppercase tracking-wide mb-1.5">Discount Type</label>
+            <select name="discount_type" class="w-full px-4 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl text-sm font-semibold text-neutral-900 focus:bg-white focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all outline-none">
+              <option value="percentage" {% if coupon.discount_type == 'percentage' %}selected{% endif %}>Percentage (%)</option>
+              <option value="flat" {% if coupon.discount_type == 'flat' %}selected{% endif %}>Flat Amount (₹)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-neutral-700 uppercase tracking-wide mb-1.5">Discount Value</label>
+            <input type="number" step="0.01" name="value" value="{{ coupon.value|default:'' }}" required placeholder="e.g. 50" class="w-full px-4 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl text-sm font-bold text-neutral-900 focus:bg-white focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all outline-none">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div>
+            <label class="block text-xs font-bold text-neutral-700 uppercase tracking-wide mb-1.5">Minimum Purchase (₹)</label>
+            <input type="number" step="0.01" name="minimum_purchase_amount" value="{{ coupon.minimum_purchase_amount|default:'' }}" placeholder="Optional" class="w-full px-4 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl text-sm font-semibold text-neutral-900 focus:bg-white focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all outline-none">
+            <p class="text-[10px] text-neutral-500 mt-1.5">Cart total must exceed this to apply.</p>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-neutral-700 uppercase tracking-wide mb-1.5">Maximum Discount (₹)</label>
+            <input type="number" step="0.01" name="maximum_discount_amount" value="{{ coupon.maximum_discount_amount|default:'' }}" placeholder="Optional" class="w-full px-4 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl text-sm font-semibold text-neutral-900 focus:bg-white focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all outline-none">
+            <p class="text-[10px] text-neutral-500 mt-1.5">Caps percentage discounts (e.g., Max ₹500).</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Usage & Validity -->
+    <div class="bg-white rounded-2xl border border-neutral-200 overflow-hidden shadow-sm">
+      <div class="px-6 py-4 border-b border-neutral-100 bg-neutral-50/50">
+        <h3 class="text-sm font-bold text-neutral-900">3. Limits & Eligibility</h3>
+      </div>
+      <div class="p-6 space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div>
+            <label class="block text-xs font-bold text-neutral-700 uppercase tracking-wide mb-1.5">Total Usage Limit</label>
+            <input type="number" name="usage_limit" value="{{ coupon.usage_limit|default:'' }}" placeholder="Unlimited if empty" class="w-full px-4 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl text-sm font-semibold text-neutral-900 focus:bg-white focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all outline-none">
+            <p class="text-[10px] text-neutral-500 mt-1.5">Maximum times this coupon can be redeemed across all users.</p>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-neutral-700 uppercase tracking-wide mb-1.5">Customer Eligibility</label>
+            <select name="eligibility" class="w-full px-4 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl text-sm font-semibold text-neutral-900 focus:bg-white focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all outline-none">
+              <option value="all" {% if coupon.eligibility == 'all' %}selected{% endif %}>All Customers</option>
+              <option value="new_only" {% if coupon.eligibility == 'new_only' %}selected{% endif %}>New Signups Only</option>
+              <option value="existing" {% if coupon.eligibility == 'existing' %}selected{% endif %}>Existing Subscribers</option>
+              <option value="trial_users" {% if coupon.eligibility == 'trial_users' %}selected{% endif %}>Trial Users Upgrading</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div>
+            <label class="block text-xs font-bold text-neutral-700 uppercase tracking-wide mb-1.5">Valid From</label>
+            <input type="datetime-local" name="valid_from" value="{{ coupon.valid_from|date:'Y-m-d\TH:i' }}" class="w-full px-4 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl text-sm font-semibold text-neutral-900 focus:bg-white focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-neutral-700 uppercase tracking-wide mb-1.5">Valid Until (Expiry)</label>
+            <input type="datetime-local" name="valid_until" value="{{ coupon.valid_until|date:'Y-m-d\TH:i' }}" class="w-full px-4 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl text-sm font-semibold text-neutral-900 focus:bg-white focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all outline-none">
+            <p class="text-[10px] text-neutral-500 mt-1.5">Leave empty for no expiry.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 4. Plan Assignment -->
+    <div class="bg-white rounded-2xl border border-neutral-200 overflow-hidden shadow-sm">
+      <div class="px-6 py-4 border-b border-neutral-100 bg-neutral-50/50">
+        <h3 class="text-sm font-bold text-neutral-900">4. Applicable Plans</h3>
+      </div>
+      <div class="p-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          {% for plan in plans %}
+          <label class="relative flex items-center justify-between gap-3 p-4 border border-neutral-200 rounded-xl cursor-pointer hover:border-blue-400 hover:bg-blue-50/30 transition-colors">
+            <div>
+              <div class="text-sm font-bold text-neutral-900">{{ plan.display_name|default:plan.name }}</div>
+              <div class="text-[10px] text-neutral-500 font-mono">{{ plan.duration_days }} Days</div>
+            </div>
+            <div class="flex-shrink-0">
+              <input type="checkbox" name="applicable_plans" value="{{ plan.id }}" 
+                     {% if coupon and plan in coupon.applicable_plans.all %}checked{% endif %}
+                     class="w-5 h-5 text-blue-600 bg-neutral-50 border-neutral-300 rounded focus:ring-blue-600">
+            </div>
+          </label>
+          {% endfor %}
+        </div>
+        <p class="text-[10px] text-neutral-500 mt-4">Select the plans this coupon can be applied to. Leave all unchecked if it applies to ANY plan.</p>
+      </div>
+    </div>
+    
+    <!-- 5. Status Settings -->
+    <div class="bg-white rounded-2xl border border-neutral-200 overflow-hidden shadow-sm">
+      <div class="px-6 py-4 border-b border-neutral-100 bg-neutral-50/50">
+        <h3 class="text-sm font-bold text-neutral-900">5. Status & Display</h3>
+      </div>
+      <div class="p-6 space-y-4">
+        <label class="flex items-center justify-between p-4 border border-neutral-200 rounded-xl cursor-pointer hover:bg-neutral-50 transition-colors">
+          <div>
+            <div class="text-sm font-bold text-neutral-900">Active Status</div>
+            <div class="text-xs text-neutral-500">Allow customers to redeem this coupon.</div>
+          </div>
+          <div class="relative">
+            <input type="checkbox" name="is_active" {% if not coupon or coupon.is_active %}checked{% endif %} class="sr-only peer">
+            <div class="w-11 h-6 bg-neutral-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+          </div>
+        </label>
+        
+        <label class="flex items-center justify-between p-4 border border-neutral-200 rounded-xl cursor-pointer hover:bg-neutral-50 transition-colors">
+          <div>
+            <div class="text-sm font-bold text-neutral-900">Hide from Admin Lists</div>
+            <div class="text-xs text-neutral-500">If active, hides the coupon from public viewing lists or normal staff views.</div>
+          </div>
+          <div class="relative">
+            <input type="checkbox" name="is_hidden" {% if coupon.is_hidden %}checked{% endif %} class="sr-only peer">
+            <div class="w-11 h-6 bg-neutral-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+          </div>
+        </label>
+      </div>
+    </div>
+    
+    <!-- Submit -->
+    <div class="bg-white rounded-2xl border border-neutral-200 shadow-sm p-5 space-y-3">
+      <button type="submit"
+              class="w-full inline-flex items-center justify-center gap-2 px-5 py-3 bg-blue-600 text-white text-sm font-bold rounded-xl shadow-md hover:bg-blue-700 active:scale-[0.98] transition-all">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+        {% if coupon %}Update Coupon{% else %}Create Coupon{% endif %}
+      </button>
+      <a href="{% url 'super_admin:coupon_discount_list' %}" class="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 border border-neutral-200 text-neutral-600 text-sm font-semibold rounded-xl hover:bg-neutral-50 transition-all">
+        Cancel
+      </a>
+    </div>
+
+  </div>
+</form>
+
+{% endblock %}

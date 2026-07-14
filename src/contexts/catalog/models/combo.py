@@ -57,6 +57,12 @@ class ComboOffer(TenantAwareModel):
         default=CustomerEligibility.ALL
     )
     
+    # Example format: [{"product_id": "<uuid>", "min_qty": 2}]
+    eligibility_products = models.JSONField(default=list, blank=True)
+    
+    # Example format: [{"category_id": "<uuid>", "min_qty": 1}]
+    eligibility_categories = models.JSONField(default=list, blank=True)
+    
     # Usage Limits
     usage_limit_type = models.CharField(
         max_length=20,

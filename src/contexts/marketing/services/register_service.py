@@ -23,7 +23,7 @@ from django.utils.text import slugify
 
 from contexts.billing.services import subscription_service
 from contexts.identity.models.rbac import Membership, Role
-from contexts.tenants.models import Branch, Tenant, TenantConfiguration
+from contexts.tenants.models import Tenant, TenantConfiguration
 from shared.tenancy import tenant_scope
 
 User = get_user_model()
@@ -43,7 +43,6 @@ class ProvisioningError(Exception):
 class ProvisionedWorkspace:
     user: Any
     tenant: Tenant
-    branch: Branch
 
 
 def _unique_tenant_slug(base: str) -> str:
@@ -125,26 +124,20 @@ def provision_workspace(
                 timezone=branch["timezone"],
             )
 
-            first_branch = Branch.objects.create(
-                name=branch["branch_name"],
-                code=branch["branch_code"],
-                phone=account["phone"],
-                address=_compose_address(restaurant),
-            )
-
             # 4. Subscription via the existing billing service ------------
             subscription_service.create_subscription(
                 tenant_id=tenant.id,
                 plan_code=plan["plan_code"],
                 interval=plan["interval"],
+                coupon_code=plan.get("coupon_code"),
             )
             
-            # Seed default Tables for the new branch
+            # Seed default Tables for the new tenant
             from contexts.restaurant.models.layout import DiningTable
-            DiningTable.objects.create(branch=first_branch, number="T1", capacity=2)
-            DiningTable.objects.create(branch=first_branch, number="T2", capacity=4)
-            DiningTable.objects.create(branch=first_branch, number="T3", capacity=4)
-            DiningTable.objects.create(branch=first_branch, number="T4", capacity=6)
+            DiningTable.objects.create(number="T1", capacity=2)
+            DiningTable.objects.create(number="T2", capacity=4)
+            DiningTable.objects.create(number="T3", capacity=4)
+            DiningTable.objects.create(number="T4", capacity=6)
 
             # 5. Membership: user -> tenant (company-scope, no branch) ----
             Membership.objects.create(
@@ -155,7 +148,7 @@ def provision_workspace(
                 is_active=True,
             )
 
-        return ProvisionedWorkspace(user=user, tenant=tenant, branch=first_branch)
+        return ProvisionedWorkspace(user=user, tenant=tenant)
 
 
 def _compose_address(restaurant: dict) -> str:

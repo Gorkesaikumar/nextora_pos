@@ -9,11 +9,6 @@ class Warehouse(TenantAwareModel):
     name = models.CharField(max_length=120)
     code = models.CharField(max_length=20, help_text="Short identifier, e.g., WH-01")
     address = models.TextField(blank=True)
-    # Soft cross-context reference: which branch does this warehouse belong to?
-    branch_id = models.UUIDField(
-        null=True, blank=True,
-        help_text="Cross-context soft FK to tenants.Branch"
-    )
     is_active = models.BooleanField(default=True)
     is_default = models.BooleanField(default=False)
 

@@ -20,10 +20,11 @@ def next_number(
     series: str = "",
     on: date | None = None,
 ) -> int:
+    del location_id
     on = on or timezone.localdate()
     with transaction.atomic():
         counter, _ = DailyCounter.objects.get_or_create(
-            location_id=location_id, scope=scope, series=series, date=on
+            scope=scope, series=series, date=on
         )
         counter = DailyCounter.objects.select_for_update().get(pk=counter.pk)
         counter.last_number += 1

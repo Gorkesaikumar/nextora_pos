@@ -1,0 +1,46 @@
+<div class="fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center p-4">
+  <div class="bg-white dark:bg-neutral-800 rounded-xl shadow-lg border border-neutral-200 dark:border-neutral-700 max-w-sm w-full flex flex-col">
+    <!-- Header -->
+    <div class="px-6 py-4 border-b border-neutral-100 dark:border-neutral-700 flex justify-between items-center">
+      <h3 class="text-md font-bold text-neutral-900 dark:text-white">New Designation</h3>
+      <button onclick="this.closest('.fixed').remove()" class="text-neutral-400 hover:text-neutral-600">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
+    </div>
+
+    <!-- Form -->
+    <form hx-post="{% url 'employees:designation_create_quick' %}"
+          hx-target="closest .fixed"
+          hx-swap="outerHTML"
+          class="p-6 space-y-4">
+      {% csrf_token %}
+      
+      {% if form.non_field_errors %}
+        <div class="p-3 bg-red-50 text-red-700 text-xs rounded-lg">
+          {{ form.non_field_errors }}
+        </div>
+      {% endif %}
+
+      <div>
+        <label class="block text-xs font-semibold text-neutral-500 mb-1">Department <span class="text-red-500">*</span></label>
+        {{ form.department }}
+        <span class="text-[10px] text-red-500">{{ form.department.errors }}</span>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-neutral-500 mb-1">Name <span class="text-red-500">*</span></label>
+        {{ form.name }}
+        <span class="text-[10px] text-red-500">{{ form.name.errors }}</span>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-neutral-500 mb-1">Description</label>
+        {{ form.description }}
+        <span class="text-[10px] text-red-500">{{ form.description.errors }}</span>
+      </div>
+
+      <div class="pt-2 flex justify-end gap-3">
+        <button type="button" onclick="this.closest('.fixed').remove()" class="btn-secondary">Cancel</button>
+        <button type="submit" class="btn-primary">Save</button>
+      </div>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,111 @@
+<div class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+  <div class="bg-white dark:bg-neutral-800 rounded-xl shadow-lg border border-neutral-200 dark:border-neutral-700 max-w-lg w-full flex flex-col max-h-[90vh]">
+    <!-- Header -->
+    <div class="px-6 py-4 border-b border-neutral-100 dark:border-neutral-700 flex justify-between items-center shrink-0">
+      <h3 class="text-md font-bold text-neutral-900 dark:text-white">
+        {% if form.instance.pk %}Edit Attendance Record{% else %}Add Attendance Record{% endif %}
+      </h3>
+      <button onclick="this.closest('.fixed').remove()" class="text-neutral-400 hover:text-neutral-600">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
+    </div>
+
+    <!-- Form -->
+    <div class="overflow-y-auto">
+      <form {% if form.instance.pk %}hx-post="{% url 'employees:attendance_update' form.instance.pk %}"{% else %}hx-post="{% url 'employees:attendance_create' %}"{% endif %}
+            hx-target="#dialog-container"
+            class="p-6 space-y-4">
+        {% csrf_token %}
+        
+        {% if form.non_field_errors %}
+          <div class="p-3 bg-red-50 text-red-700 text-xs rounded-lg">
+            {{ form.non_field_errors }}
+          </div>
+        {% endif %}
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-neutral-500 mb-1">Employee <span class="text-red-500">*</span></label>
+            {{ form.employee }}
+            <span class="text-[10px] text-red-500">{{ form.employee.errors }}</span>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-neutral-500 mb-1">Shift</label>
+            {{ form.shift }}
+            <span class="text-[10px] text-red-500">{{ form.shift.errors }}</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-neutral-500 mb-1">Date <span class="text-red-500">*</span></label>
+            {{ form.date }}
+            <span class="text-[10px] text-red-500">{{ form.date.errors }}</span>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-neutral-500 mb-1">Status <span class="text-red-500">*</span></label>
+            {{ form.status }}
+            <span class="text-[10px] text-red-500">{{ form.status.errors }}</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-neutral-500 mb-1">Check In <span class="text-red-500">*</span></label>
+            {{ form.check_in }}
+            <span class="text-[10px] text-red-500">{{ form.check_in.errors }}</span>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-neutral-500 mb-1">Check Out</label>
+            {{ form.check_out }}
+            <span class="text-[10px] text-red-500">{{ form.check_out.errors }}</span>
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-neutral-500 mb-1">Break Start</label>
+            {{ form.break_start }}
+            <span class="text-[10px] text-red-500">{{ form.break_start.errors }}</span>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-neutral-500 mb-1">Break End</label>
+            {{ form.break_end }}
+            <span class="text-[10px] text-red-500">{{ form.break_end.errors }}</span>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap gap-4 pt-2">
+          <div class="flex items-center gap-2">
+            {{ form.is_late_entry }}
+            <label class="text-sm font-medium text-neutral-900 dark:text-white">Late Entry</label>
+          </div>
+          <div class="flex items-center gap-2">
+            {{ form.is_early_exit }}
+            <label class="text-sm font-medium text-neutral-900 dark:text-white">Early Exit</label>
+          </div>
+          <div class="flex items-center gap-2">
+            {{ form.is_manual }}
+            <label class="text-sm font-medium text-neutral-900 dark:text-white">Manual Entry</label>
+          </div>
+        </div>
+        
+        <div>
+          <label class="block text-xs font-semibold text-neutral-500 mb-1">Notes</label>
+          {{ form.notes }}
+          <span class="text-[10px] text-red-500">{{ form.notes.errors }}</span>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="border-t border-neutral-100 dark:border-neutral-700 pt-4 flex justify-end gap-2 mt-2">
+          <button type="button" onclick="this.closest('.fixed').remove()" class="px-4 py-2 bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-200 rounded-lg text-xs font-semibold hover:bg-neutral-200">
+            Cancel
+          </button>
+          <button type="submit" class="px-4 py-2 bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900 rounded-lg text-xs font-semibold hover:bg-neutral-800">
+            Save Record
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

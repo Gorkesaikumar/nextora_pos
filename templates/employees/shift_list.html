@@ -1,0 +1,71 @@
+{% extends "layouts/dashboard.html" %}
+
+{% block page_title %}Shifts & Rules{% endblock %}
+{% block page_subtitle %}<p class="text-caption text-neutral-500 mt-1">Configure employee working hours, breaks, and grace periods.</p>{% endblock %}
+
+{% block primary_action %}
+<button hx-get="{% url 'employees:shift_create' %}" hx-target="#dialog-container" class="btn-primary">
+  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+  New Shift
+</button>
+{% endblock %}
+
+{% block workspace %}
+<div class="card overflow-hidden bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl"
+     hx-get="{% url 'employees:shift_list' %}"
+     hx-trigger="shiftListChanged from:body"
+     hx-select=".card">
+  <div class="overflow-x-auto">
+    <table class="w-full text-left border-collapse">
+      <thead>
+        <tr class="bg-neutral-50 dark:bg-neutral-900/50 border-b border-neutral-150 dark:border-neutral-700 text-heading-3 text-neutral-700 dark:text-neutral-300">
+          <th class="px-5 py-3.5 font-semibold">Shift Name</th>
+          <th class="px-5 py-3.5 font-semibold">Timing</th>
+          <th class="px-5 py-3.5 font-semibold">Grace / Break</th>
+          <th class="px-5 py-3.5 font-semibold">Status</th>
+          <th class="px-5 py-3.5 font-semibold text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-neutral-100 dark:divide-neutral-700/50">
+        {% for shift in shifts %}
+        <tr class="hover:bg-neutral-50/50 dark:hover:bg-neutral-800/50 transition-colors">
+          <td class="px-5 py-4">
+            <span class="text-sm font-bold text-neutral-900 dark:text-white">{{ shift.name }}</span>
+          </td>
+          <td class="px-5 py-4 text-sm text-neutral-700 dark:text-neutral-300">
+            {{ shift.start_time|time:"g:i A" }} - {{ shift.end_time|time:"g:i A" }}
+          </td>
+          <td class="px-5 py-4 text-sm text-neutral-500">
+            Late after {{ shift.grace_period_minutes }} mins<br>
+            <span class="text-xs">{{ shift.break_time_minutes }} mins break</span>
+          </td>
+          <td class="px-5 py-4">
+            {% if shift.is_active %}
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-emerald-100 text-emerald-800">Active</span>
+            {% else %}
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-neutral-100 text-neutral-800">Inactive</span>
+            {% endif %}
+          </td>
+          <td class="px-5 py-4 text-right flex gap-3 justify-end items-center">
+            <button hx-get="{% url 'employees:shift_update' shift.id %}" hx-target="#dialog-container" class="text-xs font-semibold text-brand-default hover:text-brand-hover">
+              Edit
+            </button>
+            <button hx-post="{% url 'employees:shift_delete' shift.id %}" hx-confirm="Delete this shift rule?" class="text-xs font-semibold text-red-500 hover:text-red-700">
+              Delete
+            </button>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" class="px-5 py-8 text-center text-xs text-neutral-500">
+            No shift configurations yet.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div id="dialog-container"></div>
+{% endblock %}

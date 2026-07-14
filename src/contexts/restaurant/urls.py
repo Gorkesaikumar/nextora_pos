@@ -4,20 +4,6 @@ from contexts.restaurant import views
 app_name = "restaurant"
 
 urlpatterns = [
-    path("branches/", views.BranchListView.as_view(), name="branch_list"),
-    path("<uuid:tenant_id>/branches/", views.BranchListView.as_view(), name="branch_list_tenant"),
-    path("branches/create/", views.BranchCreateView.as_view(), name="branch_create"),
-    path("<uuid:tenant_id>/branches/create/", views.BranchCreateView.as_view(), name="branch_create_tenant"),
-    path("branches/<uuid:pk>/edit/", views.BranchUpdateView.as_view(), name="branch_update"),
-    path("<uuid:tenant_id>/branches/<uuid:pk>/edit/", views.BranchUpdateView.as_view(), name="branch_update_tenant"),
-    path("branches/<uuid:pk>/delete/", views.BranchDeleteView.as_view(), name="branch_delete"),
-    path("<uuid:tenant_id>/branches/<uuid:pk>/delete/", views.BranchDeleteView.as_view(), name="branch_delete_tenant"),
-    path("branches/<uuid:pk>/archive/", views.BranchArchiveView.as_view(), name="branch_archive"),
-    path("<uuid:tenant_id>/branches/<uuid:pk>/archive/", views.BranchArchiveView.as_view(), name="branch_archive_tenant"),
-    path("branches/<uuid:pk>/status/", views.BranchToggleStatusView.as_view(), name="branch_toggle_status"),
-    path("<uuid:tenant_id>/branches/<uuid:pk>/status/", views.BranchToggleStatusView.as_view(), name="branch_toggle_status_tenant"),
-    path("branches/<uuid:pk>/default/", views.BranchSetDefaultView.as_view(), name="branch_set_default"),
-    path("<uuid:tenant_id>/branches/<uuid:pk>/default/", views.BranchSetDefaultView.as_view(), name="branch_set_default_tenant"),
     
     path("printers/", views.PrinterListView.as_view(), name="printer_list"),
     path("<uuid:tenant_id>/printers/", views.PrinterListView.as_view(), name="printer_list_tenant"),

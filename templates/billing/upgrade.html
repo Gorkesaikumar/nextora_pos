@@ -1,0 +1,189 @@
+{% extends "layouts/dashboard.html" %}
+
+{% block page_title %}Upgrade / Renew Subscription{% endblock %}
+{% block page_subtitle %}<p class="text-caption text-neutral-500 mt-1">Select your preferred subscription duration and enjoy 100% of Nextora POS features without restrictions.</p>{% endblock %}
+
+{% block workspace %}
+<div class="max-w-6xl mx-auto space-y-8"
+     x-data="{
+       selectedPlan: '{{ summary.plan_code|default:plans.0.code }}',
+       couponCode: '',
+       couponStatus: '',
+       couponMessage: '',
+       isLoading: false,
+       async applyCoupon() {
+         if (!this.couponCode.trim()) return;
+         this.isLoading = true;
+         try {
+           const res = await fetch('/billing/upgrade/validate-coupon/', {
+             method: 'POST',
+             headers: {
+               'Content-Type': 'application/json',
+               'X-CSRFToken': '{{ csrf_token }}'
+             },
+             body: JSON.stringify({
+               plan_code: this.selectedPlan,
+               coupon_code: this.couponCode
+             })
+           });
+           const data = await res.json();
+           if (data.status === 'success') {
+             this.couponStatus = 'success';
+             this.couponMessage = data.message + ` (Final Price: ₹${data.total_amount})`;
+           } else {
+             this.couponStatus = 'error';
+             this.couponMessage = data.message;
+           }
+         } catch (e) {
+           this.couponStatus = 'error';
+           this.couponMessage = 'Failed to apply coupon. Please try again.';
+         } finally {
+           this.isLoading = false;
+         }
+       }
+     }">
+
+  <!-- Current License Summary Card -->
+  <div class="card p-6 border-l-4"
+       :class="'{{ summary.banner_type }}' === 'expired' ? 'border-l-semantic-danger bg-red-50/50' : ('{{ summary.banner_type }}' === 'warning' ? 'border-l-semantic-warning bg-amber-50/50' : 'border-l-brand-default bg-neutral-0')">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div>
+        <div class="flex items-center gap-2">
+          <h3 class="text-heading-2 text-neutral-900 dark:text-neutral-dark-900">Current Status: <span class="uppercase font-extrabold">{{ summary.status }}</span></h3>
+          {% if summary.is_expired %}
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-800">Expired</span>
+          {% else %}
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">{{ summary.remaining_days }} Days Remaining</span>
+          {% endif %}
+        </div>
+        <p class="text-body text-neutral-600 dark:text-neutral-dark-600 mt-1.5">{{ summary.banner_text }}</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold shadow-sm">
+          <i data-lucide="sparkles" class="w-4 h-4 text-emerald-600"></i>
+          <span>100% POS Access Guaranteed</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Interval Tabs Removed for New Architecture -->
+
+  <!-- Plan Cards Grid -->
+  <form method="POST" action="{% url 'billing:upgrade' %}" class="space-y-8">
+    {% csrf_token %}
+    <input type="hidden" name="coupon_code" :value="couponCode">
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      {% for p in plans %}
+      <label class="card relative cursor-pointer p-6 transition-all flex flex-col justify-between"
+             :class="selectedPlan === '{{ p.code }}' ? 'border-2 border-brand-600 ring-4 ring-brand-600/10 shadow-lg bg-brand-50/10' : 'border border-neutral-200 hover:border-brand-300'">
+        <input type="radio" name="plan_code" value="{{ p.code }}" class="sr-only"
+               :checked="selectedPlan === '{{ p.code }}'" @change="selectedPlan = '{{ p.code }}'; couponStatus = ''">
+
+        {% if p.is_popular %}
+          <span class="absolute -top-3 right-4 inline-flex items-center px-2.5 py-0.5 rounded-full bg-orange-100 border border-orange-200 text-orange-700 text-[10px] font-extrabold tracking-wider uppercase shadow-sm">Popular</span>
+        {% elif p.is_recommended %}
+          <span class="absolute -top-3 right-4 inline-flex items-center px-2.5 py-0.5 rounded-full bg-neutral-900 text-white text-[10px] font-bold tracking-wider uppercase shadow-sm">Recommended</span>
+        {% elif p.is_featured %}
+          <span class="absolute -top-3 right-4 inline-flex items-center px-2.5 py-0.5 rounded-full bg-indigo-100 border border-indigo-200 text-indigo-700 text-[10px] font-bold tracking-wider uppercase shadow-sm">Featured</span>
+        {% endif %}
+
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h4 class="text-heading-3 text-neutral-900 font-bold">{{ p.name }}</h4>
+              <p class="text-[11px] font-semibold text-brand-600 uppercase tracking-widest mt-0.5">{{ p.duration_days }} Days</p>
+            </div>
+            <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors"
+                 :class="selectedPlan === '{{ p.code }}' ? 'border-brand-600 bg-brand-600' : 'border-neutral-300'">
+              <div x-show="selectedPlan === '{{ p.code }}'" class="w-2 h-2 rounded-full bg-white"></div>
+            </div>
+          </div>
+
+          <!-- Dynamic Pricing Display -->
+          <div class="mb-4 min-h-[60px]">
+            {% if p.total_amount > 0 %}
+              <div class="flex items-baseline gap-1">
+                <span class="text-3xl font-extrabold text-neutral-900">{% if p.currency == 'INR' %}₹{% elif p.currency == 'USD' %}${% elif p.currency == 'EUR' %}€{% else %}{{ p.currency }} {% endif %}{{ p.total_amount|floatformat:"0" }}</span>
+              </div>
+              <p class="text-xs text-neutral-500 mt-1">For {{ p.duration_days }} days (Includes GST)</p>
+            {% else %}
+              <div class="flex items-baseline gap-1">
+                <span class="text-3xl font-extrabold text-emerald-600">Free</span>
+              </div>
+              <p class="text-xs text-neutral-500 mt-1">For {{ p.duration_days }} days</p>
+            {% endif %}
+          </div>
+
+          <p class="text-xs text-neutral-500 mb-6 min-h-[36px]">{{ p.description }}</p>
+
+          <ul class="space-y-2.5 text-xs text-neutral-700 border-t border-neutral-100 pt-4">
+            <li class="flex items-center gap-2 font-bold text-neutral-900">
+              <i data-lucide="check-circle" class="w-4 h-4 text-brand-600 shrink-0"></i>
+              <span>100% Nextora POS Features</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <i data-lucide="check" class="w-4 h-4 text-brand-500 shrink-0"></i>
+              <span>Full Billing &amp; ESC/POS Printing</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <i data-lucide="check" class="w-4 h-4 text-brand-500 shrink-0"></i>
+              <span>Kitchen Display &amp; Table Orders</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <i data-lucide="check" class="w-4 h-4 text-brand-500 shrink-0"></i>
+              <span>Inventory &amp; Recipe Engine</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <i data-lucide="check" class="w-4 h-4 text-brand-500 shrink-0"></i>
+              <span>Staff, Payroll &amp; Attendance</span>
+            </li>
+            <li class="flex items-center gap-2 text-neutral-600 border-t border-neutral-100 pt-2">
+              <i data-lucide="building" class="w-3.5 h-3.5 text-neutral-400 shrink-0"></i>
+              <span>Unlimited branches</span>
+            </li>
+            <li class="flex items-center gap-2 text-neutral-600">
+              <i data-lucide="users" class="w-3.5 h-3.5 text-neutral-400 shrink-0"></i>
+              <span>Unlimited staff seats</span>
+            </li>
+          </ul>
+        </div>
+      </label>
+      {% empty %}
+        <div class="col-span-full py-8 text-center bg-neutral-50 rounded-2xl border border-neutral-200">
+          <p class="text-sm font-semibold text-neutral-700">No plans are currently available.</p>
+          <p class="text-xs text-neutral-500 mt-1">Please contact support or check back later.</p>
+        </div>
+      {% endfor %}
+    </div>
+
+    <!-- Coupon Code Box & Action Bar -->
+    <div class="card p-6 bg-neutral-50 border border-neutral-200">
+      <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+        <div class="w-full md:w-1/2">
+          <label class="block text-xs font-bold uppercase text-neutral-700 mb-1.5">Have a Promotional Coupon?</label>
+          <div class="flex gap-2">
+            <input type="text" x-model="couponCode" placeholder="Enter coupon code (e.g. FESTIVAL20)"
+                   class="input-text w-full uppercase">
+            <button type="button" @click="applyCoupon()" :disabled="isLoading || !couponCode"
+                    class="btn border border-neutral-300 bg-white hover:bg-neutral-100 px-4 py-2 font-semibold text-xs shrink-0">
+              <span x-show="!isLoading">Apply</span>
+              <span x-show="isLoading" x-cloak>Checking...</span>
+            </button>
+          </div>
+          <p x-show="couponStatus === 'success'" x-text="couponMessage" class="mt-1.5 text-xs text-emerald-600 font-semibold" x-cloak></p>
+          <p x-show="couponStatus === 'error'" x-text="couponMessage" class="mt-1.5 text-xs text-red-600 font-semibold" x-cloak></p>
+        </div>
+
+        <div class="w-full md:w-auto flex flex-col items-end">
+          <button type="submit" class="btn-primary px-8 py-3.5 text-base font-bold shadow-md hover:shadow-lg transition-all">
+            Upgrade / Renew Now
+          </button>
+          <p class="text-micro text-neutral-500 mt-1.5">Zero overlap: Your remaining days will be added to the new validity.</p>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}

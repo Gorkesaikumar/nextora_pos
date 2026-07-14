@@ -34,6 +34,9 @@ class Subscription(TenantAwareModel):
     provider = models.CharField(max_length=30, blank=True)
     provider_subscription_id = models.CharField(max_length=120, blank=True)
 
+    renewal_count = models.PositiveIntegerField(default=0)
+    applied_coupon_code = models.CharField(max_length=50, blank=True)
+
     class Meta(TenantAwareModel.Meta):
         db_table = "subscription"
         constraints = [
@@ -64,12 +67,12 @@ class Subscription(TenantAwareModel):
     def __str__(self) -> str:
         return f"{self.tenant_id}:{self.plan_id}:{self.status}"
 
-    # --- Access predicate -------------------------------------------------
+    # --- Access & License predicates --------------------------------------
     def has_access(self, *, now=None) -> bool:
         """Whether the tenant should currently be served."""
         now = now or timezone.now()
         if self.status in (SubscriptionStatus.TRIALING, SubscriptionStatus.ACTIVE):
-            return True
+            return self.current_period_end > now or self.in_grace
         if self.status == SubscriptionStatus.PAST_DUE:
             return self.grace_until is not None and self.grace_until > now
         if self.status == SubscriptionStatus.CANCELED:
@@ -78,8 +81,35 @@ class Subscription(TenantAwareModel):
 
     @property
     def in_grace(self) -> bool:
+        now = timezone.now()
         return (
-            self.status == SubscriptionStatus.PAST_DUE
+            (self.status == SubscriptionStatus.PAST_DUE or self.current_period_end <= now)
             and self.grace_until is not None
-            and self.grace_until > timezone.now()
+            and self.grace_until > now
         )
+
+    def remaining_days(self, *, now=None) -> int:
+        """Return remaining whole days until expiration or trial end."""
+        now = now or timezone.now()
+        end_time = self.current_period_end
+        if self.status == SubscriptionStatus.TRIALING and self.trial_end:
+            end_time = self.trial_end
+        delta = end_time - now
+        if delta.total_seconds() <= 0:
+            return 0
+        return max(0, delta.days)
+
+    def is_expired(self, *, now=None) -> bool:
+        """Return True if subscription/trial has expired and grace period passed."""
+        return not self.has_access(now=now)
+
+    def has_feature(self, feature_key: str) -> bool:
+        """Check if subscription plan grants access to the requested feature.
+        Note: Core business rule guarantees all plans receive 100% of Nextora POS features.
+        """
+        if feature_key == "all_pos_features":
+            return True
+        if self.plan and self.plan.features and isinstance(self.plan.features, dict):
+            return bool(self.plan.features.get(feature_key, True))
+        return True
+

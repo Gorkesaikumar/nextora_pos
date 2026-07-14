@@ -19,7 +19,7 @@
         </div>
       </div>
       <div class="flex gap-4">
-        <button class="btn border border-neutral-300 bg-neutral-0 text-neutral-800 hover:bg-neutral-50 dark:border-neutral-dark-200 dark:bg-neutral-dark-100 dark:text-neutral-dark-800 dark:hover:bg-neutral-dark-150 px-4 py-2 transition-colors">Change Plan</button>
+        <a href="{% url 'billing:upgrade' %}" class="btn border border-neutral-300 bg-neutral-0 text-neutral-800 hover:bg-neutral-50 dark:border-neutral-dark-200 dark:bg-neutral-dark-100 dark:text-neutral-dark-800 dark:hover:bg-neutral-dark-150 px-4 py-2 transition-colors inline-flex items-center">Change Plan</a>
         <button class="text-semantic-danger dark:text-semantic-danger-dark hover:underline text-body-strong transition-colors">Cancel Subscription</button>
       </div>
     </div>

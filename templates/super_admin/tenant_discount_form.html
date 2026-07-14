@@ -1,0 +1,104 @@
+{% extends "super_admin/layouts/platform.html" %}
+
+{% block platform_title %}{% if discount %}Edit{% else %}Create{% endif %} Tenant Override{% endblock %}
+
+{% block header_title %}{% if discount %}Edit Tenant Override{% else %}Create Tenant Override{% endif %}{% endblock %}
+{% block header_subtitle %}Manually override subscription pricing for a specific tenant or globally.{% endblock %}
+
+{% block content %}
+<form method="post" class="max-w-4xl space-y-6">
+  {% csrf_token %}
+  
+  <div class="bg-white rounded-2xl border border-neutral-200 shadow-sm overflow-hidden">
+    <div class="px-6 py-5 border-b border-neutral-100 bg-neutral-50/50">
+      <h3 class="text-base font-bold text-neutral-900">Targeting Details</h3>
+      <p class="text-xs text-neutral-500 mt-1">Specify which tenant and plan this discount applies to.</p>
+    </div>
+    <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+      
+      <div>
+        <label class="block text-xs font-bold text-neutral-700 uppercase tracking-wide mb-2">Target Tenant</label>
+        <select name="target_tenant" class="w-full px-4 py-2.5 bg-white border border-neutral-200 rounded-xl text-sm font-semibold text-neutral-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none">
+          <option value="">All Tenants (Global Override)</option>
+          {% for t in tenants %}
+          <option value="{{ t.id }}" {% if discount and discount.target_tenant_id == t.id %}selected{% endif %}>{{ t.name }} ({{ t.slug }})</option>
+          {% endfor %}
+        </select>
+        <p class="text-[11px] text-neutral-500 mt-1.5">Leave blank to apply this rule to ALL tenants globally.</p>
+      </div>
+      
+      <div>
+        <label class="block text-xs font-bold text-neutral-700 uppercase tracking-wide mb-2">Applicable Plan</label>
+        <select name="target_plan" class="w-full px-4 py-2.5 bg-white border border-neutral-200 rounded-xl text-sm font-semibold text-neutral-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none">
+          <option value="">All Plans</option>
+          {% for p in plans %}
+          <option value="{{ p.id }}" {% if discount and discount.target_plan_id == p.id %}selected{% endif %}>{{ p.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+    </div>
+  </div>
+  
+  <div class="bg-white rounded-2xl border border-neutral-200 shadow-sm overflow-hidden" x-data="{ discountType: '{{ discount.discount_type|default:"percentage" }}', scope: '{{ discount.scope|default:"forever" }}' }">
+    <div class="px-6 py-5 border-b border-neutral-100 bg-neutral-50/50">
+      <h3 class="text-base font-bold text-neutral-900">Discount Configuration</h3>
+      <p class="text-xs text-neutral-500 mt-1">Define the value and duration of the override.</p>
+    </div>
+    <div class="p-6 space-y-6">
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label class="block text-xs font-bold text-neutral-700 uppercase tracking-wide mb-2">Discount Type</label>
+          <select name="discount_type" x-model="discountType" class="w-full px-4 py-2.5 bg-white border border-neutral-200 rounded-xl text-sm font-semibold text-neutral-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none">
+            <option value="percentage">Percentage (%)</option>
+            <option value="flat">Flat Amount (₹)</option>
+          </select>
+        </div>
+        
+        <div>
+          <label class="block text-xs font-bold text-neutral-700 uppercase tracking-wide mb-2">Discount Value</label>
+          <div class="relative">
+            <input type="number" step="0.01" name="value" value="{{ discount.value|default:'0' }}" required class="w-full px-4 py-2.5 pl-10 bg-white border border-neutral-200 rounded-xl text-sm font-semibold text-neutral-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none">
+            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-neutral-400 font-bold" x-text="discountType === 'percentage' ? '%' : '₹'"></div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 border-t border-neutral-100 pt-6">
+        <div>
+          <label class="block text-xs font-bold text-neutral-700 uppercase tracking-wide mb-2">Duration Scope</label>
+          <select name="scope" x-model="scope" class="w-full px-4 py-2.5 bg-white border border-neutral-200 rounded-xl text-sm font-semibold text-neutral-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none">
+            <option value="once">Once (Single Billing Cycle)</option>
+            <option value="repeating">Repeating (X Months)</option>
+            <option value="forever">Forever</option>
+          </select>
+        </div>
+        
+        <div x-show="scope === 'repeating'" x-cloak>
+          <label class="block text-xs font-bold text-neutral-700 uppercase tracking-wide mb-2">Duration (Months)</label>
+          <input type="number" name="duration_in_months" value="{{ discount.duration_in_months|default:'' }}" min="1" class="w-full px-4 py-2.5 bg-white border border-neutral-200 rounded-xl text-sm font-semibold text-neutral-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none">
+        </div>
+      </div>
+      
+      <div class="pt-6 border-t border-neutral-100">
+        <label class="flex items-center gap-3 cursor-pointer p-4 border border-neutral-200 rounded-xl hover:bg-neutral-50 transition-colors">
+          <input type="checkbox" name="is_active" {% if not discount or discount.is_active %}checked{% endif %} class="w-5 h-5 text-blue-600 rounded border-neutral-300 focus:ring-blue-600">
+          <div>
+            <span class="block text-sm font-bold text-neutral-900">Active Status</span>
+            <span class="block text-xs text-neutral-500 mt-0.5">If disabled, the override will not be applied to future invoices.</span>
+          </div>
+        </label>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="flex items-center justify-end gap-3 pt-4 pb-12">
+    <a href="{% url 'super_admin:coupon_discount_list' %}" class="px-5 py-2.5 text-sm font-bold text-neutral-600 hover:text-neutral-900 transition-colors">Cancel</a>
+    <button type="submit" class="px-6 py-2.5 bg-neutral-900 text-white text-sm font-bold rounded-xl shadow-sm hover:bg-neutral-800 active:scale-95 transition-all">
+      Save Tenant Override
+    </button>
+  </div>
+</form>
+{% endblock %}

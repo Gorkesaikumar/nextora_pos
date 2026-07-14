@@ -17,7 +17,7 @@ from shared.tenancy.context import bypass_tenant, get_current_tenant
 from contexts.identity.permissions.mixins import TenantPermissionRequiredMixin
 from contexts.identity.services.authorization import has_permission
 from contexts.identity.models import User
-from contexts.tenants.models import Branch, Table
+from contexts.tenants.models import Table
 from contexts.ordering.models import Order, OrderItem, KOT, Payment, Invoice
 from contexts.ordering.domain.enums import OrderStatus, OrderType, PaymentMethod, PaymentKind, PaymentStatus, KOTStatus, InvoiceStatus
 from contexts.inventory.models.item import InventoryItem
@@ -193,21 +193,17 @@ class DashboardHomeView(TenantPermissionRequiredMixin, LoginRequiredMixin, Templ
                      .annotate(qty_sold=Sum('qty'), revenue=Sum('line_total'))
                      .order_by('-qty_sold')[:5])
                      
-        top_branches_raw = list(settled_orders.values('location_id')
+        top_branches_raw = list(settled_orders.values('tenant_id')
                             .annotate(revenue=Sum('total'), order_count=Count('id'))
                             .order_by('-revenue')[:5])
                             
-        branch_ids = [b['location_id'] for b in top_branches_raw if b['location_id']]
-        branches_map = {b.id: b.name for b in Branch.objects.filter(id__in=branch_ids)}
-        
         top_branches = []
         for b in top_branches_raw:
-            if b['location_id']:
-                top_branches.append({
-                    'name': branches_map.get(b['location_id'], 'Unknown Branch'),
-                    'revenue': b['revenue'],
-                    'orders': b['order_count']
-                })
+            top_branches.append({
+                'name': 'Main Branch',
+                'revenue': b['revenue'],
+                'orders': b['order_count']
+            })
         
         recent_orders = Order.objects.filter(
             status=OrderStatus.SETTLED,
@@ -325,8 +321,8 @@ class BillingDashboardView(TenantPermissionRequiredMixin, LoginRequiredMixin, Te
         chart_gst_data = [float(gst_collected * Decimal('0.5')), float(gst_collected * Decimal('0.5')), 0]
         
         context.update({
-            'branches': Branch.objects.filter(is_active=True),
-            'selected_branch': branch_id or '',
+            'branches': [],
+            'selected_branch': '',
             'revenue_today': revenue_today,
             'total_bills': total_bills,
             'avg_bill': avg_bill,
@@ -416,12 +412,12 @@ class SalesReportView(TenantPermissionRequiredMixin, LoginRequiredMixin, Templat
                 
         elif report_type == 'branch':
             report_headers = ['Branch ID', 'Orders', 'Gross Sales', 'Discounts', 'Taxes', 'Net Sales']
-            branch_data = settled.values('location_id').annotate(
+            branch_data = settled.values('tenant_id').annotate(
                 order_count=Count('id'), gross=Sum('subtotal'), disc=Sum('discount_amount'),
                 tax=Sum('tax_amount'), net=Sum('total')
             ).order_by('-net')
             for d in branch_data:
-                report_rows.append([str(d['location_id']) or 'Unknown', d['order_count'], d['gross'], d['disc'], d['tax'], d['net']])
+                report_rows.append(['Main Branch', d['order_count'], d['gross'], d['disc'], d['tax'], d['net']])
                 
         elif report_type == 'payment':
             report_headers = ['Payment Method', 'Transactions', 'Collected Amount']
@@ -580,8 +576,8 @@ class SalesReportView(TenantPermissionRequiredMixin, LoginRequiredMixin, Templat
             'start_date': start_date.strftime('%Y-%m-%d'),
             'end_date': end_date.strftime('%Y-%m-%d'),
             'preset': preset,
-            'branches': Branch.objects.filter(is_active=True),
-            'selected_branch': branch_id or '',
+            'branches': [],
+            'selected_branch': '',
             'cashiers': User.objects.filter(is_active=True),
             'selected_cashier': cashier_id or '',
             'customer': customer or '',
@@ -933,7 +929,7 @@ class InvoiceDetailView(TenantPermissionRequiredMixin, LoginRequiredMixin, Templ
         # Get related branch
         branch = None
         try:
-            branch = Branch.objects.get(id=order.location_id)
+            branch = Branch.objects.get(id=getattr(order, 'location_id', None))
         except Branch.DoesNotExist:
             pass
 
@@ -1080,7 +1076,7 @@ class EmailShareModalView(TenantPermissionRequiredMixin, LoginRequiredMixin, Tem
         
         branch_name = "our store"
         try:
-            branch = Branch.objects.get(id=order.location_id)
+            branch = Branch.objects.get(id=getattr(order, 'location_id', None))
             branch_name = branch.name
         except Branch.DoesNotExist:
             pass
@@ -1251,7 +1247,7 @@ class PaymentHistoryView(TenantPermissionRequiredMixin, LoginRequiredMixin, Temp
         header = ['Transaction ID', 'Date & Time', 'Invoice #', 'Order #', 'Customer', 'Amount', 'Payment Method', 'Status', 'Cashier', 'Branch']
         rows = []
         for p in qs:
-            branch_name = branch_map.get(str(p.order.location_id), "Unknown")
+            branch_name = branch_map.get(str(p.getattr(order, 'location_id', None)), "Unknown")
             cashier_name = user_map.get(str(p.created_by), "System")
             invoice_num = p.order.invoice.number if hasattr(p.order, 'invoice') else "N/A"
             rows.append([
@@ -1315,7 +1311,7 @@ class PaymentHistoryView(TenantPermissionRequiredMixin, LoginRequiredMixin, Temp
         branch_map = {str(b.id): b.name for b in branches}
 
         for p in page_obj:
-            p.branch_name = branch_map.get(str(p.order.location_id), "Unknown")
+            p.branch_name = branch_map.get(str(p.getattr(order, 'location_id', None)), "Unknown")
             p.cashier_name = user_map.get(str(p.created_by), "System")
         
         # Get total collected today
@@ -1350,7 +1346,7 @@ class WhatsAppShareModalView(TenantPermissionRequiredMixin, LoginRequiredMixin, 
         
         branch_name = "our store"
         try:
-            branch = Branch.objects.get(id=order.location_id)
+            branch = Branch.objects.get(id=getattr(order, 'location_id', None))
             branch_name = branch.name
         except Branch.DoesNotExist:
             pass
@@ -1574,7 +1570,7 @@ class RefundLookupView(TenantPermissionRequiredMixin, View):
         tenant_id = getattr(self.request, "tenant_id", None)
         location_id = getattr(self.request, "branch_id", None)
         for perm in ["reports.financial.view", "payments.refund", "orders.void", "invoices.void", "billing.manage"]:
-            if has_permission(self.request.user, perm, tenant_id, location_id):
+            if has_permission(self.request.user, perm, tenant_id):
                 return True
         return False
 
@@ -1656,7 +1652,7 @@ class InitiateRefundView(TenantPermissionRequiredMixin, View):
         tenant_id = getattr(self.request, "tenant_id", None)
         location_id = getattr(self.request, "branch_id", None)
         for perm in ["reports.financial.view", "payments.refund", "orders.void", "invoices.void", "billing.manage"]:
-            if has_permission(self.request.user, perm, tenant_id, location_id):
+            if has_permission(self.request.user, perm, tenant_id):
                 return True
         return False
 

@@ -29,7 +29,6 @@ _TTL = 600  # seconds
 
 @dataclass(frozen=True)
 class _Grant:
-    location_id: str | None      # None = all branches
     permissions: frozenset[str]
 
 
@@ -62,8 +61,7 @@ def _resolve_grants(
     grants: list[_Grant] = []
     for m in memberships:
         codes = frozenset(p.code for p in m.role.permissions.all())
-        loc = str(m.location_id) if m.location_id else None
-        grants.append(_Grant(location_id=loc, permissions=codes))
+        grants.append(_Grant(permissions=codes))
     return grants
 
 
@@ -73,12 +71,12 @@ def _get_grants(
     key = _cache_key(user_id, tenant_id)
     cached = cache.get(key)
     if cached is not None:
-        return [_Grant(g["location_id"], frozenset(g["permissions"])) for g in cached]
+        return [_Grant(frozenset(g["permissions"])) for g in cached]
 
     grants = _resolve_grants(user_id, tenant_id)
     cache.set(
         key,
-        [{"location_id": g.location_id, "permissions": list(g.permissions)} for g in grants],
+        [{"permissions": list(g.permissions)} for g in grants],
         _TTL,
     )
     return grants
@@ -88,9 +86,8 @@ def has_permission(
     user,
     code: str,
     tenant_id: uuid.UUID | None,
-    location_id: uuid.UUID | None = None,
 ) -> bool:
-    """Return True iff the user holds ``code`` in this tenant/branch scope."""
+    """Return True iff the user holds ``code`` in this tenant scope."""
     if user is None or not getattr(user, "is_authenticated", False):
         return False
     if not getattr(user, "is_active", False):
@@ -98,30 +95,20 @@ def has_permission(
     if getattr(user, "is_superuser", False):
         return True
 
-    target_loc = str(location_id) if location_id else None
     for grant in _get_grants(user.id, tenant_id):
-        # Global grant applies anywhere
-        if grant.location_id is None:
-            if code in grant.permissions or "*" in grant.permissions or "*tenant" in grant.permissions:
-                return True
-        # Branch-specific grant applies if target matches OR if no target is specified
-        elif target_loc is None or grant.location_id == target_loc:
-            if code in grant.permissions or "*" in grant.permissions or "*tenant" in grant.permissions:
-                return True
+        if code in grant.permissions or "*" in grant.permissions or "*tenant" in grant.permissions:
+            return True
     return False
 
 
 def get_permission_codes(
     user,
     tenant_id: uuid.UUID | None,
-    location_id: uuid.UUID | None = None,
 ) -> frozenset[str]:
     """Union of all permission codes the user holds in scope (for UI/menus)."""
     if user is None or not getattr(user, "is_authenticated", False):
         return frozenset()
-    target_loc = str(location_id) if location_id else None
     codes: set[str] = set()
     for grant in _get_grants(user.id, tenant_id):
-        if grant.location_id is None or grant.location_id == target_loc:
-            codes |= grant.permissions
+        codes |= grant.permissions
     return frozenset(codes)

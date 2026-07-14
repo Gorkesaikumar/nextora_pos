@@ -1,0 +1,298 @@
+{% extends "super_admin/layouts/platform.html" %}
+
+{% block platform_title %}SaaS Coupons &amp; Discounts{% endblock %}
+{% block header_title %}Promotional Coupons &amp; Discounts{% endblock %}
+{% block header_subtitle %}Manage SaaS subscription coupon codes, validity periods, and usage limits.{% endblock %}
+
+{% block header_actions %}
+<a href="{% url 'super_admin:coupon_create' %}" class="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-xl shadow-md hover:bg-blue-700 active:scale-[0.98] transition-all">
+  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+  <span>Create Plan</span>
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+
+  {% if messages %}
+  <div class="space-y-2 max-w-full">
+    {% for msg in messages %}
+    <div class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium shadow-sm {% if msg.tags == 'error' %}bg-red-50 text-red-800 border-red-200{% else %}bg-emerald-50 text-emerald-800 border-emerald-200{% endif %} border">
+      {{ msg }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Section 1: Promotional Coupons -->
+  <div class="bg-white rounded-2xl border border-neutral-200 overflow-hidden shadow-sm">
+    <div class="px-6 py-5 border-b border-neutral-100 flex justify-between items-center bg-neutral-50/30">
+      <div>
+        <h3 class="text-base font-bold text-neutral-900">Active Promotional Coupons</h3>
+        <p class="text-xs text-neutral-500 mt-1">Codes applied during checkout by restaurants.</p>
+      </div>
+      <span class="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold bg-neutral-100 text-neutral-600 font-mono border border-neutral-200">{{ coupons|length }} Coupons</span>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-neutral-50/50 border-b border-neutral-200">
+            <th class="px-6 py-4 text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Coupon Code</th>
+            <th class="px-6 py-4 text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Discount</th>
+            <th class="px-6 py-4 text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Usage Limit</th>
+            <th class="px-6 py-4 text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Status</th>
+            <th class="px-6 py-4 text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Validity</th>
+            <th class="px-6 py-4 text-[10px] font-bold text-neutral-500 uppercase tracking-widest text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-neutral-100">
+          {% for c in coupons %}
+          <tr class="hover:bg-neutral-50/50 transition-colors bg-white group">
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600">
+                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V4.22c0-.754-.726-1.294-1.453-1.096a59.769 59.769 0 01-5.038.862m-10.76 14.774C3.251 18.75 4 17.55 4 16.5m-1.75 2.25V4.22c0-.754.726-1.294 1.453-1.096a59.769 59.769 0 015.038.862" /></svg>
+                </div>
+                <div>
+                  <span class="inline-block px-2.5 py-0.5 rounded text-[11px] font-bold bg-neutral-900 text-white font-mono tracking-wider shadow-sm">{{ c.code }}</span>
+                  <div class="text-sm font-semibold text-neutral-900 mt-1">{{ c.name }}</div>
+                  {% if c.description %}<div class="text-[10px] text-neutral-500 mt-0.5">{{ c.description|truncatechars:40 }}</div>{% endif %}
+                </div>
+              </div>
+            </td>
+            <td class="px-6 py-4">
+              <div class="text-sm font-black text-neutral-900">
+                {% if c.discount_type == 'percentage' %}
+                  {{ c.value }}% OFF
+                {% else %}
+                  ₹{{ c.value|floatformat:"0" }} OFF
+                {% endif %}
+              </div>
+              {% if c.minimum_purchase_amount %}
+              <div class="text-[10px] text-neutral-500 mt-1">Min. ₹{{ c.minimum_purchase_amount|floatformat:"0" }}</div>
+              {% endif %}
+              {% if c.maximum_discount_amount %}
+              <div class="text-[10px] text-neutral-500 mt-0.5">Max. ₹{{ c.maximum_discount_amount|floatformat:"0" }}</div>
+              {% endif %}
+            </td>
+            <td class="px-6 py-4">
+              <div class="flex flex-col gap-1">
+                <div class="text-xs font-bold text-neutral-900 font-mono">
+                  {{ c.usages.count|default:"0" }} / {% if c.usage_limit %}{{ c.usage_limit }}{% else %}&infin;{% endif %}
+                </div>
+                {% if c.usage_limit %}
+                  <div class="w-full h-1.5 bg-neutral-100 rounded-full overflow-hidden">
+                    <div class="h-full bg-blue-500 rounded-full" style="width: {% widthratio c.usages.count|default:0 c.usage_limit 100 %}%"></div>
+                  </div>
+                {% endif %}
+              </div>
+            </td>
+            <td class="px-6 py-4">
+              {% if c.is_hidden %}
+                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-neutral-100 text-neutral-500 border border-neutral-200">Hidden</span>
+              {% elif c.is_active and not c.is_expired %}
+                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Active</span>
+              {% elif not c.is_active %}
+                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-red-50 text-red-700 border border-red-200">Disabled</span>
+              {% else %}
+                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">Expired</span>
+              {% endif %}
+            </td>
+            <td class="px-6 py-4">
+              <div class="text-xs text-neutral-900 font-medium whitespace-nowrap">
+                From: <span class="font-mono text-neutral-600">{{ c.valid_from|date:"M d, Y" }}</span>
+              </div>
+              <div class="text-xs text-neutral-900 font-medium whitespace-nowrap mt-1">
+                To: {% if c.valid_until %}<span class="font-mono text-neutral-600">{{ c.valid_until|date:"M d, Y" }}</span>{% else %}<span class="text-emerald-600 font-bold">Forever</span>{% endif %}
+              </div>
+            </td>
+            <td class="px-6 py-4 text-right">
+              <div class="flex items-center justify-end gap-2">
+                <a href="{% url 'super_admin:coupon_edit' c.id %}" class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-neutral-50 text-neutral-500 hover:bg-blue-50 hover:text-blue-600 transition-colors" title="Edit Coupon">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" /></svg>
+                </a>
+                <button type="button" onclick="document.getElementById('toggle-form-{{ c.id }}').submit()" class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-neutral-50 text-neutral-500 hover:bg-orange-50 hover:text-orange-600 transition-colors" title="Toggle Status">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5.636 5.636a9 9 0 1012.728 0M12 3v9" /></svg>
+                </button>
+                <button type="button" onclick="openDeleteModal('{{ c.id }}', '{{ c.code }}')" class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-neutral-50 text-neutral-500 hover:bg-red-50 hover:text-red-600 transition-colors" title="Delete Coupon">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+          
+          <!-- Hidden form for deleting -->
+          <form id="delete-form-{{ c.id }}" action="{% url 'super_admin:coupon_delete' c.id %}" method="POST" class="hidden">
+            {% csrf_token %}
+          </form>
+
+          <!-- Hidden form for toggling status -->
+          <form id="toggle-form-{{ c.id }}" action="{% url 'super_admin:coupon_toggle' c.id %}" method="POST" class="hidden">
+            {% csrf_token %}
+          </form>
+          
+          {% empty %}
+          <tr>
+            <td colspan="6" class="px-6 py-16 text-center">
+              <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-neutral-50 mb-4 border border-neutral-100 shadow-sm">
+                <svg class="w-8 h-8 text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V4.22c0-.754-.726-1.294-1.453-1.096a59.769 59.769 0 01-5.038.862m-10.76 14.774C3.251 18.75 4 17.55 4 16.5m-1.75 2.25V4.22c0-.754.726-1.294 1.453-1.096a59.769 59.769 0 015.038.862" /></svg>
+              </div>
+              <h3 class="text-sm font-bold text-neutral-900 mb-1">No coupons found</h3>
+              <p class="text-xs text-neutral-500 max-w-sm mx-auto">Create a promotional code to offer percentage or flat-rate discounts to new restaurants.</p>
+              <div class="mt-6">
+                <a href="{% url 'super_admin:coupon_create' %}" class="inline-flex items-center gap-2 px-4 py-2 bg-neutral-900 text-white text-xs font-bold rounded-lg hover:bg-neutral-800 transition-colors">
+                  Create First Coupon
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <!-- Section 2: Tenant Specific Discounts -->
+  <div class="bg-white rounded-2xl border border-neutral-200 overflow-hidden shadow-sm mt-8">
+    <div class="px-6 py-5 border-b border-neutral-100 flex justify-between items-center bg-neutral-50/30">
+      <div>
+        <h3 class="text-base font-bold text-neutral-900">Tenant-Specific Discounts</h3>
+        <p class="text-xs text-neutral-500 mt-1">Manual pricing overrides applied directly to specific restaurants.</p>
+      </div>
+      <div class="flex items-center gap-4">
+        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold bg-neutral-100 text-neutral-600 font-mono border border-neutral-200">{{ discounts|length }} Overrides</span>
+        <a href="{% url 'super_admin:tenant_discount_create' %}" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-neutral-900 text-white text-xs font-bold rounded-lg shadow-sm hover:bg-neutral-800 transition-colors">
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+          Add Override
+        </a>
+      </div>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-neutral-50/50 border-b border-neutral-200">
+            <th class="px-6 py-4 text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Restaurant Tenant</th>
+            <th class="px-6 py-4 text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Applicable Plan</th>
+            <th class="px-6 py-4 text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Discount &amp; Scope</th>
+            <th class="px-6 py-4 text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Status</th>
+            <th class="px-6 py-4 text-[10px] font-bold text-neutral-500 uppercase tracking-widest text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-neutral-100">
+          {% for d in discounts %}
+          <tr class="hover:bg-neutral-50/50 transition-colors bg-white group">
+            <td class="px-6 py-4 font-bold text-sm text-neutral-900">
+              {% if d.target_tenant %}
+                {{ d.target_tenant.name }}
+                <div class="text-[10px] text-neutral-500 font-mono font-normal">{{ d.target_tenant.slug }}</div>
+              {% else %}
+                <span class="text-neutral-400 font-normal">All Tenants (Global)</span>
+              {% endif %}
+            </td>
+            <td class="px-6 py-4 text-xs font-semibold text-neutral-800">
+              {% if d.target_plan %}{{ d.target_plan.name }}{% else %}All Plans{% endif %}
+            </td>
+            <td class="px-6 py-4">
+              <div class="text-sm font-black text-neutral-900">
+                {% if d.discount_type == 'percentage' %}
+                  {{ d.value }}% OFF
+                {% else %}
+                  ₹{{ d.value|floatformat:"0" }} OFF
+                {% endif %}
+              </div>
+              <div class="text-[10px] font-bold text-blue-600 uppercase tracking-wider mt-0.5">{{ d.scope }}</div>
+            </td>
+            <td class="px-6 py-4">
+              {% if d.is_active %}
+                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Active</span>
+              {% else %}
+                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-neutral-100 text-neutral-500 border border-neutral-200">Inactive</span>
+              {% endif %}
+            </td>
+            <td class="px-6 py-4 text-right">
+              <a href="{% url 'super_admin:tenant_discount_edit' d.id %}" class="text-xs text-blue-600 font-semibold hover:text-blue-800">Manage</a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="5" class="px-6 py-12 text-center text-neutral-500 text-xs">No tenant-specific plan discounts configured.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Tailwind Modal for Delete Confirmation -->
+<div id="deleteModal" class="relative z-50 hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+  <div class="fixed inset-0 bg-neutral-900/40 backdrop-blur-sm transition-opacity opacity-0" id="deleteModalBackdrop"></div>
+  <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+    <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+      <div id="deleteModalPanel" class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95 border border-neutral-100">
+        <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+          <div class="sm:flex sm:items-start">
+            <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+              <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
+              <h3 class="text-base font-semibold leading-6 text-gray-900" id="modal-title">Delete Coupon</h3>
+              <div class="mt-2">
+                <p class="text-sm text-gray-500">Are you sure you want to delete the coupon <span id="deleteModalCouponName" class="font-bold text-gray-900"></span>? This action cannot be undone.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+          <button type="button" id="confirmDeleteBtn" class="inline-flex w-full justify-center rounded-xl bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto transition-colors">Delete</button>
+          <button type="button" onclick="closeDeleteModal()" class="mt-3 inline-flex w-full justify-center rounded-xl bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto transition-colors">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let currentDeleteFormId = null;
+
+  function openDeleteModal(couponId, couponCode) {
+    currentDeleteFormId = `delete-form-${couponId}`;
+    document.getElementById('deleteModalCouponName').textContent = couponCode;
+    
+    const modal = document.getElementById('deleteModal');
+    const backdrop = document.getElementById('deleteModalBackdrop');
+    const panel = document.getElementById('deleteModalPanel');
+    
+    modal.classList.remove('hidden');
+    
+    // Trigger animations
+    setTimeout(() => {
+      backdrop.classList.remove('opacity-0');
+      panel.classList.remove('opacity-0', 'translate-y-4', 'sm:scale-95');
+    }, 10);
+  }
+
+  function closeDeleteModal() {
+    const backdrop = document.getElementById('deleteModalBackdrop');
+    const panel = document.getElementById('deleteModalPanel');
+    
+    // Reverse animations
+    backdrop.classList.add('opacity-0');
+    panel.classList.add('opacity-0', 'translate-y-4', 'sm:scale-95');
+    
+    setTimeout(() => {
+      document.getElementById('deleteModal').classList.add('hidden');
+      currentDeleteFormId = null;
+    }, 300); // Wait for transition
+  }
+
+  document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+    if (currentDeleteFormId) {
+      document.getElementById(currentDeleteFormId).submit();
+    }
+  });
+</script>
+{% endblock %}

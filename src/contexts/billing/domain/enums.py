@@ -7,9 +7,31 @@ from django.db import models
 
 
 class BillingInterval(models.TextChoices):
-    MONTHLY = "monthly"
-    QUARTERLY = "quarterly"
-    YEARLY = "yearly"
+    DAILY = "daily", "Daily"
+    WEEKLY = "weekly", "Weekly"
+    MONTHLY = "monthly", "Monthly"
+    QUARTERLY = "quarterly", "Quarterly"
+    HALF_YEARLY = "half_yearly", "Half-Yearly"
+    YEARLY = "yearly", "Yearly"
+    CUSTOM = "custom", "Custom Duration"
+
+
+class DiscountType(models.TextChoices):
+    PERCENTAGE = "percentage", "Percentage (%)"
+    FLAT = "flat", "Flat Amount (₹)"
+
+
+class DiscountScope(models.TextChoices):
+    PLATFORM = "platform", "Entire Platform"
+    TENANT = "tenant", "Specific Restaurant"
+    PLAN = "plan", "Specific Plan"
+
+
+class CouponEligibility(models.TextChoices):
+    ALL = "all", "All Customers"
+    NEW_ONLY = "new_only", "New Customers Only"
+    EXISTING = "existing", "Existing Customers Only"
+    TRIAL_USERS = "trial_users", "Trial Users Only"
 
 
 class SubscriptionStatus(models.TextChoices):

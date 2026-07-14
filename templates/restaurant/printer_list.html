@@ -46,16 +46,7 @@
 
 <!-- Filter and search bar -->
 <div class="flex flex-col sm:flex-row gap-4 mb-6">
-  <form method="GET" action="." class="flex gap-4 flex-1">
-    <div class="w-full sm:w-64">
-      <select name="branch" class="form-input h-11" onchange="this.form.submit()">
-        <option value="">All Branches</option>
-        {% for b in branches %}
-          <option value="{{ b.id }}" {% if request.GET.branch == b.id|stringformat:"s" %}selected{% endif %}>{{ b.name }}</option>
-        {% endfor %}
-      </select>
-    </div>
-  </form>
+  <!-- Search or filter can go here in the future -->
 </div>
 
 <!-- Printer List Table -->
@@ -69,7 +60,6 @@
         <tr class="bg-neutral-50 dark:bg-neutral-900/50 border-b border-neutral-150 dark:border-neutral-700 text-heading-3 text-neutral-700 dark:text-neutral-300">
           <th class="px-5 py-3.5 font-semibold">Printer Details</th>
           <th class="px-5 py-3.5 font-semibold">Type</th>
-          <th class="px-5 py-3.5 font-semibold">Branch Assignment</th>
           <th class="px-5 py-3.5 font-semibold">Connection Details</th>
           <th class="px-5 py-3.5 font-semibold">Status</th>
           <th class="px-5 py-3.5 font-semibold text-right">Actions</th>
@@ -96,9 +86,6 @@
           </td>
           <td class="px-5 py-4 text-xs font-semibold text-neutral-700 dark:text-neutral-300 capitalize">
             {{ printer.get_kind_display }}
-          </td>
-          <td class="px-5 py-4 text-xs text-neutral-500 dark:text-neutral-400 font-medium">
-            {{ printer.branch_name }}
           </td>
           <td class="px-5 py-4">
             <div class="text-xs font-semibold text-neutral-800 dark:text-neutral-200 uppercase">{{ printer.connection_type }}</div>

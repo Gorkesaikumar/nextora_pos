@@ -78,7 +78,7 @@ def _create_invoice_with_number(
     then retried with the next number until one is free.
     """
     fields = dict(
-        order=order, location_id=order.location_id, series=series,
+        order=order, series=series,
         financial_year=financial_year(on),
         subtotal=order.subtotal, discount_amount=order.discount_amount,
         service_charge_amount=order.service_charge_amount,

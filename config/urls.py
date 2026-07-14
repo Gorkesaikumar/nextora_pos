@@ -8,6 +8,7 @@ Surface is split into three concerns:
 from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path
+from django.conf.urls.static import static
 
 from shared.api.health import liveness, readiness
 
@@ -70,3 +71,7 @@ if settings.DEBUG:
     urlpatterns += [
         path("__debug__/", include("debug_toolbar.urls")),
     ]
+
+# Always serve media files in development (runserver).
+# In production, NGINX/CDN should serve /media/ directly.
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

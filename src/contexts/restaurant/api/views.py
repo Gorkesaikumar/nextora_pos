@@ -7,9 +7,6 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from ..models import (
-    Branch,
-    BranchGSTProfile,
-    BranchSettings,
     BusinessHours,
     CashCounter,
     DiningTable,
@@ -21,29 +18,18 @@ from ..models import (
 from ..services import (
     activate_restaurant,
     block_table,
-    check_branch_open_status,
     close_restaurant,
-    create_branch,
     create_restaurant,
     ensure_default_restaurant,
     generate_table_qr_url,
     merge_tables,
-    open_branch,
-    pause_branch,
-    permanently_close_branch,
     reactivate_restaurant,
     release_table,
-    resume_branch,
     seat_guests,
-    set_business_hours,
     split_tables,
     suspend_restaurant,
-    update_gst_profile,
 )
 from .serializers import (
-    BranchGSTProfileSerializer,
-    BranchSerializer,
-    BranchSettingsSerializer,
     BusinessHoursInputSerializer,
     BusinessHoursSerializer,
     CashCounterSerializer,
@@ -105,93 +91,6 @@ class RestaurantViewSet(viewsets.ModelViewSet):
         except Exception as e:
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-
-class BranchViewSet(viewsets.ModelViewSet):
-    serializer_class = BranchSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    filter_backends = [filters.SearchFilter]
-    search_fields = ["name", "code"]
-
-    def get_queryset(self):
-        return Branch.objects.all()
-
-    @action(detail=True, methods=["post"])
-    def open(self, request, pk=None):
-        try:
-            branch = open_branch(uuid.UUID(pk))
-            return Response(self.get_serializer(branch).data)
-        except Exception as e:
-            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-    @action(detail=True, methods=["post"])
-    def pause(self, request, pk=None):
-        try:
-            branch = pause_branch(uuid.UUID(pk))
-            return Response(self.get_serializer(branch).data)
-        except Exception as e:
-            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-    @action(detail=True, methods=["post"])
-    def resume(self, request, pk=None):
-        try:
-            branch = resume_branch(uuid.UUID(pk))
-            return Response(self.get_serializer(branch).data)
-        except Exception as e:
-            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-    @action(detail=True, methods=["post"])
-    def close_permanently(self, request, pk=None):
-        try:
-            branch = permanently_close_branch(uuid.UUID(pk))
-            return Response(self.get_serializer(branch).data)
-        except Exception as e:
-            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-    @action(detail=True, methods=["post"], url_path="gst-profile")
-    def set_gst_profile(self, request, pk=None):
-        serializer = GSTProfileInputSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        d = serializer.validated_data
-        
-        try:
-            profile = update_gst_profile(
-                branch_id=uuid.UUID(pk),
-                gstin=d["gstin"],
-                legal_name=d["legal_name"],
-                registration_type=d["registration_type"],
-            )
-            return Response(BranchGSTProfileSerializer(profile).data)
-        except Exception as e:
-            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-    @action(detail=True, methods=["post"], url_path="business-hours")
-    def set_business_hours(self, request, pk=None):
-        serializer = BusinessHoursInputSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        d = serializer.validated_data
-        
-        try:
-            hours = set_business_hours(
-                branch_id=uuid.UUID(pk),
-                day_of_week=d["day_of_week"],
-                open_time=d["open_time"],
-                close_time=d["close_time"],
-                is_closed=d.get("is_closed", False),
-            )
-            return Response(BusinessHoursSerializer(hours).data)
-        except Exception as e:
-            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-    @action(detail=True, methods=["get"], url_path="open-status")
-    def open_status(self, request, pk=None):
-        time_str = request.query_params.get("time")
-        if time_str:
-            dt = datetime.datetime.fromisoformat(time_str)
-        else:
-            dt = datetime.datetime.now()
-            
-        is_open, reason = check_branch_open_status(uuid.UUID(pk), dt)
-        return Response({"is_open": is_open, "reason": reason})
 
 
 

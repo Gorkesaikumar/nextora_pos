@@ -1,0 +1,91 @@
+{% extends "super_admin/layouts/platform.html" %}
+
+{% block platform_title %}Duration Visibility Settings{% endblock %}
+{% block header_title %}Subscription Duration Visibility Toggles{% endblock %}
+{% block header_subtitle %}Control which billing duration options appear on customer registration wizards and upgrade screens{% endblock %}
+
+{% block content %}
+<form method="POST" class="max-w-3xl bg-white rounded-xl border border-neutral-200 p-8 shadow-sm space-y-8">
+  {% csrf_token %}
+
+  <div class="border-b border-neutral-200 pb-6">
+    <h3 class="text-heading-3 text-neutral-900 font-bold mb-1">Billing Interval Visibility Master Switches</h3>
+    <p class="text-xs text-neutral-500">Toggle on/off exact duration tabs shown to users when choosing or upgrading their Nextora POS subscription.</p>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <label class="flex items-center justify-between p-4 rounded-xl border border-neutral-200 bg-neutral-50 cursor-pointer hover:border-neutral-300">
+      <div>
+        <div class="text-sm font-bold text-neutral-900">Daily Subscription (1 Day)</div>
+        <div class="text-xs text-neutral-500">Ideal for pop-up events and one-day expos</div>
+      </div>
+      <input type="checkbox" name="show_daily" {% if config.show_daily %}checked{% endif %} class="rounded text-brand-600 focus:ring-brand-500 w-5 h-5">
+    </label>
+
+    <label class="flex items-center justify-between p-4 rounded-xl border border-neutral-200 bg-neutral-50 cursor-pointer hover:border-neutral-300">
+      <div>
+        <div class="text-sm font-bold text-neutral-900">Weekly Subscription (7 Days)</div>
+        <div class="text-xs text-neutral-500">Short-term festival food stalls</div>
+      </div>
+      <input type="checkbox" name="show_weekly" {% if config.show_weekly %}checked{% endif %} class="rounded text-brand-600 focus:ring-brand-500 w-5 h-5">
+    </label>
+
+    <label class="flex items-center justify-between p-4 rounded-xl border border-neutral-200 bg-neutral-50 cursor-pointer hover:border-neutral-300">
+      <div>
+        <div class="text-sm font-bold text-neutral-900">Monthly Subscription (30 Days)</div>
+        <div class="text-xs text-neutral-500">Standard recurring monthly billing</div>
+      </div>
+      <input type="checkbox" name="show_monthly" {% if config.show_monthly %}checked{% endif %} class="rounded text-brand-600 focus:ring-brand-500 w-5 h-5">
+    </label>
+
+    <label class="flex items-center justify-between p-4 rounded-xl border border-neutral-200 bg-neutral-50 cursor-pointer hover:border-neutral-300">
+      <div>
+        <div class="text-sm font-bold text-neutral-900">Quarterly Subscription (90 Days)</div>
+        <div class="text-xs text-neutral-500">Seasonal businesses &amp; 3-month commitments</div>
+      </div>
+      <input type="checkbox" name="show_quarterly" {% if config.show_quarterly %}checked{% endif %} class="rounded text-brand-600 focus:ring-brand-500 w-5 h-5">
+    </label>
+
+    <label class="flex items-center justify-between p-4 rounded-xl border border-neutral-200 bg-neutral-50 cursor-pointer hover:border-neutral-300">
+      <div>
+        <div class="text-sm font-bold text-neutral-900">Half-Yearly Subscription (180 Days)</div>
+        <div class="text-xs text-neutral-500">Medium-term discount plan</div>
+      </div>
+      <input type="checkbox" name="show_half_yearly" {% if config.show_half_yearly %}checked{% endif %} class="rounded text-brand-600 focus:ring-brand-500 w-5 h-5">
+    </label>
+
+    <label class="flex items-center justify-between p-4 rounded-xl border border-neutral-200 bg-neutral-50 cursor-pointer hover:border-neutral-300">
+      <div>
+        <div class="text-sm font-bold text-neutral-900">Yearly Subscription (365 Days)</div>
+        <div class="text-xs text-neutral-500">Annual billing with maximum discount</div>
+      </div>
+      <input type="checkbox" name="show_yearly" {% if config.show_yearly %}checked{% endif %} class="rounded text-brand-600 focus:ring-brand-500 w-5 h-5">
+    </label>
+  </div>
+
+  <div class="border-t border-neutral-200 pt-6">
+    <h3 class="text-heading-3 text-neutral-900 font-bold mb-4">Advanced Display Toggles</h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <label class="flex items-center justify-between p-4 rounded-xl border border-neutral-200 bg-neutral-50 cursor-pointer hover:border-neutral-300">
+        <div>
+          <div class="text-sm font-bold text-neutral-900">Show Custom Duration Option</div>
+          <div class="text-xs text-neutral-500">Allow users to enter custom exact date ranges</div>
+        </div>
+        <input type="checkbox" name="show_custom_duration" {% if config.show_custom_duration %}checked{% endif %} class="rounded text-brand-600 focus:ring-brand-500 w-5 h-5">
+      </label>
+
+      <label class="flex items-center justify-between p-4 rounded-xl border border-neutral-200 bg-neutral-50 cursor-pointer hover:border-neutral-300">
+        <div>
+          <div class="text-sm font-bold text-neutral-900">Show Currency Symbol (₹/INR)</div>
+          <div class="text-xs text-neutral-500">Display explicit currency badges on pricing cards</div>
+        </div>
+        <input type="checkbox" name="show_currency" {% if config.show_currency %}checked{% endif %} class="rounded text-brand-600 focus:ring-brand-500 w-5 h-5">
+      </label>
+    </div>
+  </div>
+
+  <div class="flex items-center justify-end gap-4 border-t border-neutral-200 pt-6">
+    <button type="submit" class="btn-primary px-8 py-3 text-xs font-bold shadow-md">Update Visibility Settings</button>
+  </div>
+</form>
+{% endblock %}

@@ -11,9 +11,6 @@ class KitchenStation(TenantAwareModel):
     Orders are routed to stations based on product → category → station mapping
     in the catalog context.
     """
-    branch = models.ForeignKey(
-        "restaurant.Branch", on_delete=models.CASCADE, related_name="kitchen_stations"
-    )
     code = models.CharField(max_length=30)
     name = models.CharField(max_length=120)
     kind = models.CharField(
@@ -28,15 +25,15 @@ class KitchenStation(TenantAwareModel):
         ordering = ["sort_order", "name"]
         constraints = [
             models.UniqueConstraint(
-                fields=["branch", "code"],
+                fields=["tenant", "code"],
                 condition=models.Q(is_deleted=False),
-                name="uq_r_station__branch_code",
+                name="uq_r_station__tenant_code",
             ),
         ]
         indexes = [
             models.Index(
-                fields=["branch", "is_active"],
-                name="ix_r_station__branch_active",
+                fields=["tenant", "is_active"],
+                name="ix_r_station__tenant_active",
             ),
         ]
 
@@ -45,10 +42,7 @@ class KitchenStation(TenantAwareModel):
 
 
 class Printer(TenantAwareModel):
-    """A physical printer at a branch (receipt, KOT, label)."""
-    branch = models.ForeignKey(
-        "restaurant.Branch", on_delete=models.CASCADE, related_name="printers"
-    )
+    """A physical printer (receipt, KOT, label)."""
     code = models.CharField(max_length=30)
     name = models.CharField(max_length=120)
     kind = models.CharField(
@@ -72,16 +66,16 @@ class Printer(TenantAwareModel):
         ordering = ["name"]
         constraints = [
             models.UniqueConstraint(
-                fields=["branch", "code"],
+                fields=["tenant", "code"],
                 condition=models.Q(is_deleted=False),
-                name="uq_r_printer__branch_code",
+                name="uq_r_printer__tenant_code",
             ),
         ]
         indexes = [
             models.Index(
-                fields=["branch", "kind"],
+                fields=["tenant", "kind"],
                 condition=models.Q(is_active=True),
-                name="ix_r_printer__branch_kind",
+                name="ix_r_printer__tenant_kind",
             ),
         ]
 

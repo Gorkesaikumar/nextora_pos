@@ -13,7 +13,7 @@ from contexts.billing.exceptions import (
     PlanNotFound,
     PriceNotFound,
 )
-from contexts.billing.models import Plan, Subscription
+from contexts.billing.models import Plan, Subscription, SubscriptionCoupon, CouponUsage
 from contexts.billing.services import entitlements, invoice_service
 from shared.tenancy import tenant_scope
 
@@ -24,9 +24,17 @@ def _plan_and_price(plan_code: str, interval: str):
     except Plan.DoesNotExist as exc:
         raise PlanNotFound(plan_code) from exc
     price = plan.prices.filter(interval=interval).first()
-    if price is None:
+    amount = plan.sale_price if plan.sale_price > 0 else plan.original_price
+    currency = plan.currency or "INR"
+    if price is not None:
+        amount = price.amount
+        currency = price.currency
+    elif amount <= 0 and not plan.prices.exists():
+        # Fallback if amount is 0 and no prices defined
+        amount = 0
+    elif price is None and not (amount >= 0):
         raise PriceNotFound(f"{plan_code}/{interval}")
-    return plan, price
+    return plan, amount, currency
 
 
 def create_subscription(
@@ -34,37 +42,75 @@ def create_subscription(
     plan_code: str,
     interval: str,
     now: datetime | None = None,
+    coupon_code: str | None = None,
 ) -> Subscription:
-    """Start a subscription. With trial_days>0 begins a trial; otherwise issues
-    an open invoice immediately and starts in a (grace) past_due state until paid.
-    """
+    """Start a subscription. Uses GlobalTrialConfig or plan trial_days to begin a trial."""
     now = now or timezone.now()
+    from contexts.billing.models import GlobalTrialConfig
+    trial_config = GlobalTrialConfig.get_solo()
+
     with tenant_scope(tenant_id), transaction.atomic():
         if Subscription.objects.filter(
             status__in=SubscriptionStatus.occupied()
         ).exists():
             raise ActiveSubscriptionExists(str(tenant_id))
 
-        plan, price = _plan_and_price(plan_code, interval)
+        plan, amount, currency = _plan_and_price(plan_code, interval)
+        
+        # Apply Coupon Discount
+        coupon_obj = None
+        discount_amount = Decimal("0.00")
+        if coupon_code:
+            try:
+                coupon_obj = SubscriptionCoupon.objects.get(code=coupon_code)
+                is_valid, _ = coupon_obj.is_valid_now(cart_amount=amount, tenant_status="new")
+                if is_valid:
+                    if coupon_obj.discount_type == 'percentage':
+                        discount = amount * (coupon_obj.value / Decimal("100"))
+                        if coupon_obj.maximum_discount_amount and discount > coupon_obj.maximum_discount_amount:
+                            discount = coupon_obj.maximum_discount_amount
+                        discount_amount = discount
+                    else:
+                        discount_amount = coupon_obj.value
+                    
+                    amount = max(Decimal("0.00"), amount - discount_amount)
+            except SubscriptionCoupon.DoesNotExist:
+                pass
 
+        trial_days = trial_config.trial_days if trial_config.is_enabled else 0
         if plan.trial_days > 0:
-            trial_end = now + timedelta(days=plan.trial_days)
+            trial_days = plan.trial_days
+
+        if trial_days > 0:
+            trial_end = now + timedelta(days=trial_days)
+            grace_until = trial_end + timedelta(days=trial_config.grace_days or plan.grace_days)
             return Subscription.objects.create(
                 plan=plan, interval=interval,
-                price_amount=price.amount, currency=price.currency,
+                price_amount=amount, currency=currency,
                 status=SubscriptionStatus.TRIALING,
                 trial_end=trial_end,
                 current_period_start=now, current_period_end=trial_end,
+                grace_until=grace_until,
             )
 
         period_end = add_interval(now, interval)
         subscription = Subscription.objects.create(
             plan=plan, interval=interval,
-            price_amount=price.amount, currency=price.currency,
+            price_amount=amount, currency=currency,
             status=SubscriptionStatus.PAST_DUE,
             current_period_start=now, current_period_end=period_end,
             grace_until=now + timedelta(days=plan.grace_days),
         )
+        
+        if coupon_obj and discount_amount > 0:
+            CouponUsage.objects.create(
+                coupon=coupon_obj,
+                tenant_id=tenant_id,
+                subscription=subscription,
+                used_at=now,
+                discount_amount=discount_amount
+            )
+
         invoice_service.generate_invoice(
             tenant_id, subscription, now, period_end, now
         )

@@ -122,17 +122,14 @@ class Membership(UUIDModel, TimeStampedModel):
         blank=True,
     )
     role = models.ForeignKey(Role, on_delete=models.PROTECT, related_name="memberships")
-    # NULL = all branches (company/platform scope). Set = branch-scoped.
-    # Soft reference to tenants.Location (added with the inventory/branch work).
-    location_id = models.UUIDField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
 
     class Meta:
         db_table = "membership"
         constraints = [
             models.UniqueConstraint(
-                fields=["user", "tenant", "role", "location_id"],
-                name="uq_membership__user_tenant_role_location",
+                fields=["user", "tenant", "role"],
+                name="uq_membership__user_tenant_role",
             ),
         ]
         indexes = [

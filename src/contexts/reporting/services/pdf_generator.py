@@ -19,9 +19,9 @@ def generate_invoice_pdf(order_id: str) -> tuple[str, bytes]:
         order = get_object_or_404(Order.objects.select_related('invoice').prefetch_related('items'), id=order_id)
         
         branch = None
-        if order.location_id:
+        if getattr(order, 'location_id', None):
             try:
-                branch = Branch.objects.get(id=order.location_id)
+                branch = Branch.objects.get(id=getattr(order, 'location_id', None))
             except Branch.DoesNotExist:
                 pass
                 

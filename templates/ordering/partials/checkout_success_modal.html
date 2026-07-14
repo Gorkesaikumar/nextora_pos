@@ -1,76 +1,93 @@
+<div class="fixed inset-0 bg-neutral-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in" id="pos-success-modal-overlay">
+  <div class="bg-white dark:bg-neutral-900 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border border-neutral-200 dark:border-neutral-800 animate-slide-up flex flex-col items-center p-8 relative">
+    
+    <!-- Close Button -->
+    <button class="absolute top-4 right-4 text-neutral-400 hover:text-neutral-600 transition-colors" onclick="closeSuccessModalAndReset()">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+      </svg>
+    </button>
+
+    <!-- Success Icon -->
+    <div class="w-20 h-20 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mb-6">
+      <svg class="w-10 h-10 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+      </svg>
+    </div>
+
+    <!-- Title and Subtitle -->
+    <h2 class="text-2xl font-bold text-neutral-900 dark:text-white mb-2">Payment Confirmed</h2>
+    <div class="text-center space-y-1 mb-8">
+        <p class="text-neutral-600 dark:text-neutral-400 text-sm">Invoice Generated Successfully</p>
+        {% if print_result.success and not print_result.auto_print_disabled %}
+            <p class="text-green-600 dark:text-green-400 font-medium text-sm">Receipt Printed Successfully</p>
+        {% elif print_result.auto_print_disabled %}
+            <p class="text-neutral-500 dark:text-neutral-500 text-sm italic">Auto-print is disabled.</p>
+        {% else %}
+            <p class="text-red-500 dark:text-red-400 font-medium text-sm">Receipt Printing Failed</p>
+        {% endif %}
+    </div>
+
+    <!-- Details Box -->
+    <div class="w-full bg-neutral-50 dark:bg-neutral-800/50 rounded-xl p-4 mb-8 space-y-2 border border-neutral-100 dark:border-neutral-800">
+        <div class="flex justify-between items-center text-sm">
+            <span class="text-neutral-500 dark:text-neutral-400">Order Number</span>
+            <span class="font-bold text-neutral-900 dark:text-white">#{{ order.order_number }}</span>
+        </div>
+        <div class="flex justify-between items-center text-sm">
+            <span class="text-neutral-500 dark:text-neutral-400">Invoice Number</span>
+            <span class="font-bold text-neutral-900 dark:text-white">{{ invoice.number }}</span>
+        </div>
+        {% if print_jobs.0.printer_name %}
+        <div class="flex justify-between items-center text-sm">
+            <span class="text-neutral-500 dark:text-neutral-400">Printer Name</span>
+            <span class="font-medium text-neutral-900 dark:text-white">{{ print_jobs.0.printer_name }}</span>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="w-full space-y-3">
+        <button class="w-full h-12 rounded-xl bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-900 dark:text-white font-bold transition-colors flex items-center justify-center gap-2"
+                hx-post="{% url 'ordering:print_receipt' order_id=order.id %}"
+                hx-swap="none"
+                onclick="if (window.Alpine) Alpine.store('toast').show('Reprinting receipt...', 'info')">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+            </svg>
+            Reprint Receipt
+        </button>
+        <button class="btn-primary w-full h-12 rounded-xl flex items-center justify-center text-white font-bold transition-colors shadow-lg"
+                onclick="closeSuccessModalAndReset()">
+            New Order
+        </button>
+    </div>
+  </div>
+</div>
+
 <div id="pos-cart-panel" hx-swap-oob="true">
   {% include "ordering/partials/cart_panel.html" with active_order=None %}
 </div>
 
-<!-- Overlay -->
-<div id="checkout-overlay" class="fixed inset-0 bg-neutral-900/50 backdrop-blur-sm z-50 flex items-center justify-center animate-fade-in p-4 lg:p-0">
-  
-  <!-- Modal Content -->
-  <div class="bg-neutral-0 dark:bg-neutral-dark-100 w-full max-w-md rounded-2xl shadow-xl overflow-hidden animate-slide-up flex flex-col p-6 text-center items-center">
-    
-    <!-- Success Icon -->
-    <div class="w-16 h-16 bg-semantic-success-subtle dark:bg-semantic-success-subtle-dark text-semantic-success dark:text-semantic-success-dark rounded-full flex items-center justify-center mb-4">
-       <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
-       </svg>
-    </div>
-    
-    <h2 class="text-heading-2 text-neutral-900 dark:text-neutral-dark-900 mb-1">Payment Successful!</h2>
-    <p class="text-body text-neutral-600 dark:text-neutral-dark-600 mb-5">Order Charged Successfully.</p>
-
-    <!-- Automated Receipt Print Queue Status -->
-    <div class="w-full bg-neutral-50 dark:bg-neutral-dark-50 rounded-xl p-4 mb-6 border border-neutral-200 dark:border-neutral-dark-200 text-left">
-      <div class="flex items-center justify-between mb-2">
-        <span class="text-caption-strong text-neutral-700 dark:text-neutral-dark-700">Automated Receipt Printing</span>
-        <span class="inline-flex items-center gap-1.5 text-xs font-semibold px-2 py-0.5 rounded-full bg-semantic-success-subtle text-semantic-success">
-          <span class="w-1.5 h-1.5 rounded-full bg-semantic-success animate-pulse"></span>
-          Dispatched
-        </span>
-      </div>
-      <ul class="space-y-1.5 text-xs text-neutral-600 dark:text-neutral-dark-600">
-        <li class="flex items-center justify-between">
-          <span>1. Customer Copy</span>
-          <span class="font-mono text-semantic-success">✓ Queued</span>
-        </li>
-        <li class="flex items-center justify-between">
-          <span>2. Restaurant Copy</span>
-          <span class="font-mono text-semantic-success">✓ Queued</span>
-        </li>
-        <li class="flex items-center justify-between">
-          <span>3. Kitchen Order Ticket (KOT)</span>
-          <span class="font-mono text-semantic-success">✓ Queued</span>
-        </li>
-      </ul>
-    </div>
-    
-    <button class="btn btn-primary w-full h-12"
-            onclick="document.getElementById('pos-modal-container').innerHTML = '';">
-      Done
-    </button>
-  </div>
-</div>
-
-<!-- Hidden Thermal Printable Container for Automatic Browser Print -->
-<div id="nextora-thermal-print-area" class="hidden print:block font-mono text-xs whitespace-pre">
-{% if print_jobs %}
-  {% for job in print_jobs %}
-{{ job.content_text }}
-================================
-  {% endfor %}
-{% endif %}
-</div>
-
 <script>
-  // Automatically trigger receipt print without user interaction
-  (function autoPrintReceipts() {
-    if (typeof window !== 'undefined' && window.print) {
-      setTimeout(() => {
-        try {
-          window.print();
-        } catch (e) {
-          console.warn("Auto-print suppressed or unavailable:", e);
+    function closeSuccessModalAndReset() {
+        // Remove the overlay manually instead of the entire modal container 
+        // to prevent wiping out other open modals unintentionally, but it's fine here
+        document.getElementById('pos-modal-container').innerHTML = '';
+        
+        // Reset Cart and Search Input (Ready for next customer)
+        if (window.Alpine && Alpine.store('pos')) {
+            Alpine.store('pos').q = '';
+            Alpine.store('pos').cat = '';
+            Alpine.store('pos').reload(); // Triggers HTMX refresh of grid
         }
-      }, 300);
+
+        // Focus the search input with a slight delay
+        setTimeout(() => {
+            const searchInput = document.getElementById('pos-search');
+            if (searchInput) {
+                searchInput.focus();
+            }
+        }, 150);
     }
-  })();
 </script>

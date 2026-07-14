@@ -1,0 +1,59 @@
+{% extends "super_admin/layouts/platform.html" %}
+
+{% block platform_title %}Global Trial Configuration{% endblock %}
+{% block header_title %}Global Free Trial &amp; Grace Period Engine{% endblock %}
+{% block header_subtitle %}Configure default trial duration, expiration grace buffers, and credit card requirements{% endblock %}
+
+{% block content %}
+<form method="POST" class="max-w-3xl bg-white rounded-xl border border-neutral-200 p-8 shadow-sm space-y-8">
+  {% csrf_token %}
+
+  <div class="border-b border-neutral-200 pb-6 flex items-center justify-between">
+    <div>
+      <h3 class="text-heading-3 text-neutral-900 font-bold mb-1">Global Trial Master Switch</h3>
+      <p class="text-xs text-neutral-500">Control whether newly registered tenants start with an automatic free trial.</p>
+    </div>
+    <label class="relative inline-flex items-center cursor-pointer">
+      <input type="checkbox" name="is_enabled" {% if config.is_enabled %}checked{% endif %} class="sr-only peer">
+      <div class="w-11 h-6 bg-neutral-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+    </label>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div>
+      <label class="block text-xs font-bold uppercase text-neutral-700 mb-1.5">Default Free Trial Duration (Days)</label>
+      <input type="number" name="trial_days" value="{{ config.trial_days }}" min="0" max="365" required
+             class="block w-full rounded-lg border border-neutral-300 bg-white px-3.5 py-2 text-base font-bold text-neutral-900 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none transition-all shadow-sm">
+      <p class="text-micro text-neutral-500 mt-1">Number of days a tenant can use 100% of Nextora POS before subscribing.</p>
+    </div>
+
+    <div>
+      <label class="block text-xs font-bold uppercase text-neutral-700 mb-1.5">Grace Period Buffer (Days)</label>
+      <input type="number" name="grace_days" value="{{ config.grace_days }}" min="0" max="60" required
+             class="block w-full rounded-lg border border-neutral-300 bg-white px-3.5 py-2 text-base font-bold text-amber-600 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none transition-all shadow-sm">
+      <p class="text-micro text-neutral-500 mt-1">Extra days after trial expiration during which POS remains accessible with warnings.</p>
+    </div>
+
+    <div>
+      <label class="block text-xs font-bold uppercase text-neutral-700 mb-1.5">Expiration Reminder Notice (Days Before)</label>
+      <input type="number" name="reminder_days_before" value="{{ config.reminder_days_before }}" min="1" max="14" required
+             class="block w-full rounded-lg border border-neutral-300 bg-white px-3.5 py-2 text-base font-bold text-neutral-900 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none transition-all shadow-sm">
+      <p class="text-micro text-neutral-500 mt-1">When to trigger renewal banners and notification emails prior to expiration.</p>
+    </div>
+  </div>
+
+  <div class="border-t border-neutral-200 pt-6">
+    <label class="flex items-start gap-3.5 p-4 rounded-xl border border-neutral-200 bg-neutral-50 cursor-pointer hover:border-neutral-300">
+      <input type="checkbox" name="require_card" {% if config.require_card %}checked{% endif %} class="rounded text-brand-600 focus:ring-brand-500 w-5 h-5 mt-0.5">
+      <div>
+        <div class="text-sm font-bold text-neutral-900">Require Credit Card / Payment Method Upfront</div>
+        <div class="text-xs text-neutral-500 mt-0.5">If checked, customers must provide a valid payment method during registration to activate the trial.</div>
+      </div>
+    </label>
+  </div>
+
+  <div class="flex items-center justify-end gap-4 border-t border-neutral-200 pt-6">
+    <button type="submit" class="btn-primary px-8 py-3 text-xs font-bold shadow-md">Update Trial Configuration</button>
+  </div>
+</form>
+{% endblock %}

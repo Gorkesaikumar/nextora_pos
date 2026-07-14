@@ -10,7 +10,6 @@ from shared.tenancy.models import TenantAwareModel
 
 
 class DailyCounter(TenantAwareModel):
-    location_id = models.UUIDField(null=True, blank=True)
     scope = models.CharField(max_length=20)        # "order" | "kot" | "invoice"
     series = models.CharField(max_length=20, blank=True)
     date = models.DateField()
@@ -20,7 +19,7 @@ class DailyCounter(TenantAwareModel):
         db_table = "daily_counter"
         constraints = [
             models.UniqueConstraint(
-                fields=["tenant", "location_id", "scope", "series", "date"],
+                fields=["tenant", "scope", "series", "date"],
                 name="uq_daily_counter__key",
             ),
         ]

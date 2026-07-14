@@ -77,9 +77,9 @@
   |   +---------+---------+  +---------+---------+  +---------+---------+  +-------+-------+   |  |
   |             |                      |                      |                    |           |  |
   |   +---------+---------+  +---------+---------+  +---------+---------+  +-------+-------+   |  |
-  |   |     Inventory     |  |    Restaurant     |  |     Billing       |  |   Reporting   |   |  |
-  |   |  (Stock/Batches/  |  |  (Dining Tables/  |  | (SaaS Subscription|  |  (Analytics   |   |  |
-  |   |    Suppliers)     |  |   Operations)     |  |     & Plans)      |  |  & Dashboards)|   |  |
+  |   |   HRMS (Staff)    |  |    Restaurant     |  |     Billing       |  |   Reporting   |   |  |
+  |   | (Employees/Leave/ |  |  (Dining Tables/  |  | (SaaS Subscription|  |  (Analytics   |   |  |
+  |   |  Payroll/Shifts)  |  |   Operations)     |  |     & Plans)      |  |  & Dashboards)|   |  |
   |   +-------------------+  +-------------------+  +-------------------+  +---------------+   |  |
   +--------------------------------------------------------------------------------------------+  |
                                           |                                                       |

@@ -5,7 +5,6 @@
   <div class="top-rail__breadcrumb-slot flex items-center gap-2 text-sm font-medium">
     {% block top_rail_breadcrumb %}
       {% if tenant %}<span class="text-neutral-800">{{ tenant.name }}</span>{% endif %}
-      {% if branch %}<span class="text-neutral-400">/</span><span class="text-neutral-500">{{ branch.name }}</span>{% endif %}
     {% endblock %}
   </div>
 

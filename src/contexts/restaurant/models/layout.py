@@ -10,10 +10,6 @@ class DiningTable(TenantAwareModel):
 
     Supports status-machine transitions, table merging, and floor-plan shape.
     """
-    branch = models.ForeignKey(
-        "restaurant.Branch", on_delete=models.CASCADE, related_name="tables",
-        null=True, blank=True
-    )
     number = models.CharField(max_length=20, help_text="Table identifier, e.g., T1, A3")
     capacity = models.PositiveIntegerField(default=4)
     status = models.CharField(
@@ -50,9 +46,9 @@ class DiningTable(TenantAwareModel):
         ordering = ["number"]
         constraints = [
             models.UniqueConstraint(
-                fields=["branch", "number"],
+                fields=["tenant", "number"],
                 condition=models.Q(is_deleted=False),
-                name="uq_r_table__branch_number",
+                name="uq_r_table__tenant_number",
             ),
             models.CheckConstraint(
                 check=models.Q(capacity__gte=1),
@@ -73,6 +69,4 @@ class DiningTable(TenantAwareModel):
         ]
 
     def __str__(self) -> str:
-        if self.branch:
-            return f"Table {self.number} ({self.branch.code})"
         return f"Table {self.number}"

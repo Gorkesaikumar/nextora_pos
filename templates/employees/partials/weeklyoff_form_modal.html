@@ -1,0 +1,59 @@
+<div class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+  <div class="bg-white dark:bg-neutral-800 rounded-xl shadow-lg border border-neutral-200 dark:border-neutral-700 max-w-sm w-full flex flex-col">
+    <!-- Header -->
+    <div class="px-6 py-4 border-b border-neutral-100 dark:border-neutral-700 flex justify-between items-center">
+      <h3 class="text-md font-bold text-neutral-900 dark:text-white">
+        {% if form.instance.pk %}Edit Weekly Off{% else %}Add Weekly Off{% endif %}
+      </h3>
+      <button onclick="this.closest('.fixed').remove()" class="text-neutral-400 hover:text-neutral-600">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
+    </div>
+
+    <!-- Form -->
+    <form {% if form.instance.pk %}hx-post="{% url 'employees:weeklyoff_update' form.instance.pk %}"{% else %}hx-post="{% url 'employees:weeklyoff_create' %}"{% endif %}
+          hx-target="#dialog-container"
+          class="p-6 space-y-4">
+      {% csrf_token %}
+      
+      {% if form.non_field_errors %}
+        <div class="p-3 bg-red-50 text-red-700 text-xs rounded-lg">
+          {{ form.non_field_errors }}
+        </div>
+      {% endif %}
+
+      <div>
+        <label class="block text-xs font-semibold text-neutral-500 mb-1">Apply to Department (Optional)</label>
+        {{ form.department }}
+        <span class="text-[10px] text-red-500">{{ form.department.errors }}</span>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-neutral-500 mb-1">Apply to Employee (Optional)</label>
+        {{ form.employee }}
+        <span class="text-[10px] text-red-500">{{ form.employee.errors }}</span>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-neutral-500 mb-1">Day of Week <span class="text-red-500">*</span></label>
+        {{ form.day_of_week }}
+        <span class="text-[10px] text-red-500">{{ form.day_of_week.errors }}</span>
+      </div>
+
+      <div class="flex items-center gap-2 pt-2">
+        {{ form.is_alternate }}
+        <label class="text-sm font-medium text-neutral-900 dark:text-white">Alternate Week (e.g. 2nd & 4th)</label>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="border-t border-neutral-100 dark:border-neutral-700 pt-4 flex justify-end gap-2 mt-2">
+        <button type="button" onclick="this.closest('.fixed').remove()" class="px-4 py-2 bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-200 rounded-lg text-xs font-semibold hover:bg-neutral-200">
+          Cancel
+        </button>
+        <button type="submit" class="px-4 py-2 bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900 rounded-lg text-xs font-semibold hover:bg-neutral-800">
+          Save Rule
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
