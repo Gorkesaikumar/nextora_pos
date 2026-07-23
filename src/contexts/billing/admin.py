@@ -2,6 +2,7 @@ from django.contrib import admin
 
 from .models import (
     Plan,
+    PlanFeature,
     PlanPrice,
     Subscription,
     SubscriptionInvoice,
@@ -16,12 +17,37 @@ class PlanPriceInline(admin.TabularInline):
     extra = 0
 
 
+class PlanFeatureInline(admin.TabularInline):
+    model = PlanFeature
+    extra = 0
+    ordering = ["display_order"]
+
 @admin.register(Plan)
 class PlanAdmin(admin.ModelAdmin):
-    list_display = ["code", "name", "trial_days", "grace_days", "is_active"]
-    list_filter = ["is_active", "is_public"]
+    list_display = ["code", "name", "trial_days", "grace_days", "is_active", "display_order"]
+    list_filter = ["is_active", "is_public", "custom_pricing"]
     search_fields = ["code", "name"]
-    inlines = [PlanPriceInline]
+    inlines = [PlanPriceInline, PlanFeatureInline]
+    fieldsets = (
+        ("Identity", {
+            "fields": ("code", "name", "display_name", "description")
+        }),
+        ("Pricing", {
+            "fields": ("custom_pricing", "original_price", "sale_price", "currency", "yearly_discount_percentage", "gst_inclusive", "gst_percentage")
+        }),
+        ("Duration & Trial", {
+            "fields": ("duration_type", "duration_days", "trial_eligible", "trial_days", "grace_days")
+        }),
+        ("Visibility & Status", {
+            "fields": ("is_active", "is_public")
+        }),
+        ("Display Flags", {
+            "fields": ("display_order", "is_featured", "is_recommended", "is_popular", "is_default")
+        }),
+        ("Advanced", {
+            "fields": ("features",)
+        }),
+    )
 
 
 @admin.register(Subscription)

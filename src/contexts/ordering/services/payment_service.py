@@ -76,7 +76,7 @@ def add_payment(
         _recompute(order)
         record_audit("payment.captured", entity_type="order", entity_id=order_id,
                      changes={"amount": str(amount), "method": method})
-        transaction.on_commit(lambda: broadcast_tenant_event("payment_captured"))
+        transaction.on_commit(lambda: broadcast_tenant_event("payment_captured", payload={"amount": float(amount), "method": method, "is_refund": False}))
         transaction.on_commit(lambda: broadcast_tenant_event("order_changed"))
     return payment
 
@@ -120,6 +120,6 @@ def refund_payment(
         _recompute(order)
         record_audit("payment.refunded", entity_type="order", entity_id=order_id,
                      changes={"amount": str(amount), "reason": reason})
-        transaction.on_commit(lambda: broadcast_tenant_event("payment_captured"))
+        transaction.on_commit(lambda: broadcast_tenant_event("payment_captured", payload={"amount": float(amount), "method": method, "is_refund": True}))
         transaction.on_commit(lambda: broadcast_tenant_event("order_changed"))
     return refund

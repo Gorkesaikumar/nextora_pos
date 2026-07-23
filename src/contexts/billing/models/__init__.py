@@ -1,6 +1,7 @@
 from .invoice import BillingSequence, SubscriptionInvoice
 from .payment import SubscriptionPayment
 from .plan import Plan, PlanPrice
+from .plan_feature import PlanFeature
 from .pricing_overrides import (
     CouponUsage,
     SubscriptionCoupon,
@@ -18,6 +19,7 @@ __all__ = [
     "CouponUsage",
     "GlobalTrialConfig",
     "Plan",
+    "PlanFeature",
     "PlanPrice",
     "Subscription",
     "SubscriptionCoupon",

@@ -47,6 +47,14 @@ class Plan(UUIDModel, TimeStampedModel):
         max_digits=5, decimal_places=2, default=Decimal("18.00"),
         help_text="GST/tax percentage applied to this plan",
     )
+    yearly_discount_percentage = models.PositiveIntegerField(
+        default=16,
+        help_text="Discount percentage for yearly billing on the frontend toggle",
+    )
+    custom_pricing = models.BooleanField(
+        default=False,
+        help_text="If True, shows 'Custom Pricing' instead of a numeric amount",
+    )
 
     # ── Trial ─────────────────────────────────────────────────────────────────
     trial_eligible = models.BooleanField(default=True, help_text="Allow free trial for this plan")

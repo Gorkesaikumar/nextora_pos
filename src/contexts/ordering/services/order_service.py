@@ -46,7 +46,7 @@ def create_order(
             created_by=created_by,
         )
     record_audit("order.created", entity_type="order", entity_id=order.id)
-    transaction.on_commit(lambda: broadcast_tenant_event("order_changed"))
+    transaction.on_commit(lambda: broadcast_tenant_event("order_changed", payload={"action": "created", "type": order.type}))
     return order
 
 
@@ -456,5 +456,5 @@ def void_order(order_id: uuid.UUID, reason: str) -> Order:
         order.save(update_fields=["status", "voided_at", "void_reason", "updated_at"])
     record_audit("order.voided", entity_type="order", entity_id=order_id,
                  changes={"reason": reason})
-    transaction.on_commit(lambda: broadcast_tenant_event("order_changed"))
+    transaction.on_commit(lambda: broadcast_tenant_event("order_changed", payload={"action": "voided", "type": order.type, "total": float(order.total)}))
     return order

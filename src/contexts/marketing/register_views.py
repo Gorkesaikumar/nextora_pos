@@ -61,7 +61,11 @@ class RegisterView(View):
         return super().dispatch(request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):
-        return self._render(request, forms={}, data={})
+        forms = {}
+        plan_code = request.GET.get('plan')
+        if plan_code:
+            forms['plan'] = PlanForm(initial={'plan_code': plan_code}, prefix="plan")
+        return self._render(request, forms=forms, data={})
 
     def post(self, request, *args, **kwargs):
         data = request.POST

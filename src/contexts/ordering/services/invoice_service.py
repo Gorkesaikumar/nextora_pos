@@ -63,7 +63,7 @@ def settle_and_invoice(
                  changes={"number": number, "total": str(order.total)})
     from shared.tenancy.context import get_current_tenant
     tid = get_current_tenant()
-    transaction.on_commit(lambda: broadcast_tenant_event("order_changed", tenant_id=tid))
+    transaction.on_commit(lambda: broadcast_tenant_event("order_changed", tenant_id=tid, payload={"action": "settled", "total": float(order.total), "type": order.type}))
     return invoice
 
 

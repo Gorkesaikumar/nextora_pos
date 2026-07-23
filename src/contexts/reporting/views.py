@@ -247,6 +247,9 @@ class DashboardHomeView(TenantPermissionRequiredMixin, LoginRequiredMixin, Templ
             'top_items': top_items,
             'top_branches': top_branches,
             'revenue_chart': revenue_chart,
+            'revenue_today_raw': revenue_today_raw,
+            'avg_ticket_raw': avg_ticket_raw,
+            'refunds_today_raw': refunds_today_raw,
         })
         return context
 

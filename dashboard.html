@@ -1,0 +1,1622 @@
+<!doctype html>
+<html lang="en" data-theme="light" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#F2F2F2">
+  <link rel="manifest" href="/static/manifest.json">
+
+  <title>Sign in · Nextora</title>
+
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap">
+
+  <!-- Alpine.js with Persist Plugin -->
+  <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/persist@3.x.x/dist/cdn.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <!-- HTMX -->
+  <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- Tailwind CSS CDN (Development) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind = {
+      config: {
+        darkMode: ['class', '[data-theme="dark"]'],
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                default: '#4F6EF7',
+                hover: '#3D5CE5',
+                pressed: '#2E4DD4',
+                subtle: '#EEF1FE',
+                'on-brand': '#FFFFFF',
+                'focus-ring': '#4F6EF7',
+                'on-dark': '#7B96FF',
+              },
+              semantic: {
+                success: '#16A34A',
+                'success-subtle': '#DCFCE7',
+                'success-dark': '#4ADE80',
+                'success-subtle-dark': '#14532D',
+                warning: '#D97706',
+                'warning-subtle': '#FEF3C7',
+                'warning-dark': '#FCD34D',
+                'warning-subtle-dark': '#451A03',
+                danger: '#DC2626',
+                'danger-subtle': '#FEE2E2',
+                'danger-dark': '#F87171',
+                'danger-subtle-dark': '#450A0A',
+                info: '#0284C7',
+                'info-subtle': '#E0F2FE',
+                'info-dark': '#38BDF8',
+                'info-subtle-dark': '#0C4A6E',
+              },
+              neutral: {
+                0: '#FFFFFF',
+                50: '#F8F8F8',
+                100: '#F2F2F2',
+                150: '#EBEBEB',
+                200: '#E0E0E0',
+                300: '#CBCBCB',
+                400: '#A8A8A8',
+                500: '#848484',
+                600: '#5C5C5C',
+                700: '#3D3D3D',
+                800: '#252525',
+                900: '#141414',
+                'dark-0': '#1A1A1C',
+                'dark-50': '#212124',
+                'dark-100': '#2A2A2E',
+                'dark-150': '#313136',
+                'dark-200': '#3C3C42',
+                'dark-300': '#4F4F57',
+                'dark-400': '#6B6B75',
+                'dark-500': '#8C8C98',
+                'dark-600': '#ABABBA',
+                'dark-700': '#C8C8D8',
+                'dark-800': '#E0E0EE',
+                'dark-900': '#F0F0F8',
+              }
+            },
+            borderRadius: {
+              'sharp': '4px',
+              'card': '8px',
+              'pill': '9999px',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  
+  <link rel="stylesheet" href="/static/css/main.css?v=2">
+  <style>[x-cloak] { display: none !important; }</style>
+
+  <meta name="csrf-token" content="1FpS0hAxBFS1AqlrqBYGpL10nDlrrgJqufRldO4hId4Sn6MsmSDx4WahByDmswNW">
+  <script>
+    document.addEventListener('htmx:configRequest', (event) => {
+      const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+      if (csrfToken) {
+        event.detail.headers['X-CSRFToken'] = csrfToken;
+      }
+    });
+  </script>
+
+  <!-- Prevent Sidebar FOUC -->
+  <script>
+    try {
+      if (localStorage.getItem('_x_sidebarOpen') === 'true') {
+        document.documentElement.classList.add('sidebar-expanded');
+      }
+    } catch (e) {}
+
+    // Security: Force a reload if the page is restored from the back/forward cache (bfcache).
+    // This ensures that hitting 'Back' after logging out won't show stale authenticated content.
+    window.addEventListener('pageshow', function(event) {
+      if (event.persisted) {
+        window.location.reload();
+      }
+    });
+  </script>
+  
+  
+</head>
+<body x-data="{ sidebarOpen: $persist(false) }" x-init="$watch('sidebarOpen', val => document.documentElement.classList.toggle('sidebar-expanded', val))">
+  <a href="#main" class="skip-link">Skip to main content</a>
+  
+<main id="main" class="min-h-screen w-full bg-neutral-50 flex" tabindex="-1">
+
+  
+  <aside class="hidden lg:flex relative w-1/2 xl:w-[55%] flex-col justify-between p-12 xl:p-16 overflow-hidden text-white bg-neutral-900">
+    
+    <div aria-hidden="true" class="pointer-events-none absolute inset-0">
+      <div class="absolute -top-32 -left-32 w-[460px] h-[460px] rounded-full opacity-30 blur-3xl"
+           style="background: radial-gradient(circle at center, #3D3D3D 0%, transparent 70%);"></div>
+      <div class="absolute -bottom-40 -right-24 w-[520px] h-[520px] rounded-full opacity-25 blur-3xl"
+           style="background: radial-gradient(circle at center, #5C5C5C 0%, transparent 70%);"></div>
+      <div class="absolute inset-0 opacity-[0.06]"
+           style="background-image: radial-gradient(rgba(255,255,255,0.6) 1px, transparent 1px); background-size: 22px 22px;"></div>
+    </div>
+
+    
+    <a href="/" class="relative z-10 flex items-center gap-3.5 hover:opacity-90 transition-opacity">
+      <img src="/static/img/logo-mark.png" alt="" class="h-14 w-14 select-none" draggable="false">
+      <span class="flex flex-col leading-tight">
+        <span class="text-lg font-extrabold tracking-[0.14em] text-white">NEXTORA CREATIONS</span>
+        <span class="text-[11px] font-semibold tracking-[0.22em] text-neutral-400 uppercase">Point of Sale</span>
+      </span>
+    </a>
+
+    
+    <div class="relative z-10 max-w-lg">
+      <h1 class="text-4xl xl:text-5xl font-bold leading-[1.1] tracking-tight">
+        The premium Point&nbsp;of&nbsp;Sale, <span class="text-neutral-400">built for ambitious restaurants.</span>
+      </h1>
+      <p class="mt-6 text-base text-neutral-300 leading-relaxed">
+        Manage orders, kitchen, inventory and reports from one elegant workspace — designed for speed at the counter and clarity in the back office.
+      </p>
+
+      <ul class="mt-10 space-y-4 text-sm text-neutral-200">
+        <li class="flex items-center gap-3">
+          <span class="flex items-center justify-center w-7 h-7 rounded-full bg-white/10 ring-1 ring-white/15">
+            <svg class="w-4 h-4 text-white" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M20 6 9 17l-5-5"></path>
+</svg>
+          </span>
+          Real-time KOT routing across stations
+        </li>
+        <li class="flex items-center gap-3">
+          <span class="flex items-center justify-center w-7 h-7 rounded-full bg-white/10 ring-1 ring-white/15">
+            <svg class="w-4 h-4 text-white" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M20 6 9 17l-5-5"></path>
+</svg>
+          </span>
+          GST-ready invoicing &amp; multi-branch reporting
+        </li>
+        <li class="flex items-center gap-3">
+          <span class="flex items-center justify-center w-7 h-7 rounded-full bg-white/10 ring-1 ring-white/15">
+            <svg class="w-4 h-4 text-white" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M20 6 9 17l-5-5"></path>
+</svg>
+          </span>
+          Offline-resilient, cloud-synced
+        </li>
+      </ul>
+    </div>
+
+    
+    <div class="relative z-10">
+      <figure class="border-l-2 border-white/20 pl-4 max-w-md">
+        <blockquote class="text-sm text-neutral-200 leading-relaxed italic">
+          "We replaced three separate apps with Nextora. Orders go out faster and our managers finally have one place to look."
+        </blockquote>
+        <figcaption class="mt-3 text-xs text-neutral-400">
+          — Priya Menon, Operations Head · Saffron Group (12 outlets)
+        </figcaption>
+      </figure>
+    </div>
+  </aside>
+
+  
+  <section class="flex-1 flex items-center justify-center px-6 py-10 sm:px-10 bg-neutral-50">
+    <div class="w-full max-w-md">
+
+      
+      <a href="/" class="lg:hidden flex items-center justify-center gap-3.5 mb-10 hover:opacity-80 transition-opacity">
+        <img src="/static/img/logo-mark.png" alt="" class="h-12 w-12 select-none" draggable="false">
+        <span class="flex flex-col leading-tight">
+          <span class="text-base font-extrabold tracking-[0.14em] text-neutral-900">NEXTORA CREATIONS</span>
+          <span class="text-[10px] font-semibold tracking-[0.22em] text-neutral-500 uppercase">Point of Sale</span>
+        </span>
+      </a>
+
+      <a href="javascript:history.back()" class="inline-flex items-center gap-1.5 text-sm font-medium text-neutral-500 hover:text-neutral-900 transition-colors mb-6">
+        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="m12 19-7-7 7-7"></path>
+  <path d="M19 12H5"></path>
+</svg> Back
+      </a>
+
+      <div class="mb-8">
+        <h2 class="text-3xl font-bold tracking-tight text-neutral-900">Welcome back</h2>
+        <p class="mt-2 text-sm text-neutral-500">Sign in to your Nextora workspace to continue.</p>
+      </div>
+
+      
+
+      
+
+      <form method="post" action="/auth/login/" class="space-y-5" novalidate
+            x-data="{ showPassword: false }">
+        <input type="hidden" name="csrfmiddlewaretoken" value="1FpS0hAxBFS1AqlrqBYGpL10nDlrrgJqufRldO4hId4Sn6MsmSDx4WahByDmswNW">
+
+        
+        <div>
+          <label for="username" class="block text-sm font-semibold text-neutral-800 mb-1.5">Email address</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+              <svg class="w-4 h-4 text-neutral-400" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7"></path>
+  <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+</svg>
+            </span>
+            <input type="email" id="username" name="username" required autofocus autocomplete="email"
+                   class="block w-full pl-10 pr-3 py-2.5 text-sm bg-white border border-neutral-200 rounded-xl text-neutral-900 placeholder-neutral-400 shadow-sm
+                          focus:outline-none focus:border-neutral-900 focus:ring-2 focus:ring-neutral-900/10 transition-all
+                          "
+                   placeholder="you@restaurant.com"
+                   value="">
+          </div>
+          
+        </div>
+
+        
+        <div>
+          <div class="flex justify-between items-center mb-1.5">
+            <label for="password" class="block text-sm font-semibold text-neutral-800">Password</label>
+            <a href="/auth/password-reset/" class="text-xs font-medium text-neutral-700 hover:text-neutral-900 transition-colors">Forgot password?</a>
+          </div>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+              <svg class="w-4 h-4 text-neutral-400" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect>
+  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+</svg>
+            </span>
+            <input :type="showPassword ? 'text' : 'password'" id="password" name="password" required autocomplete="current-password"
+                   class="block w-full pl-10 pr-11 py-2.5 text-sm bg-white border border-neutral-200 rounded-xl text-neutral-900 placeholder-neutral-400 shadow-sm
+                          focus:outline-none focus:border-neutral-900 focus:ring-2 focus:ring-neutral-900/10 transition-all
+                          "
+                   placeholder="Enter your password">
+            <button type="button" @click="showPassword = !showPassword"
+                    class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-neutral-400 hover:text-neutral-700 transition-colors"
+                    :aria-label="showPassword ? 'Hide password' : 'Show password'">
+              <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"></path>
+  <circle cx="12" cy="12" r="3"></circle>
+</svg>
+              <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"></path>
+  <path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"></path>
+  <path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"></path>
+  <path d="m2 2 20 20"></path>
+</svg>
+            </button>
+          </div>
+          
+        </div>
+
+        
+        <div class="flex items-center justify-between">
+          <label class="flex items-center gap-2 cursor-pointer select-none">
+            <input type="checkbox" name="remember" class="w-4 h-4 rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900/20">
+            <span class="text-xs text-neutral-600">Keep me signed in for 30 days</span>
+          </label>
+        </div>
+
+        
+        <button type="submit"
+                class="group relative w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-neutral-900 text-white text-sm font-semibold
+                       hover:bg-neutral-800 active:bg-black focus:outline-none focus:ring-4 focus:ring-neutral-900/20 shadow-sm transition-all">
+          <span>Sign in</span>
+          <svg class="w-4 h-4 transition-transform group-hover:translate-x-0.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M5 12h14"></path>
+  <path d="m12 5 7 7-7 7"></path>
+</svg>
+        </button>
+      </form>
+
+      
+      <div class="mt-8 text-center">
+        <p class="text-xs text-neutral-500">
+          New to Nextora?
+          <a href="/register/" class="font-semibold text-neutral-900 hover:underline">Create an account</a>
+        </p>
+      </div>
+
+      
+      <div class="mt-12 flex items-center justify-between text-[11px] text-neutral-400">
+        <span class="flex items-center gap-1.5">
+          <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <circle cx="12" cy="12" r="10"></circle>
+  <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path>
+  <path d="M2 12h20"></path>
+</svg> English (IN)
+        </span>
+        <span>v1.0.0 · Secure session</span>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+  // Security: Clear HTMX history cache to prevent 'Back' button from restoring protected HTMX pages
+  if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem('htmx-history-cache');
+  }
+</script>
+
+
+  
+  <div id="toast-region" class="toast-region " role="status" aria-live="polite" aria-atomic="false">
+    
+  </div>
+
+  
+  <div id="modal-region" class="fixed inset-0 z-50 flex items-center justify-center pointer-events-none empty:hidden bg-neutral-900/50 backdrop-blur-sm"></div>
+
+  
+  <div x-data="{
+        show: false,
+        type: 'confirm', // 'confirm', 'alert', 'prompt'
+        theme: 'info', // 'info', 'success', 'warning', 'danger'
+        title: '',
+        message: '',
+        confirmText: 'Confirm',
+        cancelText: 'Cancel',
+        promptValue: '',
+        promptPlaceholder: '',
+        onConfirm: null,
+        onCancel: null,
+        
+        openDialog(detail) {
+            this.type = detail.type || 'confirm';
+            this.theme = detail.theme || 'info';
+            this.title = detail.title || '';
+            this.message = detail.message || '';
+            this.confirmText = detail.confirmText || (this.type === 'alert' ? 'OK' : 'Confirm');
+            this.cancelText = detail.cancelText || 'Cancel';
+            this.promptValue = detail.defaultValue || '';
+            this.promptPlaceholder = detail.placeholder || '';
+            this.onConfirm = detail.onConfirm || null;
+            this.onCancel = detail.onCancel || null;
+            this.show = true;
+            
+            if (this.type === 'prompt') {
+                this.$nextTick(() => {
+                    this.$refs.promptInput.focus();
+                });
+            } else {
+                this.$nextTick(() => {
+                    this.$refs.confirmBtn.focus();
+                });
+            }
+        },
+        
+        handleConfirm() {
+            if (this.onConfirm) {
+                if (this.type === 'prompt') {
+                    this.onConfirm(this.promptValue);
+                } else {
+                    this.onConfirm();
+                }
+            }
+            this.show = false;
+        },
+        
+        handleCancel() {
+            if (this.onCancel) {
+                this.onCancel();
+            }
+            this.show = false;
+        }
+    }"
+    @open-dialog.window="openDialog($event.detail)"
+    x-show="show"
+    style="display: none;"
+    class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-neutral-900/50 backdrop-blur-sm transition-opacity duration-300"
+    x-transition:enter="ease-out duration-300"
+    x-transition:enter-start="opacity-0"
+    x-transition:enter-end="opacity-100"
+    x-transition:leave="ease-in duration-200"
+    x-transition:leave-start="opacity-100"
+    x-transition:leave-end="opacity-0"
+    role="dialog"
+    aria-modal="true"
+    :aria-labelledby="title ? 'dialog-title' : null">
+    
+    <div @click.away="type !== 'alert' ? handleCancel() : null"
+         @keydown.escape.window="type !== 'alert' ? handleCancel() : handleConfirm()"
+         class="bg-neutral-0 dark:bg-neutral-dark-100 rounded-xl shadow-overlay max-w-sm w-full overflow-hidden transition-transform duration-300 transform"
+         x-transition:enter="ease-out duration-300"
+         x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+         x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+         x-transition:leave="ease-in duration-200"
+         x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+         x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
+         
+        <div class="px-6 py-6">
+            <div class="flex items-start gap-4">
+                <!-- Icon based on theme -->
+                <div class="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full"
+                     :class="{
+                         'bg-semantic-info-subtle text-semantic-info-dark dark:bg-semantic-info-subtle-dark dark:text-semantic-info': theme === 'info',
+                         'bg-semantic-success-subtle text-semantic-success-dark dark:bg-semantic-success-subtle-dark dark:text-semantic-success': theme === 'success',
+                         'bg-semantic-warning-subtle text-semantic-warning-dark dark:bg-semantic-warning-subtle-dark dark:text-semantic-warning': theme === 'warning',
+                         'bg-semantic-danger-subtle text-semantic-danger-dark dark:bg-semantic-danger-subtle-dark dark:text-semantic-danger': theme === 'danger'
+                     }">
+                    
+                    <template x-if="theme === 'info'">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </template>
+                    <template x-if="theme === 'success'">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </template>
+                    <template x-if="theme === 'warning'">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                    </template>
+                    <template x-if="theme === 'danger'">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </template>
+                </div>
+                
+                <div class="flex-1 min-w-0 pt-0.5">
+                    <template x-if="title">
+                        <h3 id="dialog-title" class="text-heading-3 text-neutral-900 dark:text-neutral-dark-900 mb-2" x-text="title"></h3>
+                    </template>
+                    <p class="text-body text-neutral-600 dark:text-neutral-dark-600" x-text="message"></p>
+                    
+                    <template x-if="type === 'prompt'">
+                        <div class="mt-4">
+                            <input type="text" 
+                                   x-ref="promptInput"
+                                   x-model="promptValue" 
+                                   :placeholder="promptPlaceholder"
+                                   @keydown.enter="handleConfirm()"
+                                   class="w-full h-10 px-3 bg-neutral-0 dark:bg-neutral-dark-150 border border-neutral-300 dark:border-neutral-dark-300 rounded-lg text-sm text-neutral-900 dark:text-neutral-dark-900 focus:ring-2 focus:ring-brand-default focus:border-brand-default transition-all shadow-sm">
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+        
+        <div class="px-6 py-4 bg-neutral-50 dark:bg-neutral-dark-50 border-t border-neutral-150 dark:border-neutral-dark-150 flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3">
+            <template x-if="type === 'confirm' || type === 'prompt'">
+                <button type="button" 
+                        @click="handleCancel()" 
+                        class="btn btn-secondary w-full sm:w-auto"
+                        x-text="cancelText"></button>
+            </template>
+            
+            <button type="button"
+                    x-ref="confirmBtn"
+                    @click="handleConfirm()"
+                    class="btn w-full sm:w-auto"
+                    :class="{
+                        'btn-primary': theme === 'info' || theme === 'success' || (theme === 'warning' && type === 'alert'),
+                        'btn-secondary': theme === 'warning' && type !== 'alert',
+                        'btn-danger': theme === 'danger'
+                    }"
+                    x-text="confirmText"></button>
+        </div>
+    </div>
+</div>
+
+  
+
+
+<div id="npos-toast-container"
+     aria-live="polite" aria-atomic="false"
+     class="fixed top-5 right-5 z-[9999] flex flex-col gap-3 pointer-events-none"
+     x-data></div>
+
+
+<div id="npos-modal-root"
+     x-data="NPosMgr()"
+     x-show="open"
+     x-cloak
+     role="dialog"
+     :aria-modal="open"
+     :aria-labelledby="modal.title ? 'npos-modal-title' : undefined"
+     @keydown.escape.window="handleEsc()"
+     class="fixed inset-0 z-[9990] flex items-center justify-center p-4"
+     x-transition:enter="transition ease-out duration-200"
+     x-transition:enter-start="opacity-0"
+     x-transition:enter-end="opacity-100"
+     x-transition:leave="transition ease-in duration-150"
+     x-transition:leave-start="opacity-100"
+     x-transition:leave-end="opacity-0">
+
+  
+  <div class="absolute inset-0 bg-neutral-900/60 backdrop-blur-sm"
+       @click="handleBackdropClick()"></div>
+
+  
+  <div class="relative bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
+       x-transition:enter="transition ease-out duration-200"
+       x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+       x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+       x-transition:leave="transition ease-in duration-150"
+       x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+       x-transition:leave-end="opacity-0 scale-95 translate-y-4">
+
+    
+    <div class="px-6 pt-6 pb-4 flex items-start gap-4">
+      
+      <div class="shrink-0 w-12 h-12 rounded-full flex items-center justify-center"
+           :class="{
+             'bg-red-100 dark:bg-red-900/30':    modal.type === 'error'   || modal.type === 'delete' || modal.type === 'payment_error',
+             'bg-green-100 dark:bg-green-900/30': modal.type === 'success' || modal.type === 'payment_success',
+             'bg-amber-100 dark:bg-amber-900/30': modal.type === 'warning',
+             'bg-blue-100 dark:bg-blue-900/30':   modal.type === 'info'    || modal.type === 'confirm' || modal.type === 'prompt',
+           }">
+        
+        <template x-if="modal.type === 'error' || modal.type === 'delete' || modal.type === 'payment_error'">
+          <svg class="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </template>
+        
+        <template x-if="modal.type === 'success' || modal.type === 'payment_success'">
+          <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+        </template>
+        
+        <template x-if="modal.type === 'warning'">
+          <svg class="w-6 h-6 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+          </svg>
+        </template>
+        
+        <template x-if="modal.type === 'info' || modal.type === 'confirm' || modal.type === 'prompt'">
+          <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </template>
+      </div>
+
+      
+      <div class="flex-grow min-w-0 pt-0.5">
+        <h2 id="npos-modal-title"
+            class="text-lg font-bold text-neutral-900 dark:text-white leading-tight"
+            x-text="modal.title"></h2>
+        <p class="text-sm text-neutral-500 dark:text-neutral-400 mt-1 leading-relaxed"
+           x-text="modal.message"></p>
+
+        
+        <template x-if="modal.detail">
+          <p class="mt-2 text-xs font-mono bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 rounded-lg px-3 py-2 break-all"
+             x-text="modal.detail"></p>
+        </template>
+
+        
+        <template x-if="modal.type === 'prompt'">
+          <div class="mt-3">
+            <input type="text"
+                   x-model="promptValue"
+                   :placeholder="modal.placeholder || ''"
+                   @keydown.enter="handleConfirm()"
+                   class="w-full h-11 px-4 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-sm text-neutral-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                   x-ref="promptInput">
+          </div>
+        </template>
+      </div>
+
+      
+      <template x-if="!modal.required">
+        <button @click="handleCancel()"
+                class="shrink-0 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 transition-colors p-1 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                aria-label="Close">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </template>
+    </div>
+
+    
+    <div class="px-6 pb-6 flex items-center gap-3"
+         :class="modal.singleAction ? 'justify-center' : 'justify-end'">
+
+      
+      <template x-if="!modal.singleAction">
+        <button @click="handleCancel()"
+                class="flex-1 h-11 px-5 rounded-xl border border-neutral-300 dark:border-neutral-700 text-sm font-semibold text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors"
+                x-text="modal.cancelText || 'Cancel'"></button>
+      </template>
+
+      
+      <button @click="handleConfirm()"
+              :disabled="loading"
+              :class="{
+                'flex-1 h-11 px-5 rounded-xl text-sm font-bold transition-all': true,
+                'bg-red-600 hover:bg-red-700 text-white': modal.type === 'delete' || modal.type === 'error' || modal.type === 'payment_error',
+                'bg-green-600 hover:bg-green-700 text-white': modal.type === 'success' || modal.type === 'payment_success',
+                'bg-amber-500 hover:bg-amber-600 text-white': modal.type === 'warning',
+                'bg-blue-600 hover:bg-blue-700 text-white': modal.type === 'info' || modal.type === 'confirm' || modal.type === 'prompt',
+                'opacity-50 cursor-not-allowed': loading,
+                'w-full': modal.singleAction,
+              }">
+        <span x-show="!loading" x-text="modal.confirmText || 'OK'"></span>
+        <span x-show="loading" class="flex items-center justify-center gap-2">
+          <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+          </svg>
+          Processing...
+        </span>
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<div id="npos-email-modal"
+     x-data="NposEmailModal()"
+     x-show="open"
+     x-cloak
+     role="dialog"
+     aria-modal="true"
+     @keydown.escape.window="close()"
+     class="fixed inset-0 z-[9995] flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-sm"
+     x-transition:enter="transition ease-out duration-200"
+     x-transition:enter-start="opacity-0"
+     x-transition:enter-end="opacity-100">
+  <div class="relative bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden"
+       x-transition:enter="transition ease-out duration-200"
+       x-transition:enter-start="opacity-0 scale-95"
+       x-transition:enter-end="opacity-100 scale-100">
+    <div class="px-6 pt-6 pb-4">
+      <h2 class="text-lg font-bold text-neutral-900 dark:text-white mb-1">Email Receipt</h2>
+      <p class="text-sm text-neutral-500 mb-4">Enter recipient email address to send the invoice.</p>
+      <input type="email" x-model="email" :placeholder="placeholder"
+             @keydown.enter="confirm()"
+             class="w-full h-11 px-4 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+      <p x-show="error" x-text="error" class="text-xs text-red-500 mt-1"></p>
+    </div>
+    <div class="px-6 pb-6 flex gap-3">
+      <button @click="close()" class="flex-1 h-10 px-4 rounded-xl border border-neutral-300 dark:border-neutral-700 text-sm font-semibold text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 transition-colors">Cancel</button>
+      <button @click="confirm()" :disabled="sending"
+              class="flex-1 h-10 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold transition-colors disabled:opacity-50">
+        <span x-show="!sending">Send Email</span>
+        <span x-show="sending">Sending...</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+/* ─────────────────────────────────────────────────────
+   NPos — Global Notification & Modal Engine
+   ───────────────────────────────────────────────────── */
+(function () {
+  'use strict';
+
+  // ── Toast ─────────────────────────────────────────
+  function showToast(message, type) {
+    type = type || 'info';
+    const container = document.getElementById('npos-toast-container');
+    if (!container) return;
+
+    const icons = {
+      success: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>',
+      error:   '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>',
+      warning: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>',
+      info:    '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>',
+    };
+    const colors = {
+      success: 'bg-green-50 border-green-200 text-green-800',
+      error:   'bg-red-50 border-red-200 text-red-800',
+      warning: 'bg-amber-50 border-amber-200 text-amber-800',
+      info:    'bg-blue-50 border-blue-200 text-blue-800',
+    };
+    const iconColors = {
+      success: 'text-green-500', error: 'text-red-500',
+      warning: 'text-amber-500', info: 'text-blue-500',
+    };
+
+    const el = document.createElement('div');
+    el.className = [
+      'pointer-events-auto flex items-start gap-3 px-4 py-3 rounded-xl border shadow-lg',
+      'text-sm font-medium max-w-sm transition-all duration-300 translate-x-0',
+      colors[type] || colors.info,
+    ].join(' ');
+    el.innerHTML = `
+      <svg class="w-5 h-5 shrink-0 mt-0.5 ${iconColors[type] || iconColors.info}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        ${icons[type] || icons.info}
+      </svg>
+      <span class="flex-grow">${message}</span>
+      <button onclick="this.closest('[class]').remove()" class="shrink-0 opacity-60 hover:opacity-100 transition-opacity">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>`;
+
+    container.appendChild(el);
+    requestAnimationFrame(() => { el.style.opacity = '1'; });
+
+    // Auto-dismiss after 4s
+    setTimeout(() => {
+      el.style.opacity = '0';
+      el.style.transform = 'translateX(100%)';
+      setTimeout(() => el.remove(), 300);
+    }, 4000);
+  }
+
+  // ── Modal queue & state ───────────────────────────
+  let _resolveModal = null;
+
+  function openModal(opts) {
+    return new Promise((resolve) => {
+      _resolveModal = resolve;
+      const mgr = _getMgr();
+      if (!mgr) { resolve(false); return; }
+      mgr.show(opts);
+    });
+  }
+
+  function _getMgr() {
+    const el = document.getElementById('npos-modal-root');
+    if (!el || !el._x_dataStack) return null;
+    return el._x_dataStack[0];
+  }
+
+  // ── Public API ────────────────────────────────────
+  window.NPos = {
+    toast: showToast,
+
+    alert: function (opts) {
+      if (typeof opts === 'string') opts = { message: opts };
+      return openModal(Object.assign({ type: 'info', singleAction: true, confirmText: 'OK' }, opts));
+    },
+
+    confirm: function (opts) {
+      if (typeof opts === 'string') opts = { message: opts };
+      return openModal(Object.assign({
+        type: 'confirm', title: 'Are you sure?', confirmText: 'Confirm', cancelText: 'Cancel',
+      }, opts));
+    },
+
+    delete: function (opts) {
+      if (typeof opts === 'string') opts = { message: opts };
+      return openModal(Object.assign({
+        type: 'delete', title: 'Confirm Deletion', confirmText: 'Yes, Delete', cancelText: 'Cancel',
+      }, opts));
+    },
+
+    prompt: function (opts) {
+      if (typeof opts === 'string') opts = { message: opts };
+      return openModal(Object.assign({
+        type: 'prompt', title: 'Input Required', confirmText: 'Submit', cancelText: 'Cancel',
+      }, opts));
+    },
+
+    paymentError: function (message, detail) {
+      return openModal({
+        type: 'payment_error',
+        title: 'Payment Failed',
+        message: message || 'An error occurred while processing the payment. Please try again.',
+        detail: detail || null,
+        confirmText: 'Try Again',
+        cancelText: 'Cancel',
+        singleAction: false,
+      });
+    },
+
+    paymentSuccess: function (invoiceNumber, total) {
+      return openModal({
+        type: 'payment_success',
+        title: 'Payment Successful!',
+        message: `Invoice ${invoiceNumber || ''} — Total ₹${total || ''}`,
+        confirmText: 'Done',
+        singleAction: true,
+      });
+    },
+
+    // Called by Alpine component to resolve the promise
+    _resolve: function (value) {
+      if (_resolveModal) {
+        _resolveModal(value);
+        _resolveModal = null;
+      }
+    },
+
+    // HTMX hx-confirm override
+    _htmxConfirm: function (evt) {
+      if (!evt.detail.question) return;
+      evt.preventDefault();
+      const question = evt.detail.question;
+      NPos.confirm({
+        title: 'Confirm Action',
+        message: question,
+        confirmText: 'Yes, Proceed',
+        cancelText: 'Cancel',
+        type: 'warning',
+      }).then(function (confirmed) {
+        if (confirmed) evt.detail.issueRequest(true);
+      });
+    },
+  };
+
+  // Register HTMX confirm override after DOM ready
+  document.addEventListener('DOMContentLoaded', function () {
+    document.body.addEventListener('htmx:confirm', NPos._htmxConfirm);
+  });
+})();
+
+// ── Alpine component: modal manager ──────────────────
+function NPosMgr() {
+  return {
+    open: false,
+    loading: false,
+    promptValue: '',
+    modal: {
+      type: 'info', title: '', message: '', detail: null,
+      confirmText: 'OK', cancelText: 'Cancel',
+      singleAction: false, required: false, placeholder: '',
+    },
+
+    show(opts) {
+      this.modal = Object.assign({
+        type: 'info', title: '', message: '', detail: null,
+        confirmText: 'OK', cancelText: 'Cancel',
+        singleAction: false, required: false, placeholder: '',
+      }, opts);
+      this.promptValue = opts.defaultValue || '';
+      this.loading = false;
+      this.open = true;
+
+      if (opts.type === 'prompt') {
+        this.$nextTick(() => {
+          const inp = this.$refs.promptInput;
+          if (inp) inp.focus();
+        });
+      }
+    },
+
+    handleConfirm() {
+      if (this.modal.type === 'prompt') {
+        NPos._resolve(this.promptValue || null);
+      } else {
+        NPos._resolve(true);
+      }
+      if (this.modal.onConfirm) this.modal.onConfirm(this.promptValue);
+      this.close();
+    },
+
+    handleCancel() {
+      NPos._resolve(false);
+      this.close();
+    },
+
+    handleEsc() {
+      if (!this.modal.required) this.handleCancel();
+    },
+
+    handleBackdropClick() {
+      if (!this.modal.required) this.handleCancel();
+    },
+
+    close() {
+      this.open = false;
+      this.loading = false;
+      this.promptValue = '';
+    },
+  };
+}
+
+// ── Alpine component: email prompt modal ─────────────
+function NposEmailModal() {
+  return {
+    open: false,
+    email: '',
+    placeholder: '',
+    error: '',
+    sending: false,
+    _resolve: null,
+
+    openFor(defaultEmail) {
+      this.email = defaultEmail || '';
+      this.placeholder = defaultEmail || 'customer@example.com';
+      this.error = '';
+      this.sending = false;
+      this.open = true;
+      return new Promise((resolve) => { this._resolve = resolve; });
+    },
+
+    confirm() {
+      if (!this.email || !this.email.includes('@')) {
+        this.error = 'Please enter a valid email address.';
+        return;
+      }
+      this.error = '';
+      if (this._resolve) this._resolve(this.email);
+      this.close();
+    },
+
+    close() {
+      this.open = false;
+      if (this._resolve) this._resolve(null);
+      this._resolve = null;
+    },
+  };
+}
+
+// Global helper to open email modal from outside Alpine
+window.NposPromptEmail = function (defaultEmail) {
+  const el = document.getElementById('npos-email-modal');
+  if (!el || !el._x_dataStack) return Promise.resolve(null);
+  return el._x_dataStack[0].openFor(defaultEmail);
+};
+</script>
+
+
+  <script>
+    // Modal Dismiss Logic
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('[data-modal-dismiss]') || e.target.id === 'modal-region') {
+            const modalRegion = document.getElementById('modal-region');
+            if (modalRegion) modalRegion.innerHTML = '';
+        }
+    });
+    
+    // Listen for custom HTMX events from server to close modal
+    document.body.addEventListener('tableListChanged', function(evt) {
+        const modalRegion = document.getElementById('modal-region');
+        if (modalRegion) modalRegion.innerHTML = '';
+        // Note: the main list is usually refreshed via hx-trigger on the form response
+        // but we can also trigger a reload here if needed.
+    });
+
+    // --- Global Tenant Real-Time WebSocket ---
+    (function () {
+      const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+      const wsUrl = proto + '://' + location.host + '/ws/events/';
+      let ws = null, retries = 0, retryTimer = null, closedByUs = false;
+
+      function connect() {
+        try { ws = new WebSocket(wsUrl); } catch (e) { scheduleReconnect(); return; }
+
+        ws.onopen = function () { retries = 0; };
+
+        ws.onmessage = function (evt) {
+          let data = {};
+          try { data = JSON.parse(evt.data); } catch (e) { return; }
+          if (data.event) {
+            // Dispatch a global DOM event that HTMX or Alpine can listen to.
+            // Example: "tenant:order_changed"
+            window.dispatchEvent(new CustomEvent('tenant:' + data.event, { detail: data }));
+          }
+        };
+
+        ws.onclose = function () {
+          if (closedByUs) return;
+          scheduleReconnect();
+        };
+
+        ws.onerror = function () { try { ws.close(); } catch (e) {} };
+      }
+
+      function scheduleReconnect() {
+        clearTimeout(retryTimer);
+        const delay = Math.min(1000 * Math.pow(2, retries++), 15000); // capped backoff
+        retryTimer = setTimeout(connect, delay);
+      }
+
+      document.addEventListener('visibilitychange', function () {
+        if (!document.hidden && (!ws || ws.readyState === WebSocket.CLOSED)) {
+          clearTimeout(retryTimer);
+          connect();
+        }
+      });
+
+      window.addEventListener('beforeunload', function () {
+        closedByUs = true;
+        if (ws) { try { ws.close(); } catch (e) {} }
+      });
+
+      // We only want the socket on authenticated tenant pages. If we get a 4401 or 4403, 
+      // the connection will just drop, which is fine.
+      connect();
+    })();
+
+    // --- Progressive Web App Service Worker Registration ---
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/static/sw.js').then(function(registration) {
+          console.log('[PWA] ServiceWorker registration successful with scope: ', registration.scope);
+        }).catch(function(err) {
+          console.warn('[PWA] ServiceWorker registration failed: ', err);
+        });
+      });
+    }
+  </script>
+
+  <!-- Enterprise Offline Engine Scripts -->
+  <script src="/static/js/vendor/dexie.min.js"></script>
+  <script src="/static/js/offline/db.js"></script>
+  <script src="/static/js/offline/auth.js"></script>
+  <script src="/static/js/offline/sync.js"></script>
+  <script src="/static/js/offline/pos-offline.js"></script>
+  
+
+
+<link rel="stylesheet" href="/static/debug_toolbar/css/print.css" media="print">
+<link rel="stylesheet" href="/static/debug_toolbar/css/toolbar.css">
+
+
+<script type="module" src="/static/debug_toolbar/js/toolbar.js" async></script>
+
+<div id="djDebug" class="djdt-hidden" dir="ltr"
+     
+     data-request-id="ca3299f0d18d47afab89a715834d1825"
+     data-render-panel-url="/__debug__/render_panel/"
+     
+     
+     
+     data-sidebar-url="/__debug__/history_sidebar/"
+     
+     data-default-show="true"
+       data-update-on-fetch="False">
+  <div class="djdt-hidden" id="djDebugToolbar">
+    <ul id="djDebugPanelList">
+      <li><a id="djHideToolBarButton" href="#" title="Hide toolbar">Hide »</a></li>
+      <li>
+        <a id="djToggleThemeButton" href="#" title="Toggle Theme">
+          Toggle Theme <svg
+  aria-hidden="true"
+  class="djdt-hidden theme-auto"
+  fill="currentColor"
+  viewBox="0 0 32 32"
+  version="1.1"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <path
+    d="M0 16q0 3.264 1.28 6.24t3.392 5.088 5.12 3.424 6.208 1.248q3.264 0 6.24-1.248t5.088-3.424 3.392-5.088 1.28-6.24-1.28-6.208-3.392-5.12-5.088-3.392-6.24-1.28q-3.264 0-6.208 1.28t-5.12 3.392-3.392 5.12-1.28 6.208zM4 16q0-3.264 1.6-6.016t4.384-4.352 6.016-1.632 6.016 1.632 4.384 4.352 1.6 6.016-1.6 6.048-4.384 4.352-6.016 1.6-6.016-1.6-4.384-4.352-1.6-6.048zM16 26.016q2.72 0 5.024-1.344t3.648-3.648 1.344-5.024-1.344-4.992-3.648-3.648-5.024-1.344v20z"
+  ></path>
+</svg>
+<svg
+  aria-hidden="true"
+  class="djdt-hidden theme-light"
+  viewBox="0 0 24 24"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <path
+    fill-rule="evenodd"
+    clip-rule="evenodd"
+    d="M12 1.25C12.4142 1.25 12.75 1.58579 12.75 2V4C12.75 4.41421 12.4142 4.75 12 4.75C11.5858 4.75 11.25 4.41421 11.25 4V2C11.25 1.58579 11.5858 1.25 12 1.25ZM3.66865 3.71609C3.94815 3.41039 4.42255 3.38915 4.72825 3.66865L6.95026 5.70024C7.25596 5.97974 7.2772 6.45413 6.9977 6.75983C6.7182 7.06553 6.2438 7.08677 5.9381 6.80727L3.71609 4.77569C3.41039 4.49619 3.38915 4.02179 3.66865 3.71609ZM20.3314 3.71609C20.6109 4.02179 20.5896 4.49619 20.2839 4.77569L18.0619 6.80727C17.7562 7.08677 17.2818 7.06553 17.0023 6.75983C16.7228 6.45413 16.744 5.97974 17.0497 5.70024L19.2718 3.66865C19.5775 3.38915 20.0518 3.41039 20.3314 3.71609ZM12 7.75C9.65279 7.75 7.75 9.65279 7.75 12C7.75 14.3472 9.65279 16.25 12 16.25C14.3472 16.25 16.25 14.3472 16.25 12C16.25 9.65279 14.3472 7.75 12 7.75ZM6.25 12C6.25 8.82436 8.82436 6.25 12 6.25C15.1756 6.25 17.75 8.82436 17.75 12C17.75 15.1756 15.1756 17.75 12 17.75C8.82436 17.75 6.25 15.1756 6.25 12ZM1.25 12C1.25 11.5858 1.58579 11.25 2 11.25H4C4.41421 11.25 4.75 11.5858 4.75 12C4.75 12.4142 4.41421 12.75 4 12.75H2C1.58579 12.75 1.25 12.4142 1.25 12ZM19.25 12C19.25 11.5858 19.5858 11.25 20 11.25H22C22.4142 11.25 22.75 11.5858 22.75 12C22.75 12.4142 22.4142 12.75 22 12.75H20C19.5858 12.75 19.25 12.4142 19.25 12ZM17.0255 17.0252C17.3184 16.7323 17.7933 16.7323 18.0862 17.0252L20.3082 19.2475C20.6011 19.5404 20.601 20.0153 20.3081 20.3082C20.0152 20.6011 19.5403 20.601 19.2475 20.3081L17.0255 18.0858C16.7326 17.7929 16.7326 17.3181 17.0255 17.0252ZM6.97467 17.0253C7.26756 17.3182 7.26756 17.7931 6.97467 18.086L4.75244 20.3082C4.45955 20.6011 3.98468 20.6011 3.69178 20.3082C3.39889 20.0153 3.39889 19.5404 3.69178 19.2476L5.91401 17.0253C6.2069 16.7324 6.68177 16.7324 6.97467 17.0253ZM12 19.25C12.4142 19.25 12.75 19.5858 12.75 20V22C12.75 22.4142 12.4142 22.75 12 22.75C11.5858 22.75 11.25 22.4142 11.25 22V20C11.25 19.5858 11.5858 19.25 12 19.25Z"
+    fill="currentColor"
+  />
+</svg>
+<svg
+  aria-hidden="true"
+  class="djdt-hidden theme-dark"
+  viewBox="0 0 24 24"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <path
+    d="M3.32031 11.6835C3.32031 16.6541 7.34975 20.6835 12.3203 20.6835C16.1075 20.6835 19.3483 18.3443 20.6768 15.032C19.6402 15.4486 18.5059 15.6834 17.3203 15.6834C12.3497 15.6834 8.32031 11.654 8.32031 6.68342C8.32031 5.50338 8.55165 4.36259 8.96453 3.32996C5.65605 4.66028 3.32031 7.89912 3.32031 11.6835Z"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+</svg>
+
+        </a>
+      </li>
+      
+        
+
+<li id="djdt-HistoryPanel" class="djDebugPanelButton">
+  <input type="checkbox" data-cookie="djdtHistoryPanel" checked title="Disable for next and successive requests">
+  
+    <a href="#" title="History" class="HistoryPanel">
+  
+  History
+  
+    
+      <br><small>/auth/login/?next=/dashboard/</small>
+    
+  
+  
+    </a>
+  
+</li>
+
+      
+        
+
+<li id="djdt-VersionsPanel" class="djDebugPanelButton">
+  <input type="checkbox" data-cookie="djdtVersionsPanel" checked title="Disable for next and successive requests">
+  
+    <a href="#" title="Versions" class="VersionsPanel">
+  
+  Versions
+  
+    
+      <br><small>Django 5.2.15</small>
+    
+  
+  
+    </a>
+  
+</li>
+
+      
+        
+
+<li id="djdt-TimerPanel" class="djDebugPanelButton">
+  <input type="checkbox" data-cookie="djdtTimerPanel" checked title="Disable for next and successive requests">
+  
+    <div class="djdt-contentless">
+  
+  Time
+  
+    
+      <br><small>Total: 40.53ms</small>
+    
+  
+  
+    </div>
+  
+</li>
+
+      
+        
+
+<li id="djdt-SettingsPanel" class="djDebugPanelButton">
+  <input type="checkbox" data-cookie="djdtSettingsPanel" checked title="Disable for next and successive requests">
+  
+    <a href="#" title="Settings from &#x27;config.settings.dev&#x27;" class="SettingsPanel">
+  
+  Settings
+  
+    
+      
+    
+  
+  
+    </a>
+  
+</li>
+
+      
+        
+
+<li id="djdt-HeadersPanel" class="djDebugPanelButton">
+  <input type="checkbox" data-cookie="djdtHeadersPanel" checked title="Disable for next and successive requests">
+  
+    <a href="#" title="Headers" class="HeadersPanel">
+  
+  Headers
+  
+    
+      
+    
+  
+  
+    </a>
+  
+</li>
+
+      
+        
+
+<li id="djdt-RequestPanel" class="djDebugPanelButton">
+  <input type="checkbox" data-cookie="djdtRequestPanel" title="Enable for next and successive requests">
+  
+    <div class="djdt-contentless djdt-disabled">
+  
+  Request
+  
+  
+    </div>
+  
+</li>
+
+      
+        
+
+<li id="djdt-SQLPanel" class="djDebugPanelButton">
+  <input type="checkbox" data-cookie="djdtSQLPanel" checked title="Disable for next and successive requests">
+  
+    <a href="#" title="SQL queries from 1 connection" class="SQLPanel">
+  
+  SQL
+  
+    
+      <br><small>1 query in 0.26ms</small>
+    
+  
+  
+    </a>
+  
+</li>
+
+      
+        
+
+<li id="djdt-StaticFilesPanel" class="djDebugPanelButton">
+  <input type="checkbox" data-cookie="djdtStaticFilesPanel" checked title="Disable for next and successive requests">
+  
+    <a href="#" title="Static files (0 found, 8 used)" class="StaticFilesPanel">
+  
+  Static files
+  
+    
+      <br><small>8 files used</small>
+    
+  
+  
+    </a>
+  
+</li>
+
+      
+        
+
+<li id="djdt-TemplatesPanel" class="djDebugPanelButton">
+  <input type="checkbox" data-cookie="djdtTemplatesPanel" checked title="Disable for next and successive requests">
+  
+    <a href="#" title="Templates (14 rendered)" class="TemplatesPanel">
+  
+  Templates
+  
+    
+      <br><small>identity/login.html</small>
+    
+  
+  
+    </a>
+  
+</li>
+
+      
+        
+
+<li id="djdt-AlertsPanel" class="djDebugPanelButton">
+  <input type="checkbox" data-cookie="djdtAlertsPanel" checked title="Disable for next and successive requests">
+  
+    <a href="#" title="Alerts" class="AlertsPanel">
+  
+  Alerts
+  
+    
+      
+    
+  
+  
+    </a>
+  
+</li>
+
+      
+        
+
+<li id="djdt-CachePanel" class="djDebugPanelButton">
+  <input type="checkbox" data-cookie="djdtCachePanel" checked title="Disable for next and successive requests">
+  
+    <a href="#" title="Cache calls from 1 backend" class="CachePanel">
+  
+  Cache
+  
+    
+      <br><small>1 call in 0.02ms</small>
+    
+  
+  
+    </a>
+  
+</li>
+
+      
+        
+
+<li id="djdt-SignalsPanel" class="djDebugPanelButton">
+  <input type="checkbox" data-cookie="djdtSignalsPanel" checked title="Disable for next and successive requests">
+  
+    <a href="#" title="Signals" class="SignalsPanel">
+  
+  Signals
+  
+    
+      <br><small>77 receivers of 15 signals</small>
+    
+  
+  
+    </a>
+  
+</li>
+
+      
+        
+
+<li id="djdt-CommunityPanel" class="djDebugPanelButton">
+  <input type="checkbox" data-cookie="djdtCommunityPanel" checked title="Disable for next and successive requests">
+  
+    <a href="#" title="Community" class="CommunityPanel">
+  
+  Community
+  
+    
+      
+    
+  
+  
+    </a>
+  
+</li>
+
+      
+        
+
+<li id="djdt-RedirectsPanel" class="djDebugPanelButton">
+  <input type="checkbox" data-cookie="djdtRedirectsPanel" title="Enable for next and successive requests">
+  
+    <div class="djdt-contentless djdt-disabled">
+  
+  Intercept redirects
+  
+  
+    </div>
+  
+</li>
+
+      
+        
+
+<li id="djdt-ProfilingPanel" class="djDebugPanelButton">
+  <input type="checkbox" data-cookie="djdtProfilingPanel" title="Enable for next and successive requests">
+  
+    <div class="djdt-contentless djdt-disabled">
+  
+  Profiling
+  
+  
+    </div>
+  
+</li>
+
+      
+    </ul>
+  </div>
+  <div class="djdt-hidden" id="djDebugToolbarHandle">
+    <div title="Show toolbar" id="djShowToolBarButton">
+      <span id="djShowToolBarD">D</span><span id="djShowToolBarJ">J</span>DT
+    </div>
+  </div>
+
+  
+    
+
+
+  <div id="HistoryPanel" class="djdt-panelContent djdt-hidden">
+    <div class="djDebugPanelTitle">
+      <h3>History</h3>
+      <button type="button" class="djDebugClose">×</button>
+    </div>
+    <div class="djDebugPanelContent">
+      
+        <div class="djdt-loader"></div>
+        <div class="djdt-scroll"></div>
+      
+    </div>
+  </div>
+
+
+  
+    
+
+
+  <div id="VersionsPanel" class="djdt-panelContent djdt-hidden">
+    <div class="djDebugPanelTitle">
+      <h3>Versions</h3>
+      <button type="button" class="djDebugClose">×</button>
+    </div>
+    <div class="djDebugPanelContent">
+      
+        <div class="djdt-loader"></div>
+        <div class="djdt-scroll"></div>
+      
+    </div>
+  </div>
+
+
+  
+    
+
+
+
+  
+    
+
+
+  <div id="SettingsPanel" class="djdt-panelContent djdt-hidden">
+    <div class="djDebugPanelTitle">
+      <h3>Settings from &#x27;config.settings.dev&#x27;</h3>
+      <button type="button" class="djDebugClose">×</button>
+    </div>
+    <div class="djDebugPanelContent">
+      
+        <div class="djdt-loader"></div>
+        <div class="djdt-scroll"></div>
+      
+    </div>
+  </div>
+
+
+  
+    
+
+
+  <div id="HeadersPanel" class="djdt-panelContent djdt-hidden">
+    <div class="djDebugPanelTitle">
+      <h3>Headers</h3>
+      <button type="button" class="djDebugClose">×</button>
+    </div>
+    <div class="djDebugPanelContent">
+      
+        <div class="djdt-loader"></div>
+        <div class="djdt-scroll"></div>
+      
+    </div>
+  </div>
+
+
+  
+    
+
+
+
+  
+    
+
+
+  <div id="SQLPanel" class="djdt-panelContent djdt-hidden">
+    <div class="djDebugPanelTitle">
+      <h3>SQL queries from 1 connection</h3>
+      <button type="button" class="djDebugClose">×</button>
+    </div>
+    <div class="djDebugPanelContent">
+      
+        <div class="djdt-loader"></div>
+        <div class="djdt-scroll"></div>
+      
+    </div>
+  </div>
+
+
+  
+    
+
+
+  <div id="StaticFilesPanel" class="djdt-panelContent djdt-hidden">
+    <div class="djDebugPanelTitle">
+      <h3>Static files (0 found, 8 used)</h3>
+      <button type="button" class="djDebugClose">×</button>
+    </div>
+    <div class="djDebugPanelContent">
+      
+        <div class="djdt-loader"></div>
+        <div class="djdt-scroll"></div>
+      
+    </div>
+  </div>
+
+
+  
+    
+
+
+  <div id="TemplatesPanel" class="djdt-panelContent djdt-hidden">
+    <div class="djDebugPanelTitle">
+      <h3>Templates (14 rendered)</h3>
+      <button type="button" class="djDebugClose">×</button>
+    </div>
+    <div class="djDebugPanelContent">
+      
+        <div class="djdt-loader"></div>
+        <div class="djdt-scroll"></div>
+      
+    </div>
+  </div>
+
+
+  
+    
+
+
+  <div id="AlertsPanel" class="djdt-panelContent djdt-hidden">
+    <div class="djDebugPanelTitle">
+      <h3>Alerts</h3>
+      <button type="button" class="djDebugClose">×</button>
+    </div>
+    <div class="djDebugPanelContent">
+      
+        <div class="djdt-loader"></div>
+        <div class="djdt-scroll"></div>
+      
+    </div>
+  </div>
+
+
+  
+    
+
+
+  <div id="CachePanel" class="djdt-panelContent djdt-hidden">
+    <div class="djDebugPanelTitle">
+      <h3>Cache calls from 1 backend</h3>
+      <button type="button" class="djDebugClose">×</button>
+    </div>
+    <div class="djDebugPanelContent">
+      
+        <div class="djdt-loader"></div>
+        <div class="djdt-scroll"></div>
+      
+    </div>
+  </div>
+
+
+  
+    
+
+
+  <div id="SignalsPanel" class="djdt-panelContent djdt-hidden">
+    <div class="djDebugPanelTitle">
+      <h3>Signals</h3>
+      <button type="button" class="djDebugClose">×</button>
+    </div>
+    <div class="djDebugPanelContent">
+      
+        <div class="djdt-loader"></div>
+        <div class="djdt-scroll"></div>
+      
+    </div>
+  </div>
+
+
+  
+    
+
+
+  <div id="CommunityPanel" class="djdt-panelContent djdt-hidden">
+    <div class="djDebugPanelTitle">
+      <h3>Community</h3>
+      <button type="button" class="djDebugClose">×</button>
+    </div>
+    <div class="djDebugPanelContent">
+      
+        <div class="djdt-loader"></div>
+        <div class="djdt-scroll"></div>
+      
+    </div>
+  </div>
+
+
+  
+    
+
+
+
+  
+    
+
+
+
+  
+  <div id="djDebugWindow" class="djdt-panelContent djdt-hidden"></div>
+</div>
+</body>
+</html>

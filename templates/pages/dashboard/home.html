@@ -20,11 +20,7 @@
 {% block workspace %}
 <div id="dashboard-content" 
      class="px-8 pb-12 space-y-6 relative" 
-     x-data="productTour()" x-init="initTour()"
-     hx-get="{% url 'reporting:home' %}"
-     hx-trigger="tenant:order_changed from:window, tenant:payment_captured from:window, tenant:kds_changed from:window"
-     hx-select="#dashboard-content"
-     hx-swap="outerHTML">
+     x-data="productTour()" x-init="initTour()">
 
   <!-- KPI Cards -->
   <section class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4" aria-label="Key metrics">
@@ -754,5 +750,78 @@
     // Initial snapshot
     snapshotCounters();
   })();
+<script>
+  document.addEventListener('tenant:order_changed', (e) => {
+    const payload = e.detail?.payload;
+    if (!payload) return;
+    
+    // Update Orders Today
+    if (payload.action === 'created') {
+      const ordersEl = document.querySelector('[data-metric="orders"]');
+      if (ordersEl) {
+        let count = parseInt(ordersEl.getAttribute('data-value') || '0') + 1;
+        ordersEl.setAttribute('data-value', count);
+        ordersEl.textContent = count;
+      }
+    } else if (payload.action === 'settled') {
+      // Update Revenue
+      const revEl = document.querySelector('[data-metric="revenue"]');
+      const ordersEl = document.querySelector('[data-metric="orders"]');
+      const avgEl = document.querySelector('[data-metric="avg_ticket"]');
+      const tablesEl = document.querySelector('[data-metric="tables"]');
+      
+      let rev = parseFloat(revEl?.getAttribute('data-value') || '0');
+      let orders = parseInt(ordersEl?.getAttribute('data-value') || '0');
+      
+      rev += (payload.total || 0);
+      orders += 1;
+      
+      if (revEl) {
+        revEl.setAttribute('data-value', rev);
+        revEl.textContent = '₹' + rev.toFixed(2);
+      }
+      if (ordersEl) {
+        ordersEl.setAttribute('data-value', orders);
+        ordersEl.textContent = orders;
+      }
+      if (avgEl && orders > 0) {
+        const avg = rev / orders;
+        avgEl.setAttribute('data-value', avg);
+        avgEl.textContent = '₹' + avg.toFixed(2);
+      }
+      if (tablesEl && payload.type === 'dine_in') {
+        let tables = parseInt(tablesEl.getAttribute('data-value') || '0') + 1;
+        tablesEl.setAttribute('data-value', tables);
+        tablesEl.textContent = tables;
+      }
+    }
+  });
+
+  document.addEventListener('tenant:payment_captured', (e) => {
+    const payload = e.detail?.payload;
+    if (!payload) return;
+    if (payload.is_refund) {
+      const refEl = document.querySelector('[data-metric="refunds"]');
+      if (refEl) {
+        let refunds = parseFloat(refEl.getAttribute('data-value') || '0') + (payload.amount || 0);
+        refEl.setAttribute('data-value', refunds);
+        refEl.textContent = '₹' + refunds.toFixed(2);
+      }
+    }
+  });
+
+  document.addEventListener('tenant:kds_changed', (e) => {
+    const payload = e.detail?.payload;
+    if (!payload) return;
+    const kotsEl = document.querySelector('[data-metric="kots"]');
+    if (kotsEl) {
+      let count = parseInt(kotsEl.getAttribute('data-value') || '0');
+      if (payload.action === 'created') count += (payload.count || 1);
+      else if (payload.action === 'completed') count = Math.max(0, count - (payload.count || 1));
+      
+      kotsEl.setAttribute('data-value', count);
+      kotsEl.textContent = count;
+    }
+  });
 </script>
 {% endblock %}

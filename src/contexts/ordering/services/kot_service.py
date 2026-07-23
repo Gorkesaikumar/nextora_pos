@@ -43,5 +43,5 @@ def generate_kots(order_id: uuid.UUID) -> list[KOT]:
     if kots:
         record_audit("kot.generated", entity_type="order", entity_id=order_id,
                      changes={"count": len(kots)})
-        transaction.on_commit(lambda: broadcast_tenant_event("kds_changed"))
+        transaction.on_commit(lambda: broadcast_tenant_event("kds_changed", payload={"action": "created", "count": len(kots)}))
     return kots

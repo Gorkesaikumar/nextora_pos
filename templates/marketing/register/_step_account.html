@@ -33,8 +33,8 @@
                       {% if form_account.password.errors %}border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-500/10{% else %}border-neutral-200 focus:border-neutral-900 focus:ring-2 focus:ring-neutral-900/10{% endif %}"
                placeholder="Min. 12 characters">
         <button type="button" @click="show = !show" class="absolute inset-y-0 right-0 pr-3 flex items-center text-neutral-400 hover:text-neutral-700">
-          {% include "icons/eye.html" with class="w-4 h-4" %}
-          {% include "icons/eye-off.html" with class="w-4 h-4" %}
+          <span x-show="!show">{% include "icons/eye.html" with class="w-4 h-4" %}</span>
+          <span x-show="show" x-cloak>{% include "icons/eye-off.html" with class="w-4 h-4" %}</span>
         </button>
       </div>
       {% if form_account.password.errors %}
@@ -74,8 +74,8 @@
                       {% if form_account.confirm_password.errors %}border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-500/10{% else %}border-neutral-200 focus:border-neutral-900 focus:ring-2 focus:ring-neutral-900/10{% endif %}"
                placeholder="Repeat password">
         <button type="button" @click="show = !show" class="absolute inset-y-0 right-0 pr-3 flex items-center text-neutral-400 hover:text-neutral-700">
-          {% include "icons/eye.html" with class="w-4 h-4" %}
-          {% include "icons/eye-off.html" with class="w-4 h-4" %}
+          <span x-show="!show">{% include "icons/eye.html" with class="w-4 h-4" %}</span>
+          <span x-show="show" x-cloak>{% include "icons/eye-off.html" with class="w-4 h-4" %}</span>
         </button>
       </div>
       {% if form_account.confirm_password.errors %}
