@@ -1,6 +1,7 @@
 """Subscription lifecycle commands: create, change plan, cancel."""
 import uuid
 from datetime import datetime, timedelta
+from decimal import Decimal
 
 from django.db import transaction
 from django.utils import timezone

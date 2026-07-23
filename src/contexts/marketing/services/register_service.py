@@ -144,7 +144,6 @@ def provision_workspace(
                 user=user,
                 tenant=tenant,
                 role=owner_role,
-                location_id=None,
                 is_active=True,
             )
 

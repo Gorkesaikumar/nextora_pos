@@ -13,7 +13,7 @@
   <!-- Core Scripts -->
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   <script src="https://unpkg.com/htmx.org@1.9.10"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
+
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -94,8 +94,8 @@
         <!-- Mobile Menu Button -->
         <div class="md:hidden flex items-center">
           <button @click="mobileMenuOpen = !mobileMenuOpen" class="text-slate-500 hover:text-slate-900 focus:outline-none">
-            <i data-lucide="menu" class="w-6 h-6" x-show="!mobileMenuOpen"></i>
-            <i data-lucide="x" class="w-6 h-6" x-show="mobileMenuOpen" x-cloak></i>
+            {% include "icons/menu.html" with class="w-6 h-6" %}
+            {% include "icons/x.html" with class="w-6 h-6" %}
           </button>
         </div>
       </div>
@@ -137,9 +137,9 @@
             The modern, cloud-based point of sale system by Nextora Creations — designed to help ambitious restaurants run efficiently and scale effortlessly.
           </p>
           <div class="flex gap-4 text-slate-400">
-            <a href="#" class="hover:text-brand-600 transition-colors"><i data-lucide="twitter" class="w-5 h-5"></i></a>
-            <a href="#" class="hover:text-brand-600 transition-colors"><i data-lucide="github" class="w-5 h-5"></i></a>
-            <a href="#" class="hover:text-brand-600 transition-colors"><i data-lucide="linkedin" class="w-5 h-5"></i></a>
+            <a href="#" class="hover:text-brand-600 transition-colors">{% include "icons/twitter.html" with class="w-5 h-5" %}</a>
+            <a href="#" class="hover:text-brand-600 transition-colors">{% include "icons/github.html" with class="w-5 h-5" %}</a>
+            <a href="#" class="hover:text-brand-600 transition-colors">{% include "icons/linkedin.html" with class="w-5 h-5" %}</a>
           </div>
         </div>
 
@@ -186,11 +186,6 @@
     </div>
   </footer>
 
-  <script>
-    lucide.createIcons();
-    document.body.addEventListener('htmx:afterSwap', function(evt) {
-        lucide.createIcons();
-    });
-  </script>
+
 </body>
 </html>

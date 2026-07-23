@@ -10,7 +10,7 @@
     <div class="w-full flex justify-between items-center">
       <p class="text-sm text-neutral-600 font-medium">Viewing the last 50 WhatsApp shares.</p>
       <a href="{% if tenant_id %}{% url 'billing:settings_tenant' tenant_id %}{% else %}{% url 'billing:settings' %}{% endif %}" class="px-4 py-2 bg-neutral-100 text-neutral-700 rounded-md text-sm font-medium hover:bg-neutral-200 transition-colors flex items-center gap-2">
-        <i data-lucide="settings" class="w-4 h-4"></i> Template Settings
+        {% include "icons/settings.html" with class="w-4 h-4" %} Template Settings
       </a>
     </div>
   </div>
@@ -54,7 +54,7 @@
             </td>
             <td class="px-4 py-3 whitespace-nowrap">
               <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-semantic-success-subtle text-semantic-success-dark gap-1">
-                <i data-lucide="check-circle" class="w-3 h-3"></i> Shared Link
+                {% include "icons/circle-check.html" with class="w-3 h-3" %} Shared Link
               </span>
             </td>
           </tr>
@@ -62,7 +62,7 @@
           <tr>
             <td colspan="5" class="px-4 py-16 text-center text-neutral-500 bg-neutral-50/50">
               <div class="w-12 h-12 rounded-full bg-brand-subtle flex items-center justify-center mx-auto mb-3">
-                <i data-lucide="message-circle" class="w-6 h-6 text-brand-default"></i>
+                {% include "icons/message-circle.html" with class="w-6 h-6 text-brand-default" %}
               </div>
               <p class="text-base font-medium text-neutral-700">No WhatsApp History</p>
               <p class="text-sm mt-1">No invoices have been shared via WhatsApp yet.</p>

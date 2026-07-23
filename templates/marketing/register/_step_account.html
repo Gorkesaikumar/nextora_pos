@@ -9,7 +9,7 @@
 
   {% if form_account.non_field_errors %}
     <div class="mb-5 flex items-start gap-3 p-3.5 rounded-xl border border-red-200 bg-red-50">
-      <i data-lucide="alert-triangle" class="w-4 h-4 mt-0.5 text-red-600 shrink-0"></i>
+      {% include "icons/triangle-alert.html" with class="w-4 h-4 mt-0.5 text-red-600 shrink-0" %}
       <p class="text-sm text-red-700 font-medium">{{ form_account.non_field_errors.0 }}</p>
     </div>
   {% endif %}
@@ -33,13 +33,13 @@
                       {% if form_account.password.errors %}border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-500/10{% else %}border-neutral-200 focus:border-neutral-900 focus:ring-2 focus:ring-neutral-900/10{% endif %}"
                placeholder="Min. 12 characters">
         <button type="button" @click="show = !show" class="absolute inset-y-0 right-0 pr-3 flex items-center text-neutral-400 hover:text-neutral-700">
-          <i data-lucide="eye" class="w-4 h-4" x-show="!show"></i>
-          <i data-lucide="eye-off" class="w-4 h-4" x-show="show" x-cloak></i>
+          {% include "icons/eye.html" with class="w-4 h-4" %}
+          {% include "icons/eye-off.html" with class="w-4 h-4" %}
         </button>
       </div>
       {% if form_account.password.errors %}
         <p id="err_account-password" class="mt-1.5 text-xs text-red-600 flex items-center gap-1">
-          <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i>{{ form_account.password.errors.0 }}
+          {% include "icons/circle-alert.html" with class="w-3.5 h-3.5" %}{{ form_account.password.errors.0 }}
         </p>
       {% endif %}
 
@@ -74,13 +74,13 @@
                       {% if form_account.confirm_password.errors %}border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-500/10{% else %}border-neutral-200 focus:border-neutral-900 focus:ring-2 focus:ring-neutral-900/10{% endif %}"
                placeholder="Repeat password">
         <button type="button" @click="show = !show" class="absolute inset-y-0 right-0 pr-3 flex items-center text-neutral-400 hover:text-neutral-700">
-          <i data-lucide="eye" class="w-4 h-4" x-show="!show"></i>
-          <i data-lucide="eye-off" class="w-4 h-4" x-show="show" x-cloak></i>
+          {% include "icons/eye.html" with class="w-4 h-4" %}
+          {% include "icons/eye-off.html" with class="w-4 h-4" %}
         </button>
       </div>
       {% if form_account.confirm_password.errors %}
         <p id="err_account-confirm_password" class="mt-1.5 text-xs text-red-600 flex items-center gap-1">
-          <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i>{{ form_account.confirm_password.errors.0 }}
+          {% include "icons/circle-alert.html" with class="w-3.5 h-3.5" %}{{ form_account.confirm_password.errors.0 }}
         </p>
       {% endif %}
     </div>

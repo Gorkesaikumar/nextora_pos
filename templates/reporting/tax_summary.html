@@ -61,7 +61,7 @@ visibleCols = {
 {% block report_kpis %}
   <div class="bg-white dark:bg-neutral-800 p-5 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center gap-4">
     <div class="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-lg flex items-center justify-center shrink-0">
-      <i data-lucide="calculator" class="w-6 h-6"></i>
+      {% include "icons/calculator.html" with class="w-6 h-6" %}
     </div>
     <div>
       <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Total GST</span>
@@ -71,7 +71,7 @@ visibleCols = {
 
   <div class="bg-white dark:bg-neutral-800 p-5 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center gap-4">
     <div class="w-12 h-12 bg-purple-50 dark:bg-purple-900/20 text-purple-600 rounded-lg flex items-center justify-center shrink-0">
-      <i data-lucide="landmark" class="w-6 h-6"></i>
+      {% include "icons/landmark.html" with class="w-6 h-6" %}
     </div>
     <div>
       <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">CGST</span>
@@ -81,7 +81,7 @@ visibleCols = {
 
   <div class="bg-white dark:bg-neutral-800 p-5 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center gap-4">
     <div class="w-12 h-12 bg-orange-50 dark:bg-orange-900/20 text-orange-600 rounded-lg flex items-center justify-center shrink-0">
-      <i data-lucide="landmark" class="w-6 h-6"></i>
+      {% include "icons/landmark.html" with class="w-6 h-6" %}
     </div>
     <div>
       <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">SGST</span>
@@ -91,7 +91,7 @@ visibleCols = {
 
   <div class="bg-white dark:bg-neutral-800 p-5 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center gap-4">
     <div class="w-12 h-12 bg-cyan-50 dark:bg-cyan-900/20 text-cyan-600 rounded-lg flex items-center justify-center shrink-0">
-      <i data-lucide="globe" class="w-6 h-6"></i>
+      {% include "icons/globe.html" with class="w-6 h-6" %}
     </div>
     <div>
       <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">IGST</span>
@@ -101,7 +101,7 @@ visibleCols = {
 
   <div class="bg-white dark:bg-neutral-800 p-5 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center gap-4">
     <div class="w-12 h-12 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 rounded-lg flex items-center justify-center shrink-0">
-      <i data-lucide="check-circle" class="w-6 h-6"></i>
+      {% include "icons/circle-check.html" with class="w-6 h-6" %}
     </div>
     <div>
       <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Taxable Sales</span>
@@ -111,7 +111,7 @@ visibleCols = {
 
   <div class="bg-white dark:bg-neutral-800 p-5 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center gap-4">
     <div class="w-12 h-12 bg-neutral-100 dark:bg-neutral-900 text-neutral-600 rounded-lg flex items-center justify-center shrink-0">
-      <i data-lucide="slash" class="w-6 h-6"></i>
+      {% include "icons/slash.html" with class="w-6 h-6" %}
     </div>
     <div>
       <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Exempt Sales</span>
@@ -121,7 +121,7 @@ visibleCols = {
 
   <div class="bg-white dark:bg-neutral-800 p-5 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center gap-4">
     <div class="w-12 h-12 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 rounded-lg flex items-center justify-center shrink-0">
-      <i data-lucide="wallet" class="w-6 h-6"></i>
+      {% include "icons/wallet.html" with class="w-6 h-6" %}
     </div>
     <div>
       <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Tax Collected</span>
@@ -131,7 +131,7 @@ visibleCols = {
 
   <div class="bg-white dark:bg-neutral-800 p-5 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center gap-4">
     <div class="w-12 h-12 bg-red-50 dark:bg-red-900/20 text-red-600 rounded-lg flex items-center justify-center shrink-0">
-      <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+      {% include "icons/triangle-alert.html" with class="w-6 h-6" %}
     </div>
     <div>
       <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Outstanding Tax</span>

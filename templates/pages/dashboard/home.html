@@ -6,13 +6,13 @@
 
 {% block primary_action %}
   <form id="date-filter-form" method="GET" class="flex items-center gap-3 bg-white border border-neutral-200 rounded-lg px-3 py-1.5 shadow-sm text-sm font-medium text-neutral-600 relative cursor-pointer hover:bg-neutral-50 transition-colors">
-    <i data-lucide="calendar" class="w-4 h-4 text-neutral-400"></i>
+    {% include "icons/calendar.html" with class="w-4 h-4 text-neutral-400" %}
     <span>{{ display_date }}</span>
-    <i data-lucide="calendar-days" class="w-4 h-4 ml-2 text-neutral-400"></i>
+    {% include "icons/calendar-days.html" with class="w-4 h-4 ml-2 text-neutral-400" %}
     <input type="date" name="date" class="absolute inset-0 opacity-0 cursor-pointer" onchange="document.getElementById('date-filter-form').submit();" value="{{ selected_date_str }}">
   </form>
   <a href="{% url 'ordering:pos_main' %}" class="btn bg-[var(--forge-color-brand-default)] hover:bg-[var(--forge-color-brand-hover)] text-white font-medium rounded-lg px-4 py-2 flex items-center gap-2 shadow-sm transition-colors">
-    <i data-lucide="plus" class="w-4 h-4"></i>
+    {% include "icons/plus.html" with class="w-4 h-4" %}
     New Order
   </a>
 {% endblock %}
@@ -36,11 +36,11 @@
           <p class="text-2xl font-bold text-neutral-800 mt-1 tabular-nums truncate" title="₹{{ revenue_today }}" data-metric="revenue" data-value="{{ revenue_today_raw }}" data-prefix="₹">{{ revenue_today|default:"0.00" }}</p>
         </div>
         <div class="w-10 h-10 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-900 shrink-0">
-          <i data-lucide="indian-rupee" class="w-5 h-5"></i>
+          {% include "icons/indian-rupee.html" with class="w-5 h-5" %}
         </div>
       </div>
       <div class="mt-4 flex items-center text-xs font-medium text-emerald-600">
-        <i data-lucide="trending-up" class="w-3 h-3 mr-1 shrink-0"></i>
+        {% include "icons/trending-up.html" with class="w-3 h-3 mr-1 shrink-0" %}
         12% vs yesterday
       </div>
     </article>
@@ -53,11 +53,11 @@
           <p class="text-2xl font-bold text-neutral-800 mt-1 tabular-nums truncate" data-metric="orders" data-value="{{ order_count }}">{{ order_count|default:"0" }}</p>
         </div>
         <div class="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0">
-          <i data-lucide="receipt" class="w-5 h-5"></i>
+          {% include "icons/receipt.html" with class="w-5 h-5" %}
         </div>
       </div>
       <div class="mt-4 flex items-center text-xs font-medium text-emerald-600">
-        <i data-lucide="trending-up" class="w-3 h-3 mr-1 shrink-0"></i>
+        {% include "icons/trending-up.html" with class="w-3 h-3 mr-1 shrink-0" %}
         8% vs yesterday
       </div>
     </article>
@@ -70,11 +70,11 @@
           <p class="text-2xl font-bold text-neutral-800 mt-1 tabular-nums truncate" title="₹{{ avg_ticket }}" data-metric="avg_ticket" data-value="{{ avg_ticket_raw }}" data-prefix="₹">{{ avg_ticket|default:"0.00" }}</p>
         </div>
         <div class="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center text-purple-600 shrink-0">
-          <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
+          {% include "icons/chart-column.html" with class="w-5 h-5" %}
         </div>
       </div>
       <div class="mt-4 flex items-center text-xs font-medium text-neutral-400">
-        <i data-lucide="minus" class="w-3 h-3 mr-1 shrink-0"></i>
+        {% include "icons/minus.html" with class="w-3 h-3 mr-1 shrink-0" %}
         No change
       </div>
     </article>
@@ -87,11 +87,11 @@
           <p class="text-2xl font-bold text-neutral-800 mt-1 tabular-nums truncate" data-metric="tables" data-value="{{ tables_turned }}">{{ tables_turned|default:"0" }}</p>
         </div>
         <div class="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center text-orange-500 shrink-0">
-          <i data-lucide="users" class="w-5 h-5"></i>
+          {% include "icons/users.html" with class="w-5 h-5" %}
         </div>
       </div>
       <div class="mt-4 flex items-center text-xs font-medium text-emerald-600">
-        <i data-lucide="check-circle" class="w-3 h-3 mr-1 shrink-0"></i>
+        {% include "icons/circle-check.html" with class="w-3 h-3 mr-1 shrink-0" %}
         Orders Completed
       </div>
     </article>
@@ -104,11 +104,11 @@
           <p class="text-2xl font-bold text-neutral-800 mt-1 tabular-nums truncate" title="₹{{ refunds_today }}" data-metric="refunds" data-value="{{ refunds_today_raw }}" data-prefix="₹">{{ refunds_today|default:"0.00" }}</p>
         </div>
         <div class="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center text-red-600 shrink-0">
-          <i data-lucide="refresh-ccw" class="w-5 h-5"></i>
+          {% include "icons/refresh-ccw.html" with class="w-5 h-5" %}
         </div>
       </div>
       <div class="mt-4 flex items-center text-xs font-medium text-red-600">
-        <i data-lucide="trending-down" class="w-3 h-3 mr-1 shrink-0"></i>
+        {% include "icons/trending-down.html" with class="w-3 h-3 mr-1 shrink-0" %}
         0% vs yesterday
       </div>
     </article>
@@ -121,7 +121,7 @@
           <p class="text-2xl font-bold text-neutral-800 mt-1 tabular-nums truncate" data-metric="kots" data-value="{{ open_kots }}">{{ open_kots|default:"0" }}</p>
         </div>
         <div class="w-10 h-10 rounded-full bg-teal-50 flex items-center justify-center text-teal-600 shrink-0">
-          <i data-lucide="file-text" class="w-5 h-5"></i>
+          {% include "icons/file-text.html" with class="w-5 h-5" %}
         </div>
       </div>
       <div class="mt-4 flex items-center text-xs font-medium text-neutral-500">
@@ -137,7 +137,7 @@
       <div class="flex items-center justify-between mb-6">
         <h2 class="text-base font-bold text-neutral-800">Revenue Overview</h2>
         <div class="flex items-center gap-1 text-sm text-neutral-500 cursor-pointer hover:bg-neutral-50 px-2 py-1 rounded">
-          Last 14 days <i data-lucide="chevron-down" class="w-4 h-4"></i>
+          Last 14 days {% include "icons/chevron-down.html" with class="w-4 h-4" %}
         </div>
       </div>
       <div class="flex-1 flex items-end justify-between min-h-[250px] border border-neutral-100 rounded-xl bg-white p-4">
@@ -161,7 +161,7 @@
           </div>
         {% else %}
           <div class="flex-1 flex flex-col items-center justify-center h-full">
-            <i data-lucide="bar-chart" class="w-8 h-8 mb-3 text-neutral-300"></i>
+            {% include "icons/chart-column.html" with class="w-8 h-8 mb-3 text-neutral-300" %}
             <p class="font-semibold text-neutral-600 mb-1">No revenue data yet</p>
             <p class="text-xs text-neutral-400">Revenue will appear here once you start taking orders.</p>
           </div>
@@ -175,28 +175,28 @@
       <ul class="space-y-4">
         <li class="flex items-center justify-between">
           <div class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-lg bg-neutral-100 flex items-center justify-center text-neutral-900"><i data-lucide="utensils" class="w-4 h-4"></i></div>
+            <div class="w-8 h-8 rounded-lg bg-neutral-100 flex items-center justify-center text-neutral-900">{% include "icons/utensils.html" with class="w-4 h-4" %}</div>
             <span class="text-sm font-medium text-neutral-700">Dine In</span>
           </div>
           <span class="text-sm font-bold text-neutral-900">{{ dine_in_count|default:"0" }}</span>
         </li>
         <li class="flex items-center justify-between">
           <div class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600"><i data-lucide="shopping-bag" class="w-4 h-4"></i></div>
+            <div class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">{% include "icons/shopping-bag.html" with class="w-4 h-4" %}</div>
             <span class="text-sm font-medium text-neutral-700">Take Away</span>
           </div>
           <span class="text-sm font-bold text-neutral-900">{{ take_away_count|default:"0" }}</span>
         </li>
         <li class="flex items-center justify-between">
           <div class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center text-orange-600"><i data-lucide="truck" class="w-4 h-4"></i></div>
+            <div class="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center text-orange-600">{% include "icons/truck.html" with class="w-4 h-4" %}</div>
             <span class="text-sm font-medium text-neutral-700">Delivery</span>
           </div>
           <span class="text-sm font-bold text-neutral-900">{{ delivery_count|default:"0" }}</span>
         </li>
         <li class="flex items-center justify-between">
           <div class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-lg bg-rose-50 flex items-center justify-center text-rose-600"><i data-lucide="x-circle" class="w-4 h-4"></i></div>
+            <div class="w-8 h-8 rounded-lg bg-rose-50 flex items-center justify-center text-rose-600">{% include "icons/circle-x.html" with class="w-4 h-4" %}</div>
             <span class="text-sm font-medium text-neutral-700">Cancelled</span>
           </div>
           <span class="text-sm font-bold text-neutral-900">{{ cancelled_count|default:"0" }}</span>
@@ -204,7 +204,7 @@
       </ul>
       <div class="mt-6 pt-4 border-t border-neutral-100 flex items-center justify-between">
         <div class="flex items-center gap-3">
-          <div class="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600"><i data-lucide="list" class="w-4 h-4"></i></div>
+          <div class="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600">{% include "icons/list.html" with class="w-4 h-4" %}</div>
           <span class="text-sm font-bold text-neutral-800">Total Orders</span>
         </div>
         <span class="text-sm font-bold text-neutral-900">{{ total_orders_count|default:"0" }}</span>
@@ -243,7 +243,7 @@
       {% if not top_items %}
       <div class="flex flex-col items-center justify-center text-center py-6">
         <div class="w-10 h-10 bg-neutral-50 rounded-lg flex items-center justify-center mb-3">
-          <i data-lucide="file-box" class="w-5 h-5 text-neutral-400"></i>
+          {% include "icons/package.html" with class="w-5 h-5 text-neutral-400" %}
         </div>
         <h3 class="text-sm font-bold text-neutral-700 mb-1">No data available</h3>
         <p class="text-xs text-neutral-500">No items sold yet today.</p>
@@ -280,7 +280,7 @@
       {% if not top_branches %}
       <div class="flex flex-col items-center justify-center text-center py-6">
         <div class="w-10 h-10 bg-neutral-50 rounded-lg flex items-center justify-center mb-3">
-          <i data-lucide="building-2" class="w-5 h-5 text-neutral-400"></i>
+          {% include "icons/building-2.html" with class="w-5 h-5 text-neutral-400" %}
         </div>
         <h3 class="text-sm font-bold text-neutral-700 mb-1">No data available</h3>
         <p class="text-xs text-neutral-500">No orders yet today.</p>
@@ -321,7 +321,7 @@
       {% if not recent_orders %}
       <div class="flex flex-col items-center justify-center text-center py-6">
         <div class="w-10 h-10 bg-neutral-50 rounded-lg flex items-center justify-center mb-3">
-          <i data-lucide="receipt" class="w-5 h-5 text-neutral-400"></i>
+          {% include "icons/receipt.html" with class="w-5 h-5 text-neutral-400" %}
         </div>
         <h3 class="text-sm font-bold text-neutral-700 mb-1">No orders yet</h3>
         <p class="text-xs text-neutral-500">New orders will appear here.</p>
@@ -330,47 +330,108 @@
     </article>
   </section>
 
-  <!-- Quick Actions -->
-  <section class="bg-white rounded-2xl border border-neutral-100 p-6 shadow-sm">
-    <h2 class="text-base font-bold text-neutral-800 mb-4">Quick Actions</h2>
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
-      <a href="{% url 'ordering:pos_main' %}" class="flex items-center gap-3 p-3 rounded-xl border border-neutral-100 hover:border-[var(--forge-color-brand-default)] hover:shadow-sm transition-all group">
-        <div class="w-10 h-10 rounded-lg bg-neutral-100 flex items-center justify-center text-neutral-900 group-hover:bg-neutral-900 group-hover:text-white transition-colors"><i data-lucide="plus" class="w-5 h-5"></i></div>
+  <!-- Quick Actions & Tutorials -->
+  <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+    <section class="lg:col-span-3 bg-white rounded-2xl border border-neutral-100 p-6 shadow-sm">
+      <h2 class="text-base font-bold text-neutral-800 mb-4">Quick Actions</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        <a href="{% url 'ordering:pos_main' %}" class="flex items-center gap-3 p-3 rounded-xl border border-neutral-100 hover:border-[var(--forge-color-brand-default)] hover:shadow-sm transition-all group">
+          <div class="w-10 h-10 rounded-lg bg-neutral-100 flex items-center justify-center text-neutral-900 group-hover:bg-neutral-900 group-hover:text-white transition-colors">{% include "icons/plus.html" with class="w-5 h-5" %}</div>
+          <div>
+            <div class="text-sm font-bold text-neutral-800">New Order</div>
+            <div class="text-[10px] text-neutral-500">Create a new order</div>
+          </div>
+        </a>
+        <a href="{% url 'ordering:pos_tables_main' %}" class="flex items-center gap-3 p-3 rounded-xl border border-neutral-100 hover:border-neutral-300 hover:shadow-sm transition-all group">
+          <div class="w-10 h-10 rounded-lg bg-neutral-50 flex items-center justify-center text-neutral-600 group-hover:bg-neutral-100 transition-colors">{% include "icons/armchair.html" with class="w-5 h-5" %}</div>
+          <div>
+            <div class="text-sm font-bold text-neutral-800">Table Management</div>
+            <div class="text-[10px] text-neutral-500">View and manage tables</div>
+          </div>
+        </a>
+        <a href="{% url 'ordering:kds_main' %}" class="flex items-center gap-3 p-3 rounded-xl border border-neutral-100 hover:border-neutral-300 hover:shadow-sm transition-all group">
+          <div class="w-10 h-10 rounded-lg bg-neutral-50 flex items-center justify-center text-neutral-600 group-hover:bg-neutral-100 transition-colors">{% include "icons/chef-hat.html" with class="w-5 h-5" %}</div>
+          <div>
+            <div class="text-sm font-bold text-neutral-800">KOT View</div>
+            <div class="text-[10px] text-neutral-500">View kitchen orders</div>
+          </div>
+        </a>
+      </div>
+    </section>
+    
+    <article class="bg-indigo-600 rounded-2xl border border-indigo-500 p-6 shadow-sm text-white relative overflow-hidden group">
+      <div class="relative z-10 flex flex-col h-full justify-between">
         <div>
-          <div class="text-sm font-bold text-neutral-800">New Order</div>
-          <div class="text-[10px] text-neutral-500">Create a new order</div>
+          <h2 class="text-lg font-black mb-1 group-hover:scale-105 origin-left transition-transform">Learn Nextora POS</h2>
+          <p class="text-indigo-100 text-sm mb-4">Master your restaurant operations with our step-by-step video tutorials.</p>
         </div>
-      </a>
-      <a href="{% url 'ordering:pos_tables_main' %}" class="flex items-center gap-3 p-3 rounded-xl border border-neutral-100 hover:border-neutral-300 hover:shadow-sm transition-all group">
-        <div class="w-10 h-10 rounded-lg bg-neutral-50 flex items-center justify-center text-neutral-600 group-hover:bg-neutral-100 transition-colors"><i data-lucide="armchair" class="w-5 h-5"></i></div>
-        <div>
-          <div class="text-sm font-bold text-neutral-800">Table Management</div>
-          <div class="text-[10px] text-neutral-500">View and manage tables</div>
+        <button onclick="window.dispatchEvent(new CustomEvent('open-tutorial-center'))" class="bg-white text-indigo-600 px-4 py-2 text-sm font-bold rounded-xl shadow-sm hover:bg-indigo-50 transition-colors w-max flex items-center gap-2">
+          {% include "icons/circle-play.html" with class="w-4 h-4" %} Start Learning
+        </button>
+      </div>
+      {% include "icons/youtube.html" with class="w-32 h-32 absolute -bottom-8 -right-8 text-indigo-500 opacity-30 transform -rotate-12 group-hover:scale-110 group-hover:rotate-0 transition-transform duration-500" %}
+    </article>
+  </div>
+
+  <!-- Welcome Popup (Alpine Component) -->
+  <div x-data="{ showWelcome: false }"
+       x-init="
+          {% if onboarding_settings.is_enabled %}
+            if ({{ onboarding_settings.show_every_login|yesno:'true,false' }} || !localStorage.getItem('nx_welcome_seen')) {
+              setTimeout(() => { showWelcome = true; }, {{ onboarding_settings.delay_seconds|default:10 }} * 1000);
+            }
+          {% endif %}
+       "
+       @close-welcome.window="showWelcome = false; localStorage.setItem('nx_welcome_seen', 'true')"
+       x-show="showWelcome"
+       class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-sm"
+       x-cloak
+       x-transition.opacity>
+       
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden relative"
+         @click.outside="$dispatch('close-welcome')"
+         x-show="showWelcome"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 scale-90 translate-y-8"
+         x-transition:enter-end="opacity-100 scale-100 translate-y-0">
+      
+      <button @click="$dispatch('close-welcome')" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-neutral-100 text-neutral-500 hover:bg-neutral-200 hover:text-neutral-900 transition-colors z-20">
+        {% include "icons/x.html" with class="w-4 h-4" %}
+      </button>
+
+      <div class="grid md:grid-cols-2 h-full">
+        <div class="bg-indigo-600 p-8 text-white flex flex-col justify-center relative overflow-hidden min-h-[320px]">
+          {% include "icons/sparkles.html" with class="w-32 h-32 absolute -top-10 -right-10 text-indigo-500 opacity-20 transform rotate-12" %}
+          <h2 class="text-3xl font-black mb-4 relative z-10 tracking-tight">Welcome to Nextora POS!</h2>
+          <p class="text-indigo-100 mb-6 relative z-10 text-sm leading-relaxed">
+            We are thrilled to have you on board. Start exploring the powerful tools designed to simplify your restaurant operations.
+          </p>
+          <button @click="$dispatch('close-welcome'); setTimeout(() => window.dispatchEvent(new CustomEvent('open-tutorial-center')), 300)" class="bg-white text-indigo-600 px-5 py-3 text-sm font-bold rounded-xl shadow-sm hover:bg-indigo-50 transition-colors w-max flex items-center gap-2 relative z-10 group">
+            {% include "icons/circle-play.html" with class="w-5 h-5 group-hover:scale-110 transition-transform" %} Watch Setup Guide
+          </button>
         </div>
-      </a>
-      <a href="{% url 'ordering:kds_main' %}" class="flex items-center gap-3 p-3 rounded-xl border border-neutral-100 hover:border-neutral-300 hover:shadow-sm transition-all group">
-        <div class="w-10 h-10 rounded-lg bg-neutral-50 flex items-center justify-center text-neutral-600 group-hover:bg-neutral-100 transition-colors"><i data-lucide="chef-hat" class="w-5 h-5"></i></div>
-        <div>
-          <div class="text-sm font-bold text-neutral-800">KOT View</div>
-          <div class="text-[10px] text-neutral-500">View kitchen orders</div>
+        <div class="p-8 flex flex-col justify-center bg-white">
+          <h3 class="text-xs font-bold text-neutral-500 uppercase tracking-wider mb-4">Quick Links</h3>
+          <div class="space-y-3">
+            <a href="{% url 'ordering:pos_main' %}" @click="$dispatch('close-welcome')" class="flex items-center gap-4 p-3 rounded-xl border border-neutral-100 hover:border-indigo-500 hover:bg-indigo-50 transition-colors group">
+              <div class="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center text-indigo-600 group-hover:bg-indigo-200 transition-colors">{% include "icons/monitor.html" with class="w-5 h-5" %}</div>
+              <div>
+                <div class="text-sm font-bold text-neutral-900 group-hover:text-indigo-900 transition-colors">Open POS Register</div>
+                <div class="text-[10px] text-neutral-500">Start taking orders immediately</div>
+              </div>
+            </a>
+            <a href="#" @click="$dispatch('close-welcome')" onclick="window.location.search = '?tour=start'" class="flex items-center gap-4 p-3 rounded-xl border border-neutral-100 hover:border-purple-500 hover:bg-purple-50 transition-colors group">
+              <div class="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600 group-hover:bg-purple-200 transition-colors">{% include "icons/map.html" with class="w-5 h-5" %}</div>
+              <div>
+                <div class="text-sm font-bold text-neutral-900 group-hover:text-purple-900 transition-colors">Take a Product Tour</div>
+                <div class="text-[10px] text-neutral-500">Learn where everything is</div>
+              </div>
+            </a>
+          </div>
         </div>
-      </a>
-      <a href="javascript:void(0);" class="flex items-center gap-3 p-3 rounded-xl border border-neutral-100 hover:border-neutral-300 hover:shadow-sm transition-all group">
-        <div class="w-10 h-10 rounded-lg bg-neutral-50 flex items-center justify-center text-neutral-600 group-hover:bg-neutral-100 transition-colors"><i data-lucide="bar-chart-3" class="w-5 h-5"></i></div>
-        <div>
-          <div class="text-sm font-bold text-neutral-800">Sales Report</div>
-          <div class="text-[10px] text-neutral-500">View detailed sales</div>
-        </div>
-      </a>
-      <a href="javascript:void(0);" class="flex items-center gap-3 p-3 rounded-xl border border-neutral-100 hover:border-neutral-300 hover:shadow-sm transition-all group">
-        <div class="w-10 h-10 rounded-lg bg-neutral-50 flex items-center justify-center text-neutral-600 group-hover:bg-neutral-100 transition-colors"><i data-lucide="package" class="w-5 h-5"></i></div>
-        <div>
-          <div class="text-sm font-bold text-neutral-800">Inventory</div>
-          <div class="text-[10px] text-neutral-500">Check stock levels</div>
-        </div>
-      </a>
+      </div>
     </div>
-  </section>
+  </div>
 
   <!-- Product Tour Overlay -->
   <template x-if="active">
@@ -392,11 +453,11 @@
         <div class="p-6 pb-4 relative">
           <div class="flex items-center justify-between mb-3">
             <div class="flex items-center gap-2 px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-md">
-              <i data-lucide="info" class="w-3.5 h-3.5"></i>
+              {% include "icons/info.html" with class="w-3.5 h-3.5" %}
               <span class="text-[10px] font-bold tracking-widest uppercase" x-text="`Step ${stepIndex + 1} of ${steps.length}`"></span>
             </div>
             <button @click="endTour()" class="w-7 h-7 flex items-center justify-center rounded-full text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 transition-colors" aria-label="Close tour">
-              <i data-lucide="x" class="w-4 h-4"></i>
+              {% include "icons/x.html" with class="w-4 h-4" %}
             </button>
           </div>
           <h3 class="text-lg font-bold text-neutral-900 mb-2" x-text="currentStep.title"></h3>
@@ -409,23 +470,122 @@
           <div class="flex items-center gap-2">
             <button @click="prev()" :disabled="stepIndex === 0" 
                     class="w-9 h-9 flex items-center justify-center rounded-xl border border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 disabled:opacity-40 disabled:hover:bg-white disabled:cursor-not-allowed transition-all shadow-sm">
-              <i data-lucide="chevron-left" class="w-4 h-4"></i>
+              {% include "icons/chevron-left.html" with class="w-4 h-4" %}
             </button>
             
             <button @click="next()" x-show="stepIndex < steps.length - 1" 
                     class="px-5 py-2 rounded-xl bg-neutral-900 text-white text-sm font-semibold hover:bg-neutral-800 active:scale-95 transition-all shadow-md flex items-center gap-2">
-              Next <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+              Next {% include "icons/arrow-right.html" with class="w-3.5 h-3.5" %}
             </button>
             
             <button @click="endTour()" x-show="stepIndex === steps.length - 1" 
                     class="px-5 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm font-semibold hover:from-indigo-500 hover:to-purple-500 active:scale-95 transition-all shadow-md flex items-center gap-2">
-              <i data-lucide="check" class="w-4 h-4"></i> Finish
+              {% include "icons/check.html" with class="w-4 h-4" %} Finish
             </button>
           </div>
         </div>
       </div>
     </div>
-  </template>
+  <!-- Video Tutorial Center -->
+  <div x-data="{ 
+         showTutorials: false, 
+         activeVideo: null,
+         categories: [
+           { 
+             name: 'Getting Started', 
+             videos: [
+               { id: '1', title: 'How to setup your menu', duration: '5:20', url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
+               { id: '2', title: 'Understanding the POS interface', duration: '3:45', url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
+             ] 
+           },
+           { 
+             name: 'Advanced Features', 
+             videos: [
+               { id: '3', title: 'Managing inventory & stock', duration: '8:15', url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
+               { id: '4', title: 'Setting up taxes and discounts', duration: '4:30', url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
+             ] 
+           }
+         ]
+       }"
+       @open-tutorial-center.window="showTutorials = true; if(!activeVideo) activeVideo = categories[0].videos[0]"
+       @close-tutorials.window="showTutorials = false; activeVideo = null"
+       x-show="showTutorials"
+       class="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 bg-neutral-900/60 backdrop-blur-sm"
+       x-cloak
+       x-transition.opacity>
+       
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-6xl h-[85vh] overflow-hidden relative flex flex-col md:flex-row"
+         @click.outside="$dispatch('close-tutorials')"
+         x-show="showTutorials"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+         x-transition:enter-end="opacity-100 scale-100 translate-y-0">
+         
+      <!-- Sidebar / List -->
+      <div class="w-full md:w-80 bg-neutral-50 border-r border-neutral-200 flex flex-col h-full shrink-0">
+        <div class="p-4 border-b border-neutral-200 bg-white flex items-center justify-between">
+          <div>
+            <h3 class="font-bold text-neutral-900">Tutorial Center</h3>
+            <p class="text-[10px] text-neutral-500 uppercase tracking-wider font-bold mt-0.5">Learn Nextora POS</p>
+          </div>
+          <button @click="$dispatch('close-tutorials')" class="md:hidden w-8 h-8 flex items-center justify-center rounded-full bg-neutral-100 text-neutral-500">
+            {% include "icons/x.html" with class="w-4 h-4" %}
+          </button>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto p-4 space-y-6">
+          <template x-for="cat in categories" :key="cat.name">
+            <div>
+              <h4 class="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-3" x-text="cat.name"></h4>
+              <div class="space-y-2">
+                <template x-for="vid in cat.videos" :key="vid.id">
+                  <button @click="activeVideo = vid" 
+                          :class="activeVideo?.id === vid.id ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-white border-neutral-200 hover:border-indigo-300 hover:shadow-sm'"
+                          class="w-full text-left p-3 rounded-xl border transition-all flex items-start gap-3 group relative">
+                    <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors"
+                         :class="activeVideo?.id === vid.id ? 'bg-indigo-600 text-white' : 'bg-neutral-100 text-neutral-500 group-hover:text-indigo-600 group-hover:bg-indigo-50'">
+                      {% include "icons/play.html" with class="w-4 h-4" %}
+                    </div>
+                    <div>
+                      <div class="text-sm font-semibold leading-snug" :class="activeVideo?.id === vid.id ? 'text-indigo-900' : 'text-neutral-700'" x-text="vid.title"></div>
+                      <div class="text-[10px] font-medium text-neutral-500 mt-1 flex items-center gap-1">
+                        {% include "icons/clock.html" with class="w-3 h-3" %} <span x-text="vid.duration"></span>
+                      </div>
+                    </div>
+                  </button>
+                </template>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+      
+      <!-- Video Player Area -->
+      <div class="flex-1 bg-black relative flex flex-col">
+        <button @click="$dispatch('close-tutorials')" class="hidden md:flex absolute top-6 right-6 w-10 h-10 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white backdrop-blur-md transition-colors z-20">
+          {% include "icons/x.html" with class="w-5 h-5" %}
+        </button>
+        
+        <div class="flex-1 w-full h-full p-4 md:p-8 flex items-center justify-center relative">
+          <template x-if="activeVideo">
+            <div class="w-full max-w-4xl aspect-video bg-neutral-900 rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10">
+              <iframe :src="activeVideo.url" class="w-full h-full border-0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+          </template>
+        </div>
+        
+        <div class="p-6 md:p-8 bg-gradient-to-t from-black via-black/80 to-transparent absolute bottom-0 left-0 w-full pointer-events-none">
+          <template x-if="activeVideo">
+            <div class="pointer-events-auto">
+              <h2 class="text-2xl font-bold text-white mb-2" x-text="activeVideo.title"></h2>
+              <p class="text-neutral-400 text-sm">Follow along with this step-by-step tutorial.</p>
+            </div>
+          </template>
+        </div>
+      </div>
+      
+    </div>
+  </div>
 
 </div>
 

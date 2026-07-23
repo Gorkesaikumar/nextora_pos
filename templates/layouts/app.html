@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block body %}
+  <div class="zone-shell {% block zone_shell_classes %}{% endblock %}">
+    
+    {% block layout_top_rail %}
+      {% include "_chrome/top_rail.html" %}
+    {% endblock %}
+    
+    {% block layout_module_rail %}
+      {% include "_chrome/module_rail.html" %}
+    {% endblock %}
+
+    <main id="main" class="zone-workspace workspace" tabindex="-1">
+      {% block workspace_header_override %}
+      <div class="px-8 pt-8 pb-4 flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-bold text-neutral-800 tracking-tight">{% block page_title %}{% endblock %}</h1>
+          <div class="text-sm text-neutral-500 mt-1">{% block page_subtitle %}{% endblock %}</div>
+        </div>
+        <div class="flex items-center gap-3">
+          {% block primary_action %}{% endblock %}
+        </div>
+      </div>
+      {% endblock %}
+
+      {% block filter_strip %}{% endblock %}
+
+      <div class="workspace__body {% block workspace_body_classes %}{% endblock %}">
+        {% block workspace %}{% endblock %}
+      </div>
+
+      {% block page_footer %}
+        {% include "_chrome/page_footer.html" %}
+      {% endblock %}
+    </main>
+
+    {% block layout_context_panel %}{% endblock %}
+    
+    {% block layout_status_rail %}
+      {% if show_status_rail %}{% include "_chrome/status_rail.html" %}{% endif %}
+    {% endblock %}
+  </div>
+{% endblock %}

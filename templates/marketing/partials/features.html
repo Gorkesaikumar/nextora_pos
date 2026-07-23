@@ -16,7 +16,7 @@
         
         <button @click="activeFeature = 'billing'" :class="{'bg-white shadow-sm border-slate-200': activeFeature === 'billing', 'border-transparent hover:bg-slate-50': activeFeature !== 'billing'}" class="w-full flex items-start p-4 border rounded-xl transition-all text-left group">
           <div :class="{'bg-brand-50 text-brand-600': activeFeature === 'billing', 'bg-slate-100 text-slate-500 group-hover:text-slate-700': activeFeature !== 'billing'}" class="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-lg">
-            <i data-lucide="receipt" class="w-5 h-5"></i>
+            {% include "icons/receipt.html" with class="w-5 h-5" %}
           </div>
           <div class="ml-4">
             <h3 class="text-base font-bold" :class="{'text-slate-900': activeFeature === 'billing', 'text-slate-700': activeFeature !== 'billing'}">Fast Billing</h3>
@@ -26,7 +26,7 @@
 
         <button @click="activeFeature = 'inventory'" :class="{'bg-white shadow-sm border-slate-200': activeFeature === 'inventory', 'border-transparent hover:bg-slate-50': activeFeature !== 'inventory'}" class="w-full flex items-start p-4 border rounded-xl transition-all text-left group">
           <div :class="{'bg-emerald-50 text-emerald-600': activeFeature === 'inventory', 'bg-slate-100 text-slate-500 group-hover:text-slate-700': activeFeature !== 'inventory'}" class="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-lg">
-            <i data-lucide="package" class="w-5 h-5"></i>
+            {% include "icons/package.html" with class="w-5 h-5" %}
           </div>
           <div class="ml-4">
             <h3 class="text-base font-bold" :class="{'text-slate-900': activeFeature === 'inventory', 'text-slate-700': activeFeature !== 'inventory'}">Inventory Control</h3>
@@ -36,7 +36,7 @@
 
         <button @click="activeFeature = 'kitchen'" :class="{'bg-white shadow-sm border-slate-200': activeFeature === 'kitchen', 'border-transparent hover:bg-slate-50': activeFeature !== 'kitchen'}" class="w-full flex items-start p-4 border rounded-xl transition-all text-left group">
           <div :class="{'bg-orange-50 text-orange-600': activeFeature === 'kitchen', 'bg-slate-100 text-slate-500 group-hover:text-slate-700': activeFeature !== 'kitchen'}" class="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-lg">
-            <i data-lucide="chef-hat" class="w-5 h-5"></i>
+            {% include "icons/chef-hat.html" with class="w-5 h-5" %}
           </div>
           <div class="ml-4">
             <h3 class="text-base font-bold" :class="{'text-slate-900': activeFeature === 'kitchen', 'text-slate-700': activeFeature !== 'kitchen'}">Kitchen Display</h3>
@@ -46,7 +46,7 @@
 
         <button @click="activeFeature = 'reports'" :class="{'bg-white shadow-sm border-slate-200': activeFeature === 'reports', 'border-transparent hover:bg-slate-50': activeFeature !== 'reports'}" class="w-full flex items-start p-4 border rounded-xl transition-all text-left group">
           <div :class="{'bg-purple-50 text-purple-600': activeFeature === 'reports', 'bg-slate-100 text-slate-500 group-hover:text-slate-700': activeFeature !== 'reports'}" class="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-lg">
-            <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
+            {% include "icons/bar-chart-3.html" with class="w-5 h-5" %}
           </div>
           <div class="ml-4">
             <h3 class="text-base font-bold" :class="{'text-slate-900': activeFeature === 'reports', 'text-slate-700': activeFeature !== 'reports'}">Analytics & Reports</h3>

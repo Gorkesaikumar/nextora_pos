@@ -1,44 +1,39 @@
-{% extends "base.html" %}
-{# Settings layout — two-pane master/detail inside the workspace. #}
+{% extends "layouts/app.html" %}
 
+{% block zone_shell_classes %}zone-shell--no-context zone-shell--no-status-rail{% endblock %}
 
-{% block body %}
-  <div class="zone-shell zone-shell--no-context zone-shell--no-status-rail">
-    {% include "_chrome/top_rail.html" %}
-    {% include "_chrome/module_rail.html" %}
+{% block workspace_header_override %}{% endblock %}
 
-    <main id="main" class="zone-workspace" tabindex="-1">
-      <div class="settings-shell">
-        <nav class="settings-nav" aria-label="Settings sections">
-          <div class="settings-nav__title">Settings</div>
-          {% block settings_nav %}
-            <a href="#" class="settings-nav__item" aria-current="page">Tenant</a>
-            <a href="#" class="settings-nav__item">Branches</a>
-            <a href="#" class="settings-nav__item">Roles &amp; permissions</a>
-            <a href="#" class="settings-nav__item">Catalog</a>
-            <a href="#" class="settings-nav__item">Inventory</a>
-            <a href="#" class="settings-nav__item">Billing</a>
-            <a href="#" class="settings-nav__item">Devices</a>
-            <a href="#" class="settings-nav__item">Integrations</a>
-            <a href="#" class="settings-nav__item">API keys</a>
-            <a href="#" class="settings-nav__item">Audit log</a>
-          {% endblock %}
-        </nav>
+{% block workspace_body_classes %}p-0{% endblock %}
 
-        <section class="settings-pane">
-          <header class="settings-pane__header">
-            <div>
-              <h1 class="settings-pane__title">{% block settings_title %}Settings{% endblock %}</h1>
-              <div class="settings-pane__desc">{% block settings_desc %}{% endblock %}</div>
-            </div>
-            <div class="settings-pane__primary">{% block settings_primary %}{% endblock %}</div>
-          </header>
+{% block workspace %}
+  <div class="settings-shell">
+    <nav class="settings-nav" aria-label="Settings sections">
+      <div class="settings-nav__title">Settings</div>
+      {% block settings_nav %}
+        <a href="#" class="settings-nav__item" aria-current="page">Tenant</a>
+        <a href="#" class="settings-nav__item">Branches</a>
+        <a href="#" class="settings-nav__item">Roles &amp; permissions</a>
+        <a href="#" class="settings-nav__item">Catalog</a>
+        <a href="#" class="settings-nav__item">Inventory</a>
+        <a href="#" class="settings-nav__item">Billing</a>
+        <a href="#" class="settings-nav__item">Devices</a>
+        <a href="#" class="settings-nav__item">Integrations</a>
+        <a href="#" class="settings-nav__item">API keys</a>
+        <a href="#" class="settings-nav__item">Audit log</a>
+      {% endblock %}
+    </nav>
 
-          {% block settings_body %}{% endblock %}
-        </section>
-      </div>
+    <section class="settings-pane">
+      <header class="settings-pane__header">
+        <div>
+          <h1 class="settings-pane__title">{% block settings_title %}Settings{% endblock %}</h1>
+          <div class="settings-pane__desc">{% block settings_desc %}{% endblock %}</div>
+        </div>
+        <div class="settings-pane__primary">{% block settings_primary %}{% endblock %}</div>
+      </header>
 
-      {% include "_chrome/page_footer.html" %}
-    </main>
+      {% block settings_body %}{% endblock %}
+    </section>
   </div>
 {% endblock %}

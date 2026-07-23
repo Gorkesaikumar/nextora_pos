@@ -20,7 +20,7 @@ but renders <select> with iterable `choices` of (value, label) tuples.
   </select>
   {% if errors %}
     <p id="err_{{ name }}" class="mt-1.5 text-xs text-red-600 flex items-center gap-1">
-      <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i>{{ errors.0 }}
+      {% include "icons/circle-alert.html" with class="w-3.5 h-3.5" %}{{ errors.0 }}
     </p>
   {% elif hint %}
     <p id="hint_{{ name }}" class="mt-1.5 text-xs text-neutral-500">{{ hint }}</p>

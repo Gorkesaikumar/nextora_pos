@@ -89,7 +89,7 @@ visibleCols = {
   <div class="flex-1 min-w-[150px]" x-data="{ open: false }">
     <button type="button" @click="open = !open" class="btn-secondary">
       <span>More Filters</span>
-      <i data-lucide="chevron-down" class="w-4 h-4 ml-1"></i>
+      {% include "icons/chevron-down.html" with class="w-4 h-4 ml-1" %}
     </button>
     <div x-show="open" class="absolute bg-white dark:bg-neutral-800 rounded-lg shadow-lg border border-neutral-200 dark:border-neutral-700 p-4 mt-2 z-50 grid grid-cols-2 gap-3 w-80" @click.away="open = false" x-cloak>
       <div>
@@ -121,7 +121,7 @@ visibleCols = {
 {% block report_kpis %}
   <div class="bg-white dark:bg-neutral-800 p-5 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center gap-4">
     <div class="w-12 h-12 bg-green-50 dark:bg-green-900/20 text-green-600 rounded-lg flex items-center justify-center shrink-0">
-      <i data-lucide="indian-rupee" class="w-6 h-6"></i>
+      {% include "icons/indian-rupee.html" with class="w-6 h-6" %}
     </div>
     <div>
       <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Gross Sales</span>
@@ -131,7 +131,7 @@ visibleCols = {
 
   <div class="bg-white dark:bg-neutral-800 p-5 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center gap-4">
     <div class="w-12 h-12 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 rounded-lg flex items-center justify-center shrink-0">
-      <i data-lucide="trending-up" class="w-6 h-6"></i>
+      {% include "icons/trending-up.html" with class="w-6 h-6" %}
     </div>
     <div>
       <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Net Sales</span>
@@ -141,7 +141,7 @@ visibleCols = {
 
   <div class="bg-white dark:bg-neutral-800 p-5 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center gap-4">
     <div class="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-lg flex items-center justify-center shrink-0">
-      <i data-lucide="shopping-bag" class="w-6 h-6"></i>
+      {% include "icons/shopping-bag.html" with class="w-6 h-6" %}
     </div>
     <div>
       <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Orders</span>
@@ -151,7 +151,7 @@ visibleCols = {
 
   <div class="bg-white dark:bg-neutral-800 p-5 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center gap-4">
     <div class="w-12 h-12 bg-purple-50 dark:bg-purple-900/20 text-purple-600 rounded-lg flex items-center justify-center shrink-0">
-      <i data-lucide="badge-dollar-sign" class="w-6 h-6"></i>
+      {% include "icons/badge-dollar-sign.html" with class="w-6 h-6" %}
     </div>
     <div>
       <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Average Order</span>
@@ -161,7 +161,7 @@ visibleCols = {
 
   <div class="bg-white dark:bg-neutral-800 p-5 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center gap-4">
     <div class="w-12 h-12 bg-red-50 dark:bg-red-900/20 text-red-600 rounded-lg flex items-center justify-center shrink-0">
-      <i data-lucide="percent" class="w-6 h-6"></i>
+      {% include "icons/percent.html" with class="w-6 h-6" %}
     </div>
     <div>
       <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Discounts</span>
@@ -171,7 +171,7 @@ visibleCols = {
 
   <div class="bg-white dark:bg-neutral-800 p-5 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center gap-4">
     <div class="w-12 h-12 bg-rose-50 dark:bg-rose-900/20 text-rose-600 rounded-lg flex items-center justify-center shrink-0">
-      <i data-lucide="undo-2" class="w-6 h-6"></i>
+      {% include "icons/undo-2.html" with class="w-6 h-6" %}
     </div>
     <div>
       <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Refunds / Voids</span>
@@ -181,7 +181,7 @@ visibleCols = {
 
   <div class="bg-white dark:bg-neutral-800 p-5 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center gap-4">
     <div class="w-12 h-12 bg-cyan-50 dark:bg-cyan-900/20 text-cyan-600 rounded-lg flex items-center justify-center shrink-0">
-      <i data-lucide="calculator" class="w-6 h-6"></i>
+      {% include "icons/calculator.html" with class="w-6 h-6" %}
     </div>
     <div>
       <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Taxes</span>
@@ -296,7 +296,7 @@ visibleCols = {
       <th x-show="visibleCols.total" class="px-4 py-3 text-right">
         <a href="?sort={% if sort == 'total' %}-total{% else %}total{% endif %}&{{ request.GET.urlencode }}" class="inline-flex items-center gap-1 hover:underline">
           Grand Total
-          <i data-lucide="arrow-up-down" class="w-3 h-3"></i>
+          {% include "icons/arrow-up-down.html" with class="w-3 h-3" %}
         </a>
       </th>
       <th x-show="visibleCols.status" class="px-4 py-3 text-center">Status</th>
@@ -362,14 +362,14 @@ visibleCols = {
           <div class="flex items-center justify-center gap-1.5">
             <!-- View Printable Invoice via Iframe/Modal print -->
             <a href="{% url 'reporting:invoice_detail' o.id %}" target="_blank" class="text-brand-default hover:text-brand-hover p-1" title="View & Print Invoice">
-              <i data-lucide="receipt" class="w-4 h-4"></i>
+              {% include "icons/receipt.html" with class="w-4 h-4" %}
             </a>
             <button @click="
               window.NposPromptEmail('{{ o.customer_email }}').then(email => {
                 if (email) sendEmail(email);
               });
             " class="text-neutral-400 hover:text-neutral-600 p-1" title="Email Receipt">
-              <i data-lucide="mail" class="w-4 h-4"></i>
+              {% include "icons/mail.html" with class="w-4 h-4" %}
             </button>
           </div>
         </td>
@@ -378,7 +378,7 @@ visibleCols = {
       <tr>
         <td colspan="12" class="px-4 py-8 text-center text-neutral-500">
           <div class="flex flex-col items-center gap-2">
-            <i data-lucide="folder-open" class="w-8 h-8 text-neutral-300"></i>
+            {% include "icons/folder-open.html" with class="w-8 h-8 text-neutral-300" %}
             <span>No sales records found matching filters.</span>
           </div>
         </td>
@@ -401,7 +401,7 @@ visibleCols = {
       <tr>
         <td colspan="12" class="px-4 py-8 text-center text-neutral-500">
           <div class="flex flex-col items-center gap-2">
-            <i data-lucide="folder-open" class="w-8 h-8 text-neutral-300"></i>
+            {% include "icons/folder-open.html" with class="w-8 h-8 text-neutral-300" %}
             <span>No aggregated records found matching filters.</span>
           </div>
         </td>

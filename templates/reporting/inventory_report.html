@@ -47,7 +47,7 @@ visibleCols = {
 {% block report_kpis %}
   <div class="bg-white dark:bg-neutral-800 p-5 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center gap-4">
     <div class="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-lg flex items-center justify-center shrink-0">
-      <i data-lucide="boxes" class="w-6 h-6"></i>
+      {% include "icons/boxes.html" with class="w-6 h-6" %}
     </div>
     <div>
       <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Total Products</span>
@@ -57,7 +57,7 @@ visibleCols = {
 
   <div class="bg-white dark:bg-neutral-800 p-5 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center gap-4">
     <div class="w-12 h-12 bg-green-50 dark:bg-green-900/20 text-green-600 rounded-lg flex items-center justify-center shrink-0">
-      <i data-lucide="indian-rupee" class="w-6 h-6"></i>
+      {% include "icons/indian-rupee.html" with class="w-6 h-6" %}
     </div>
     <div>
       <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Inventory Value</span>
@@ -67,7 +67,7 @@ visibleCols = {
 
   <div class="bg-white dark:bg-neutral-800 p-5 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center gap-4 border-l-4 border-l-yellow-500">
     <div class="w-12 h-12 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-600 rounded-lg flex items-center justify-center shrink-0">
-      <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+      {% include "icons/triangle-alert.html" with class="w-6 h-6" %}
     </div>
     <div>
       <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Low Stock Items</span>
@@ -77,7 +77,7 @@ visibleCols = {
 
   <div class="bg-white dark:bg-neutral-800 p-5 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center gap-4 border-l-4 border-l-red-500">
     <div class="w-12 h-12 bg-red-50 dark:bg-red-900/20 text-red-600 rounded-lg flex items-center justify-center shrink-0">
-      <i data-lucide="shield-alert" class="w-6 h-6"></i>
+      {% include "icons/shield-alert.html" with class="w-6 h-6" %}
     </div>
     <div>
       <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Out of Stock</span>
@@ -87,7 +87,7 @@ visibleCols = {
 
   <div class="bg-white dark:bg-neutral-800 p-5 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center gap-4">
     <div class="w-12 h-12 bg-orange-50 dark:bg-orange-900/20 text-orange-600 rounded-lg flex items-center justify-center shrink-0">
-      <i data-lucide="hourglass" class="w-6 h-6"></i>
+      {% include "icons/hourglass.html" with class="w-6 h-6" %}
     </div>
     <div>
       <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Expiring Soon (30d)</span>
@@ -97,7 +97,7 @@ visibleCols = {
 
   <div class="bg-white dark:bg-neutral-800 p-5 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center gap-4">
     <div class="w-12 h-12 bg-rose-50 dark:bg-rose-900/20 text-rose-600 rounded-lg flex items-center justify-center shrink-0">
-      <i data-lucide="trash-2" class="w-6 h-6"></i>
+      {% include "icons/trash-2.html" with class="w-6 h-6" %}
     </div>
     <div>
       <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Damaged Loss (30d)</span>
@@ -188,7 +188,7 @@ visibleCols = {
     <tr>
       <td colspan="9" class="px-4 py-8 text-center text-neutral-500">
         <div class="flex flex-col items-center gap-2">
-          <i data-lucide="archive-x" class="w-8 h-8 text-neutral-300"></i>
+          {% include "icons/archive-x.html" with class="w-8 h-8 text-neutral-300" %}
           <span>No stock records match the search.</span>
         </div>
       </td>

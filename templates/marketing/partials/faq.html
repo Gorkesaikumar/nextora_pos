@@ -13,7 +13,7 @@
       <div x-data @click="open === 0 ? open = null : open = 0" class="border border-slate-200 rounded-xl overflow-hidden cursor-pointer hover:border-brand-300 transition-colors">
         <div class="flex items-center justify-between px-6 py-4 bg-white">
           <h3 class="text-base font-semibold text-slate-900">What is the free trial and how long does it last?</h3>
-          <i data-lucide="chevron-down" class="w-5 h-5 text-slate-400 transition-transform duration-200" :class="open === 0 ? 'rotate-180' : ''"></i>
+          {% include "icons/chevron-down.html" with class="w-5 h-5 text-slate-400 transition-transform duration-200" %}
         </div>
         <div x-show="open === 0" x-transition x-cloak class="px-6 pb-5 bg-slate-50 border-t border-slate-100">
           <p class="text-slate-600 text-sm leading-relaxed pt-4">The free trial gives you full access to the Professional plan for 14 days with no credit card required. You can add your restaurant details, products, and staff and start taking real orders during this period. At the end of the trial, choose a paid plan or your account will be paused.</p>
@@ -23,7 +23,7 @@
       <div @click="open === 1 ? open = null : open = 1" class="border border-slate-200 rounded-xl overflow-hidden cursor-pointer hover:border-brand-300 transition-colors">
         <div class="flex items-center justify-between px-6 py-4 bg-white">
           <h3 class="text-base font-semibold text-slate-900">Does Nextora support GST and Indian billing standards?</h3>
-          <i data-lucide="chevron-down" class="w-5 h-5 text-slate-400 transition-transform duration-200" :class="open === 1 ? 'rotate-180' : ''"></i>
+          {% include "icons/chevron-down.html" with class="w-5 h-5 text-slate-400 transition-transform duration-200" %}
         </div>
         <div x-show="open === 1" x-transition x-cloak class="px-6 pb-5 bg-slate-50 border-t border-slate-100">
           <p class="text-slate-600 text-sm leading-relaxed pt-4">Absolutely. Nextora is built specifically for the Indian market. It supports HSN/SAC codes, CGST/SGST/IGST breakdowns, GSTIN validation, and generates GST-compliant invoices. Our invoice format meets all requirements for filing returns.</p>
@@ -33,17 +33,17 @@
       <div @click="open === 2 ? open = null : open = 2" class="border border-slate-200 rounded-xl overflow-hidden cursor-pointer hover:border-brand-300 transition-colors">
         <div class="flex items-center justify-between px-6 py-4 bg-white">
           <h3 class="text-base font-semibold text-slate-900">Can I manage multiple restaurant branches?</h3>
-          <i data-lucide="chevron-down" class="w-5 h-5 text-slate-400 transition-transform duration-200" :class="open === 2 ? 'rotate-180' : ''"></i>
+          {% include "icons/chevron-down.html" with class="w-5 h-5 text-slate-400 transition-transform duration-200" %}
         </div>
         <div x-show="open === 2" x-transition x-cloak class="px-6 pb-5 bg-slate-50 border-t border-slate-100">
-          <p class="text-slate-600 text-sm leading-relaxed pt-4">Yes. The Professional plan supports up to 3 branches, and the Enterprise plan supports unlimited branches. Each branch has its own menu, staff, inventory tracking, and reporting — all visible from a single owner dashboard.</p>
+          <p class="text-slate-600 text-sm leading-relaxed pt-4">Yes. The Professional plan supports up to 3 branches, and the Enterprise plan supports Staff and HR management. Each branch has its own menu, staff, inventory tracking, and reporting — all visible from a single owner dashboard.</p>
         </div>
       </div>
 
       <div @click="open === 3 ? open = null : open = 3" class="border border-slate-200 rounded-xl overflow-hidden cursor-pointer hover:border-brand-300 transition-colors">
         <div class="flex items-center justify-between px-6 py-4 bg-white">
           <h3 class="text-base font-semibold text-slate-900">How does the Kitchen Display System (KDS) work?</h3>
-          <i data-lucide="chevron-down" class="w-5 h-5 text-slate-400 transition-transform duration-200" :class="open === 3 ? 'rotate-180' : ''"></i>
+          {% include "icons/chevron-down.html" with class="w-5 h-5 text-slate-400 transition-transform duration-200" %}
         </div>
         <div x-show="open === 3" x-transition x-cloak class="px-6 pb-5 bg-slate-50 border-t border-slate-100">
           <p class="text-slate-600 text-sm leading-relaxed pt-4">When a cashier places an order on the POS terminal, it appears instantly on the kitchen display screen. Kitchen staff can mark items as in progress and complete. You can configure multiple KDS screens per station (grill, drinks, desserts), and each screen only shows relevant items.</p>
@@ -53,7 +53,7 @@
       <div @click="open === 4 ? open = null : open = 4" class="border border-slate-200 rounded-xl overflow-hidden cursor-pointer hover:border-brand-300 transition-colors">
         <div class="flex items-center justify-between px-6 py-4 bg-white">
           <h3 class="text-base font-semibold text-slate-900">Is my data safe and backed up?</h3>
-          <i data-lucide="chevron-down" class="w-5 h-5 text-slate-400 transition-transform duration-200" :class="open === 4 ? 'rotate-180' : ''"></i>
+          {% include "icons/chevron-down.html" with class="w-5 h-5 text-slate-400 transition-transform duration-200" %}
         </div>
         <div x-show="open === 4" x-transition x-cloak class="px-6 pb-5 bg-slate-50 border-t border-slate-100">
           <p class="text-slate-600 text-sm leading-relaxed pt-4">Yes. All data is encrypted in transit (TLS 1.3) and at rest. We perform continuous backups with point-in-time recovery. Your data is hosted on ISO-27001 certified infrastructure and we maintain a 99.9% uptime SLA.</p>
@@ -63,7 +63,7 @@
       <div @click="open === 5 ? open = null : open = 5" class="border border-slate-200 rounded-xl overflow-hidden cursor-pointer hover:border-brand-300 transition-colors">
         <div class="flex items-center justify-between px-6 py-4 bg-white">
           <h3 class="text-base font-semibold text-slate-900">Can I import my existing menu and customer data?</h3>
-          <i data-lucide="chevron-down" class="w-5 h-5 text-slate-400 transition-transform duration-200" :class="open === 5 ? 'rotate-180' : ''"></i>
+          {% include "icons/chevron-down.html" with class="w-5 h-5 text-slate-400 transition-transform duration-200" %}
         </div>
         <div x-show="open === 5" x-transition x-cloak class="px-6 pb-5 bg-slate-50 border-t border-slate-100">
           <p class="text-slate-600 text-sm leading-relaxed pt-4">Yes. We provide CSV/Excel import templates for products, inventory, customer lists, and suppliers. Our onboarding wizard guides you through the import process step by step, and our support team can assist if you have a large catalog.</p>
@@ -73,7 +73,7 @@
       <div @click="open === 6 ? open = null : open = 6" class="border border-slate-200 rounded-xl overflow-hidden cursor-pointer hover:border-brand-300 transition-colors">
         <div class="flex items-center justify-between px-6 py-4 bg-white">
           <h3 class="text-base font-semibold text-slate-900">What payment methods does the POS support?</h3>
-          <i data-lucide="chevron-down" class="w-5 h-5 text-slate-400 transition-transform duration-200" :class="open === 6 ? 'rotate-180' : ''"></i>
+          {% include "icons/chevron-down.html" with class="w-5 h-5 text-slate-400 transition-transform duration-200" %}
         </div>
         <div x-show="open === 6" x-transition x-cloak class="px-6 pb-5 bg-slate-50 border-t border-slate-100">
           <p class="text-slate-600 text-sm leading-relaxed pt-4">Nextora POS supports cash, card (via external card readers), UPI, NEFT/RTGS, and various integrated payment gateways. You can configure multiple payment methods per branch and set the default for quick checkout.</p>

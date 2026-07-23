@@ -29,7 +29,7 @@ Variables:
                 {% if errors %}border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-500/10{% else %}border-neutral-200 focus:border-neutral-900 focus:ring-2 focus:ring-neutral-900/10{% endif %}">
   {% if errors %}
     <p id="err_{{ name }}" class="mt-1.5 text-xs text-red-600 flex items-center gap-1">
-      <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i>{{ errors.0 }}
+      {% include "icons/circle-alert.html" with class="w-3.5 h-3.5" %}{{ errors.0 }}
     </p>
   {% elif hint %}
     <p id="hint_{{ name }}" class="mt-1.5 text-xs text-neutral-500">{{ hint }}</p>

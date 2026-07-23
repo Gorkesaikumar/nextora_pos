@@ -115,8 +115,8 @@ class PlanForm(forms.Form):
 
     plan_code = forms.ChoiceField(choices=[])  # populated in __init__
     interval = forms.ChoiceField(
-        choices=[(BillingInterval.MONTHLY, "Monthly"), (BillingInterval.YEARLY, "Yearly")],
-        initial=BillingInterval.MONTHLY,
+        choices=[(BillingInterval.MONTHLY.value, "Monthly"), (BillingInterval.YEARLY.value, "Yearly")],
+        initial=BillingInterval.MONTHLY.value,
     )
     coupon_code = forms.CharField(max_length=50, required=False, strip=True)
 

@@ -1,16 +1,26 @@
 {% comment %}Step 3 — Choose plan{% endcomment %}
-<div x-show="step === 3" x-transition.opacity.duration.300ms x-cloak
+<div x-show="step === 3" x-transition.opacity.duration.200ms x-cloak
      x-data="{
-       plan: '{{ form_plan.plan_code.value|default:plans.0.code }}',
+       plan: '{{ form_plan.plan_code.value|default_if_none:plans.0.code }}',
        couponCode: '{{ form_plan.coupon_code.value|default:'' }}',
        couponStatus: '{{ form_plan.coupon_code.value|yesno:"valid,null" }}',
        couponMessage: '',
        couponDiscountType: '',
        couponDiscountValue: 0,
        
+       getPlanInterval() {
+         const intervals = {
+           {% for p in plans %}
+             '{{ p.code }}': '{% if p.duration_days >= 365 %}yearly{% else %}monthly{% endif %}',
+           {% endfor %}
+         };
+         return intervals[this.plan] || 'monthly';
+       },
+
        validateCoupon() {
          if (!this.couponCode.trim()) {
            this.couponStatus = null;
+           this.couponMessage = '';
            return;
          }
          this.couponStatus = 'loading';
@@ -28,7 +38,7 @@
          .then(data => {
            if (data.valid) {
              this.couponStatus = 'valid';
-             this.couponMessage = 'Coupon applied successfully!';
+             this.couponMessage = 'Coupon Applied Successfully';
              this.couponDiscountType = data.discount_type;
              this.couponDiscountValue = parseFloat(data.value);
            } else {
@@ -54,217 +64,147 @@
          return Math.max(0, val).toFixed(0);
        }
      }"
-     class="flex flex-col h-full max-w-5xl mx-auto">
+     class="flex flex-col max-w-4xl mx-auto">
 
-  <header class="mb-10 text-center max-w-2xl mx-auto">
-    <div class="inline-flex items-center justify-center gap-1.5 px-3 py-1 mb-4 rounded-full bg-brand-50 border border-brand-100 text-brand-700 text-[11px] font-bold tracking-widest uppercase shadow-sm">
-      <span>Step 3 of 4</span>
-    </div>
-    <h2 class="text-3xl md:text-4xl font-extrabold tracking-tight text-neutral-900 mb-3">Choose your subscription</h2>
-    <p class="text-base text-neutral-500 leading-relaxed">
+  <header class="mb-4 text-center">
+    <h2 class="text-xl font-bold tracking-tight text-neutral-900">Choose Your Subscription</h2>
+    <p class="text-[13px] text-neutral-500 mt-1">
       {% if trial_config and trial_config.is_enabled %}
-        Start with a {{ trial_config.trial_days }}-day free trial. No credit card required.
+        <span class="font-semibold text-emerald-600">{{ trial_config.trial_days }}-Day Free Trial Included.</span> Complete access to all Nextora POS features.
       {% else %}
-        Select a plan that fits your business.
+        Select a duration. Complete access to all Nextora POS features.
       {% endif %}
     </p>
   </header>
 
   {# Hidden inputs that carry the selection to the server #}
   <input type="hidden" name="plan-plan_code" :value="plan">
+  <input type="hidden" name="plan-interval" :value="getPlanInterval()">
   <input type="hidden" name="plan-coupon_code" :value="couponStatus === 'valid' ? couponCode : ''">
 
   {% if form_plan.non_field_errors %}
-    <div class="mb-6 p-4 rounded-2xl border border-red-200 bg-red-50 text-sm font-medium text-red-800 flex items-center gap-3">
-      <i data-lucide="alert-triangle" class="w-5 h-5 text-red-500"></i>
+    <div class="mb-4 p-2.5 rounded-xl border border-red-200 bg-red-50 text-xs font-medium text-red-700 flex items-center gap-2">
+      {% include "icons/triangle-alert.html" with class="w-4 h-4 text-red-500" %}
       {{ form_plan.non_field_errors.0 }}
     </div>
   {% endif %}
 
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mb-12">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
     {% for p in plans %}
-      <label class="relative group cursor-pointer transition-all duration-300"
-             @mouseenter="if(plan !== '{{ p.code }}') $el.classList.add('-translate-y-1')"
-             @mouseleave="$el.classList.remove('-translate-y-1')">
+      <label class="relative group cursor-pointer transition-all duration-200 block"
+             @click="plan = '{{ p.code }}'; $nextTick(() => { if(couponCode) validateCoupon(); });"
+             @mouseenter="if(plan !== '{{ p.code }}') $el.classList.add('-translate-y-0.5')"
+             @mouseleave="$el.classList.remove('-translate-y-0.5')">
              
-        <input type="radio" name="plan-display-radio" value="{{ p.code }}" class="sr-only"
-               :checked="plan === '{{ p.code }}'" @change="plan = '{{ p.code }}'; if(couponCode) validateCoupon();">
+        <input type="radio" name="plan-display-radio" value="{{ p.code }}" class="opacity-0 absolute inset-0 pointer-events-none"
+               x-model="plan">
 
-        <div class="h-full flex flex-col rounded-[24px] border-2 bg-white transition-all duration-300 relative overflow-hidden"
-             :class="plan === '{{ p.code }}' ? 'border-brand-500 shadow-[0_8px_30px_rgb(0,0,0,0.08)] ring-4 ring-brand-500/10' : 'border-neutral-200/80 hover:border-brand-300 hover:shadow-lg'">
+        <div class="h-full flex flex-col rounded-xl border bg-white transition-all duration-200"
+             :class="plan === '{{ p.code }}' ? 'border-indigo-600 shadow-sm ring-1 ring-indigo-600/50 bg-indigo-50/20' : 'border-neutral-200 hover:border-indigo-300 hover:shadow-sm'">
           
-          {# Selected Glow Background #}
-          <div class="absolute inset-0 bg-gradient-to-b from-brand-50/50 to-transparent opacity-0 transition-opacity duration-300 pointer-events-none"
-               :class="plan === '{{ p.code }}' ? 'opacity-100' : 'opacity-0'"></div>
+          <div class="p-4 md:p-5 flex-1 flex flex-col relative z-10">
+            {% if p.is_popular %}
+              <div class="absolute -top-3 left-4 px-2 py-0.5 bg-gradient-to-r from-amber-400 to-orange-500 rounded text-[9px] font-bold tracking-widest text-white uppercase shadow-sm">
+                Most Popular
+              </div>
+            {% elif p.is_recommended %}
+              <div class="absolute -top-3 left-4 px-2 py-0.5 bg-neutral-900 rounded text-[9px] font-bold tracking-widest text-white uppercase shadow-sm">
+                Recommended
+              </div>
+            {% endif %}
 
-          {% if p.is_popular %}
-            <div class="absolute -top-[1px] left-1/2 -translate-x-1/2 px-4 py-1.5 bg-gradient-to-r from-amber-400 to-orange-500 rounded-b-xl shadow-sm z-10">
-              <span class="text-[10px] font-extrabold tracking-widest text-white uppercase flex items-center gap-1.5"><i data-lucide="star" class="w-3.5 h-3.5 fill-white"></i> Most Popular</span>
-            </div>
-          {% elif p.is_recommended %}
-            <div class="absolute -top-[1px] left-1/2 -translate-x-1/2 px-4 py-1.5 bg-neutral-900 rounded-b-xl shadow-sm z-10">
-              <span class="text-[10px] font-extrabold tracking-widest text-white uppercase flex items-center gap-1.5"><i data-lucide="zap" class="w-3.5 h-3.5 fill-white"></i> Recommended</span>
-            </div>
-          {% endif %}
-
-          <div class="p-8 flex-1 flex flex-col relative z-10">
-            <div class="flex items-start justify-between mb-6 pt-4">
+            <div class="flex items-start justify-between mb-2">
               <div>
-                <h3 class="text-xl font-bold text-neutral-900 mb-2.5">{{ p.name }}</h3>
-                <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-neutral-100 border border-neutral-200/80 text-neutral-600 text-[11px] font-bold uppercase tracking-wider">
-                  <i data-lucide="calendar" class="w-3.5 h-3.5"></i> {{ p.duration_days }} Days
+                <h3 class="text-sm font-bold text-neutral-900 mb-0.5">{{ p.name }}</h3>
+                <div class="inline-flex items-center gap-1.5 px-2 py-0.5 bg-neutral-100 rounded text-[10px] font-bold text-neutral-600 uppercase tracking-widest">
+                  {% include "icons/calendar.html" with class="w-3 h-3" %} {{ p.duration_days }} Days
                 </div>
               </div>
-              <div class="w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all duration-300 shrink-0"
-                   :class="plan === '{{ p.code }}' ? 'border-brand-500 bg-brand-500 scale-110' : 'border-neutral-300 bg-neutral-50'">
-                <i data-lucide="check" class="w-4 h-4 text-white transition-opacity duration-300" :class="plan === '{{ p.code }}' ? 'opacity-100' : 'opacity-0'"></i>
+              <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200 shrink-0"
+                   :class="plan === '{{ p.code }}' ? 'border-indigo-600 bg-indigo-600' : 'border-neutral-300 bg-neutral-50'">
+                {% include "icons/check.html" with class="w-3 h-3 text-white transition-opacity duration-200" %}
               </div>
             </div>
 
-            <div class="mb-6">
+            <div class="mb-3">
               {% if p.sale_price > 0 %}
-                <div class="flex items-end gap-2 mb-2 flex-wrap">
-                  <span class="text-4xl font-black tracking-tight text-neutral-900">{% if p.currency == 'INR' %}₹{% elif p.currency == 'USD' %}${% elif p.currency == 'EUR' %}€{% else %}{{ p.currency }} {% endif %}<span x-text="getDiscountedPrice('{{ p.effective_price }}')">{{ p.effective_price|floatformat:"0" }}</span></span>
-                  <span class="text-sm font-medium text-neutral-500 mb-1.5">/ {% if p.duration_days == 30 %}mo{% elif p.duration_days == 365 %}yr{% else %}{{ p.duration_days }}d{% endif %}</span>
+                <div class="flex items-end gap-1.5 flex-wrap">
+                  <span class="text-2xl font-black tracking-tight text-neutral-900">{% if p.currency == 'INR' %}₹{% elif p.currency == 'USD' %}${% elif p.currency == 'EUR' %}€{% else %}{{ p.currency }} {% endif %}<span x-text="getDiscountedPrice('{{ p.effective_price }}')">{{ p.effective_price|floatformat:"0" }}</span></span>
+                  <span class="text-xs font-medium text-neutral-500 mb-1">/ {% if p.duration_days == 30 %}mo{% elif p.duration_days == 365 %}yr{% else %}{{ p.duration_days }}d{% endif %}</span>
                 </div>
                 {% if p.has_discount %}
-                <div class="flex items-center gap-2 mt-2">
-                  <span class="text-sm font-semibold text-neutral-400 line-through decoration-neutral-300 decoration-2">₹{{ p.original_price|floatformat:"0" }}</span>
-                  <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700 uppercase tracking-widest">Save ₹{{ p.original_price|add:"-"|add:p.effective_price|floatformat:"0" }}</span>
+                <div class="flex items-center gap-1.5 mt-1">
+                  <span class="text-xs font-semibold text-neutral-400 line-through decoration-neutral-300">₹{{ p.original_price|floatformat:"0" }}</span>
+                  <span class="text-[9px] font-bold text-emerald-600 uppercase tracking-wide bg-emerald-50 px-1.5 py-0.5 rounded">Save ₹{{ p.original_price|add:"-"|add:p.effective_price|floatformat:"0" }}</span>
                 </div>
                 {% endif %}
               {% elif p.original_price > 0 %}
-                <div class="flex items-end gap-2 mb-2 flex-wrap">
-                  <span class="text-4xl font-black tracking-tight text-neutral-900">{% if p.currency == 'INR' %}₹{% elif p.currency == 'USD' %}${% elif p.currency == 'EUR' %}€{% else %}{{ p.currency }} {% endif %}<span x-text="getDiscountedPrice('{{ p.original_price }}')">{{ p.original_price|floatformat:"0" }}</span></span>
-                  <span class="text-sm font-medium text-neutral-500 mb-1.5">/ {% if p.duration_days == 30 %}mo{% elif p.duration_days == 365 %}yr{% else %}{{ p.duration_days }}d{% endif %}</span>
+                <div class="flex items-end gap-1.5 flex-wrap">
+                  <span class="text-2xl font-black tracking-tight text-neutral-900">{% if p.currency == 'INR' %}₹{% elif p.currency == 'USD' %}${% elif p.currency == 'EUR' %}€{% else %}{{ p.currency }} {% endif %}<span x-text="getDiscountedPrice('{{ p.original_price }}')">{{ p.original_price|floatformat:"0" }}</span></span>
+                  <span class="text-xs font-medium text-neutral-500 mb-1">/ {% if p.duration_days == 30 %}mo{% elif p.duration_days == 365 %}yr{% else %}{{ p.duration_days }}d{% endif %}</span>
                 </div>
               {% else %}
-                <div class="flex items-end gap-2 mb-2">
-                  <span class="text-4xl font-black tracking-tight text-emerald-500">Free</span>
-                  <span class="text-sm font-medium text-neutral-500 mb-1.5">/ {% if p.duration_days == 30 %}mo{% elif p.duration_days == 365 %}yr{% else %}{{ p.duration_days }}d{% endif %}</span>
+                <div class="flex items-end gap-1.5">
+                  <span class="text-2xl font-black tracking-tight text-emerald-500">Free</span>
+                  <span class="text-xs font-medium text-neutral-500 mb-1">/ {% if p.duration_days == 30 %}mo{% elif p.duration_days == 365 %}yr{% else %}{{ p.duration_days }}d{% endif %}</span>
                 </div>
               {% endif %}
             </div>
 
-            <p class="text-sm text-neutral-600 leading-relaxed mb-8 min-h-[40px]">{{ p.description }}</p>
-
             <div class="flex-1">
-              <div class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-4">What's included</div>
-              <ul class="space-y-4 text-sm text-neutral-700">
-                <li class="flex items-start gap-3.5 font-semibold text-neutral-900">
-                  <div class="w-5 h-5 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center shrink-0 mt-0.5"><i data-lucide="check" class="w-3 h-3"></i></div>
-                  <span>100% Core Features</span>
+              <p class="text-[11px] text-neutral-600 mb-3 font-medium">{{ p.description|truncatechars:80 }}</p>
+              <ul class="space-y-1.5 text-[11px] text-neutral-700">
+                <li class="flex items-center gap-2 font-bold text-neutral-900">
+                  {% include "icons/check.html" with class="w-3.5 h-3.5 text-indigo-600 shrink-0" %} 100% Core Features
                 </li>
-                <li class="flex items-start gap-3.5">
-                  <div class="w-5 h-5 rounded-full bg-neutral-100 text-neutral-600 flex items-center justify-center shrink-0 mt-0.5"><i data-lucide="check" class="w-3 h-3"></i></div>
-                  <span>Full Billing &amp; Printing</span>
-                </li>
-                <li class="flex items-start gap-3.5">
-                  <div class="w-5 h-5 rounded-full bg-neutral-100 text-neutral-600 flex items-center justify-center shrink-0 mt-0.5"><i data-lucide="check" class="w-3 h-3"></i></div>
-                  <span>Kitchen Display System</span>
-                </li>
-                <li class="flex items-start gap-3.5">
-                  <div class="w-5 h-5 rounded-full bg-neutral-100 text-neutral-600 flex items-center justify-center shrink-0 mt-0.5"><i data-lucide="check" class="w-3 h-3"></i></div>
-                  <span>Inventory &amp; Recipes</span>
-                </li>
-                <li class="flex items-start gap-3.5">
-                  <div class="w-5 h-5 rounded-full bg-neutral-100 text-neutral-600 flex items-center justify-center shrink-0 mt-0.5"><i data-lucide="check" class="w-3 h-3"></i></div>
-                  <span>Reports &amp; Analytics</span>
-                </li>
-                <li class="pt-5 mt-3 border-t border-neutral-100 flex items-start gap-3.5 text-neutral-600">
-                  <i data-lucide="infinity" class="w-4 h-4 mt-0.5 text-neutral-400"></i>
-                  <span>Unlimited Branches &amp; Staff</span>
-                </li>
+                <li class="flex items-center gap-2">{% include "icons/check.html" with class="w-3 h-3 text-neutral-400 shrink-0" %} Full Billing &amp; KDS</li>
+                <li class="flex items-center gap-2">{% include "icons/check.html" with class="w-3 h-3 text-neutral-400 shrink-0" %} Inventory, Reports &amp; Analytics</li>
+                <li class="flex items-center gap-2">{% include "icons/check.html" with class="w-3 h-3 text-neutral-400 shrink-0" %} Staff and HR Management</li>
               </ul>
             </div>
           </div>
         </div>
       </label>
     {% empty %}
-      <div class="col-span-full py-16 text-center bg-neutral-50/50 rounded-[24px] border border-neutral-200 border-dashed">
-        <div class="w-16 h-16 mx-auto bg-white rounded-full shadow-sm flex items-center justify-center mb-4">
-          <i data-lucide="package-x" class="w-8 h-8 text-neutral-400"></i>
-        </div>
-        <h3 class="text-lg font-bold text-neutral-900">No plans available</h3>
-        <p class="text-sm text-neutral-500 mt-2">Please contact support or check back later.</p>
+      <div class="col-span-full py-8 text-center bg-neutral-50 rounded-xl border border-neutral-200">
+        {% include "icons/package-x.html" with class="w-6 h-6 text-neutral-400 mx-auto mb-2" %}
+        <h3 class="text-sm font-bold text-neutral-900">No plans available</h3>
+        <p class="text-[11px] text-neutral-500">Please contact support.</p>
       </div>
     {% endfor %}
   </div>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start mt-auto">
-    {# Coupon Section #}
-    <div class="bg-white rounded-[24px] border border-neutral-200 shadow-[0_4px_20px_rgb(0,0,0,0.03)] p-7 flex flex-col justify-center h-full transition-all duration-300"
-         :class="couponStatus === 'valid' ? 'ring-2 ring-emerald-500/20 border-emerald-200' : ''">
-      
-      <div x-show="couponStatus !== 'valid'" x-collapse>
-        <div class="flex items-center gap-4 mb-5">
-          <div class="w-12 h-12 rounded-[14px] bg-neutral-100 text-neutral-600 flex items-center justify-center border border-neutral-200/60 shadow-sm">
-            <i data-lucide="ticket" class="w-6 h-6"></i>
-          </div>
-          <div>
-            <h4 class="text-sm font-bold text-neutral-900">Have a promotional code?</h4>
-            <p class="text-[11px] font-medium text-neutral-500 mt-0.5 uppercase tracking-wide">Apply it for a discount</p>
-          </div>
-        </div>
-        
-        <div class="flex gap-3 relative">
-          <input type="text" x-model="couponCode" @keydown.enter.prevent="validateCoupon()" placeholder="ENTER CODE" 
-                 class="w-full px-5 py-3.5 bg-neutral-50 border border-neutral-200 rounded-xl text-sm font-bold text-neutral-900 uppercase tracking-widest placeholder:text-neutral-400 placeholder:font-semibold focus:bg-white focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all outline-none shadow-inner" 
-                 :class="{'border-red-300 focus:ring-red-500/20 focus:border-red-500 bg-red-50/30': couponStatus === 'invalid'}">
-          
-          <button type="button" @click.prevent="validateCoupon()" 
-                  class="px-7 py-3.5 bg-neutral-900 text-white text-sm font-bold rounded-xl shadow-md hover:bg-neutral-800 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed min-w-[110px] flex justify-center items-center" 
-                  :disabled="!couponCode || couponStatus === 'loading'">
-            <span x-show="couponStatus !== 'loading'">Apply</span>
-            <svg x-show="couponStatus === 'loading'" class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" x-cloak><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-          </button>
-        </div>
-        
-        <div x-show="couponStatus === 'invalid'" x-collapse class="mt-4">
-          <div class="flex items-center gap-2.5 text-xs font-semibold text-red-600 bg-red-50 px-4 py-3 rounded-xl border border-red-100">
-            <i data-lucide="alert-circle" class="w-4 h-4 shrink-0"></i>
-            <span x-text="couponMessage"></span>
-          </div>
-        </div>
+  <div class="bg-neutral-50 rounded-xl border border-neutral-200 p-3 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-lg bg-white border border-neutral-200 text-neutral-600 flex items-center justify-center shrink-0 shadow-sm">
+        {% include "icons/ticket.html" with class="w-4 h-4" %}
       </div>
-
-      {# Success Card #}
-      <div x-show="couponStatus === 'valid'" x-collapse x-cloak>
-        <div class="flex items-start gap-4">
-          <div class="w-12 h-12 rounded-[14px] bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-200/60 shadow-sm">
-            <i data-lucide="check-circle-2" class="w-6 h-6"></i>
-          </div>
-          <div class="flex-1 pt-1">
-            <h4 class="text-base font-bold text-neutral-900">Coupon Applied Successfully!</h4>
-            <p class="text-xs font-medium text-emerald-600 mt-1 mb-4" x-text="couponMessage"></p>
-            
-            <div class="bg-neutral-50 border border-neutral-100 rounded-xl p-3.5 flex justify-between items-center shadow-inner">
-              <span class="inline-block px-3 py-1 bg-white border border-neutral-200 rounded text-[11px] font-extrabold text-neutral-900 font-mono tracking-widest uppercase shadow-sm" x-text="couponCode"></span>
-              <button type="button" @click="couponCode = ''; couponStatus = null;" class="text-[11px] font-bold text-neutral-500 hover:text-red-600 transition-colors uppercase tracking-wider">Remove</button>
-            </div>
-          </div>
+      <div class="flex flex-col">
+        <span class="text-[11px] font-bold text-neutral-900">Promotional Code</span>
+        <span class="text-[10px] text-neutral-500" x-show="!couponMessage">Apply a discount code</span>
+        <div x-show="couponMessage" x-cloak class="flex items-center gap-1 mt-0.5">
+          {% include "icons/check-circle-2.html" with class="w-3 h-3 text-emerald-500" %}
+          {% include "icons/circle-alert.html" with class="w-3 h-3 text-red-500" %}
+          <span class="text-[10px] font-semibold" :class="couponStatus === 'valid' ? 'text-emerald-600' : 'text-red-600'" x-text="couponMessage"></span>
         </div>
       </div>
     </div>
-
-    {# Trial Info #}
-    <div class="bg-gradient-to-br from-indigo-50/80 to-blue-50/40 border border-indigo-100 rounded-[24px] p-7 h-full flex items-center gap-5 shadow-[0_4px_20px_rgb(0,0,0,0.02)]">
-      <div class="w-14 h-14 rounded-[16px] bg-white text-indigo-600 flex items-center justify-center shrink-0 shadow-sm border border-indigo-100">
-        <i data-lucide="gift" class="w-6 h-6"></i>
-      </div>
-      <div>
-        {% if trial_config and trial_config.is_enabled %}
-          <h4 class="text-sm font-extrabold text-neutral-900 mb-1.5">{{ trial_config.trial_days }}-Day Free Trial Included</h4>
-          <p class="text-[13px] text-neutral-600 leading-relaxed font-medium">
-            You won't be charged today. Enjoy full access to all features. We'll remind you {{ trial_config.reminder_days_before }} days before your trial ends.
-          </p>
-        {% else %}
-          <h4 class="text-sm font-extrabold text-neutral-900 mb-1.5">Instant Activation</h4>
-          <p class="text-[13px] text-neutral-600 leading-relaxed font-medium">
-            Your subscription duration begins immediately upon registration completion. Cancel anytime.
-          </p>
-        {% endif %}
-      </div>
+    
+    <div class="flex items-center gap-2 w-full md:w-auto relative" x-show="couponStatus !== 'valid'">
+      <input type="text" x-model="couponCode" @keydown.enter.prevent="validateCoupon()" placeholder="CODE" 
+             class="w-full md:w-32 px-3 py-1.5 bg-white border border-neutral-200 rounded-lg text-xs font-bold text-neutral-900 uppercase focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none shadow-sm"
+             :class="{'border-red-300 focus:ring-red-500 focus:border-red-500': couponStatus === 'invalid'}">
+      <button type="button" @click.prevent="validateCoupon()" 
+              class="px-3 py-1.5 bg-neutral-900 text-white text-xs font-bold rounded-lg shadow-sm hover:bg-neutral-800 transition-colors disabled:opacity-50" 
+              :disabled="!couponCode || couponStatus === 'loading'">
+        <span x-show="couponStatus !== 'loading'">Apply</span>
+        <span x-show="couponStatus === 'loading'" x-cloak>...</span>
+      </button>
+    </div>
+    <div x-show="couponStatus === 'valid'" x-cloak class="flex items-center gap-2 w-full md:w-auto">
+      <span class="inline-flex items-center px-2 py-1 bg-white border border-emerald-200 rounded text-[10px] font-bold text-emerald-700 uppercase shadow-sm" x-text="couponCode"></span>
+      <button type="button" @click="couponCode = ''; couponStatus = null; couponMessage = '';" class="text-[10px] font-bold text-red-500 hover:text-red-600 underline px-2">Remove</button>
     </div>
   </div>
+
 </div>

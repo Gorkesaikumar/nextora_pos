@@ -142,15 +142,7 @@
   {% include "components/dialogs.html" %}
   {% include "components/npos_popup.html" %}
 
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <script>
-    document.addEventListener("DOMContentLoaded", function(event) {
-        lucide.createIcons();
-    });
-    document.body.addEventListener('htmx:afterSwap', function(evt) {
-        lucide.createIcons();
-    });
-    
+
     // Modal Dismiss Logic
     document.addEventListener('click', function(e) {
         if (e.target.closest('[data-modal-dismiss]') || e.target.id === 'modal-region') {

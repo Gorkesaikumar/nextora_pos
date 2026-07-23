@@ -9,12 +9,12 @@
       <a href="{{ home_url|default:'/' }}" class="flex items-center gap-2.5 min-w-0" aria-label="Nextora Creations — Home">
         <img src="{% static 'img/logo-mark.png' %}" alt="" class="h-8 w-8 select-none shrink-0" draggable="false">
         <span class="module-rail__brand-label">
-          <span class="text-[11px] font-extrabold tracking-[0.12em] text-neutral-900 truncate">NEXTORA CREATIONS</span>
-          <span class="text-[9px] font-semibold tracking-[0.18em] text-neutral-500 uppercase">Point of Sale</span>
+          <span class="text-[11px] font-extrabold tracking-[0.12em] text-neutral-900 truncate">{{ brand_text_main|default:'NEXTORA CREATIONS' }}</span>
+          <span class="text-[9px] font-semibold tracking-[0.18em] text-neutral-500 uppercase">{{ brand_text_sub|default:'Point of Sale' }}</span>
         </span>
       </a>
       <button @click="sidebarOpen = !sidebarOpen" class="text-neutral-400 hover:text-neutral-600 shrink-0 outline-none" title="Toggle Sidebar">
-        <i data-lucide="menu" class="w-5 h-5"></i>
+        {% include "icons/menu.html" with class="w-5 h-5" %}
       </button>
     </div>
   </div>
@@ -34,7 +34,13 @@
                    {% if item.active %}aria-current="page"{% endif %}
                    title="{{ item.label }}">
                   <div class="module-rail__item-icon">
-                    <i data-lucide="{{ item.icon|default:'circle' }}"></i>
+                    {% if item.icon %}
+                      {% with icon_template="icons/"|add:item.icon|add:".html" %}
+                        {% include icon_template with class="w-5 h-5" %}
+                      {% endwith %}
+                    {% else %}
+                      {% include "icons/circle.html" with class="w-5 h-5" %}
+                    {% endif %}
                   </div>
                   <span class="module-rail__item-label">{{ item.label }}</span>
                   {% if item.badge %}
@@ -48,7 +54,7 @@
       {% endfor %}
     {% else %}
       <div class="text-center p-4">
-        <i data-lucide="lock" class="w-8 h-8 text-neutral-300 mx-auto mb-2"></i>
+        {% include "icons/lock.html" with class="w-8 h-8 text-neutral-300 mx-auto mb-2" %}
         <p class="text-sm text-neutral-500">No Access</p>
       </div>
     {% endif %}
@@ -57,7 +63,7 @@
   <div class="module-rail__footer">
     <a href="#" id="nav-settings" class="module-rail__item" title="Settings">
       <div class="module-rail__item-icon">
-        <i data-lucide="settings"></i>
+        {% include "icons/settings.html" with class="w-5 h-5" %}
       </div>
       <span class="module-rail__item-label">Settings</span>
     </a>

@@ -32,7 +32,7 @@
     </label>
     {% if form_branch.accept_terms.errors %}
       <p class="mt-1.5 text-xs text-red-600 flex items-center gap-1">
-        <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i>{{ form_branch.accept_terms.errors.0 }}
+        {% include "icons/circle-alert.html" with class="w-3.5 h-3.5" %}{{ form_branch.accept_terms.errors.0 }}
       </p>
     {% endif %}
   </div>

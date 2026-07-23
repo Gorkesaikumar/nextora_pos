@@ -74,17 +74,12 @@ should not invite navigation away.
         <p class="text-sm text-neutral-500 leading-relaxed mb-8 relative z-10">
           Congratulations! Your restaurant workspace has been created successfully. 
           You're now ready to manage billing, inventory, customers, staff, kitchen operations, reports, and much more from one place.
-          <br><br>
-          Let's take a quick tour before you begin.
         </p>
 
         <div class="flex flex-col gap-3 relative z-10">
-          <a href="{% url 'reporting:home' %}?tour=start" class="inline-flex justify-center items-center gap-2 px-6 py-3 text-sm font-semibold text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 active:scale-[0.98] rounded-xl shadow-[0_4px_14px_0_rgb(79,70,229,30%)] transition-all duration-200 group">
-            Start Product Tour
-            <i data-lucide="arrow-right" class="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1"></i>
-          </a>
-          <a href="{% url 'reporting:home' %}" class="inline-flex justify-center items-center px-6 py-3 text-sm font-semibold text-neutral-500 hover:text-neutral-900 transition-colors">
-            Skip Tour
+          <a href="{% url 'reporting:home' %}" class="inline-flex justify-center items-center gap-2 px-6 py-3 text-sm font-semibold text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 active:scale-[0.98] rounded-xl shadow-[0_4px_14px_0_rgb(79,70,229,30%)] transition-all duration-200 group">
+            Go to Dashboard
+            {% include "icons/arrow-right.html" with class="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" %}
           </a>
         </div>
       </div>
@@ -135,7 +130,7 @@ should not invite navigation away.
                             : s.id < step ? 'border-indigo-500 bg-indigo-500 text-white'
                             : 'border-neutral-700 text-neutral-500'">
                   <span x-show="s.id >= step" x-text="s.id"></span>
-                  <i data-lucide="check" class="w-4 h-4 text-white" x-show="s.id < step" x-cloak></i>
+                  {% include "icons/check.html" with class="w-4 h-4 text-white" %}
                 </div>
 
                 <button type="button" @click="goTo(s.id)"
@@ -159,9 +154,9 @@ should not invite navigation away.
 
       {# Trust signals #}
       <div class="mt-10 pt-8 border-t border-white/10 space-y-3 text-xs text-neutral-400">
-        <div class="flex items-center gap-3"><i data-lucide="shield-check" class="w-4 h-4 text-indigo-400"></i> Bank-grade SSL encryption</div>
-        <div class="flex items-center gap-3"><i data-lucide="credit-card" class="w-4 h-4 text-indigo-400"></i> No credit card required</div>
-        <div class="flex items-center gap-3"><i data-lucide="clock" class="w-4 h-4 text-indigo-400"></i> 14-day full-featured trial</div>
+        <div class="flex items-center gap-3">{% include "icons/shield-check.html" with class="w-4 h-4 text-indigo-400" %} Bank-grade SSL encryption</div>
+        <div class="flex items-center gap-3">{% include "icons/credit-card.html" with class="w-4 h-4 text-indigo-400" %} No credit card required</div>
+        <div class="flex items-center gap-3">{% include "icons/clock.html" with class="w-4 h-4 text-indigo-400" %} 14-day full-featured trial</div>
       </div>
     </div>
   </aside>
@@ -216,7 +211,7 @@ should not invite navigation away.
           <div class="mt-10 pt-6 border-t border-neutral-100 flex items-center justify-between gap-3">
             <button type="button" @click="back()" x-show="step > 1" x-cloak
                     class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-neutral-700 bg-white border border-neutral-200 rounded-xl hover:bg-neutral-50 transition-colors">
-              <i data-lucide="arrow-left" class="w-4 h-4"></i>
+              {% include "icons/arrow-left.html" with class="w-4 h-4" %}
               Back
             </button>
             <div x-show="step === 1" class="text-xs text-neutral-500">
@@ -226,7 +221,7 @@ should not invite navigation away.
             <button type="button" @click="next()" x-show="step < steps.length"
                     class="ml-auto inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-white bg-gradient-to-r from-neutral-900 to-neutral-800 hover:from-neutral-800 hover:to-neutral-700 active:scale-[0.98] rounded-xl shadow-[0_4px_14px_0_rgb(0,0,0,10%)] focus:outline-none focus:ring-4 focus:ring-neutral-900/20 transition-all duration-200 group">
               <span>Continue</span>
-              <i data-lucide="arrow-right" class="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1"></i>
+              {% include "icons/arrow-right.html" with class="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" %}
             </button>
 
             <button type="submit" x-show="step === steps.length" x-cloak
@@ -240,7 +235,7 @@ should not invite navigation away.
                 </svg>
                 Creating…
               </span>
-              <i data-lucide="check" class="w-4 h-4" x-show="!submitting"></i>
+              {% include "icons/check.html" with class="w-4 h-4" %}
             </button>
           </div>
         </form>

@@ -31,6 +31,31 @@ def rbac_context(request):
 
     # Build nav groups based on permissions
     nav_groups = []
+    
+    resolver = getattr(request, 'resolver_match', None)
+    app_name = resolver.app_name if resolver else ''
+    url_name = resolver.url_name if resolver else ''
+    view_name = resolver.view_name if resolver else ''
+    
+    # If in Super Admin, override nav groups entirely
+    if app_name == 'super_admin' or request.path.startswith('/platform/'):
+        super_admin_items = [
+            {'label': 'Dashboard', 'url': reverse('super_admin:dashboard'), 'icon': 'layout-dashboard', 'active': request.path == '/platform/'},
+            {'label': 'Tenants', 'url': reverse('super_admin:tenant_list'), 'icon': 'building-2', 'active': request.path.startswith('/platform/tenants/')},
+            {'label': 'Users & Staff', 'url': reverse('super_admin:user_list'), 'icon': 'users', 'active': request.path.startswith('/platform/users/')},
+            {'label': 'Audit Log', 'url': reverse('super_admin:audit_log_list'), 'icon': 'shield-alert', 'active': request.path.startswith('/platform/audit-logs/')},
+            {'label': 'SaaS Plans', 'url': reverse('super_admin:plan_list'), 'icon': 'layers', 'active': request.path.startswith('/platform/plans')},
+            {'label': 'Free Trials', 'url': reverse('super_admin:trial_config'), 'icon': 'clock', 'active': request.path.startswith('/platform/trials')},
+            {'label': 'Feature Visibility', 'url': reverse('super_admin:visibility_config'), 'icon': 'eye', 'active': request.path.startswith('/platform/visibility')},
+            {'label': 'SaaS Coupons', 'url': reverse('super_admin:coupon_discount_list'), 'icon': 'tag', 'active': request.path.startswith('/platform/saas-coupons')},
+        ]
+        return {
+            'user_permissions': frozenset(),
+            'nav_groups': [{'label': 'ADMINISTRATION', 'items': super_admin_items}],
+            'brand_text_main': 'ADMIN PANEL',
+            'brand_text_sub': 'NEXTORA CREATIONS',
+        }
+
 
     # Dashboard (Standalone, no group header)
     if 'reports.sales.view' in perms or 'reports.financial.view' in perms:
@@ -38,19 +63,14 @@ def rbac_context(request):
             'label': None,
             'items': [{
                 'label': 'Dashboard',
-                'url': '/',
+                'url': safe_reverse('reporting:home'),
                 'icon': 'layout-dashboard',
-                'active': request.path == '/',
+                'active': app_name == 'reporting' and url_name in ('home', 'home_tenant'),
             }]
         })
 
     # OPERATIONS
     operations_items = []
-    
-    resolver = getattr(request, 'resolver_match', None)
-    app_name = resolver.app_name if resolver else ''
-    url_name = resolver.url_name if resolver else ''
-    view_name = resolver.view_name if resolver else ''
     
     if 'orders.view' in perms or 'orders.create' in perms:
         operations_items.append({
@@ -102,7 +122,7 @@ def rbac_context(request):
         operations_items.append({
             'label': 'Tables',
             'url': safe_reverse('restaurant:table_list'),
-            'icon': 'grid',
+            'icon': 'layout-grid',
             'active': app_name == 'restaurant' and ('table' in url_name or 'floor' in url_name) and 'printer' not in url_name,
         })
     
@@ -139,7 +159,7 @@ def rbac_context(request):
     customer_items = []
     if 'customers.view' in perms:
         customer_items.extend([
-            {'label': 'Customers', 'url': '#', 'icon': 'users-2', 'active': app_name == 'customers'},
+            {'label': 'Customers', 'url': '#', 'icon': 'users', 'active': app_name == 'customers'},
             {'label': 'Loyalty & Offers', 'url': '#', 'icon': 'heart-handshake', 'active': app_name == 'loyalty'},
         ])
     if customer_items:
@@ -169,7 +189,7 @@ def rbac_context(request):
     report_items = []
     if 'reports.sales.view' in perms:
         report_items.extend([
-            {'label': 'Sales Report', 'url': safe_reverse('reporting:sales'), 'icon': 'bar-chart-3', 'active': app_name == 'reporting' and 'sales' in url_name},
+            {'label': 'Sales Report', 'url': safe_reverse('reporting:sales'), 'icon': 'bar-chart', 'active': app_name == 'reporting' and 'sales' in url_name},
             {'label': 'Item Report', 'url': safe_reverse('reporting:items'), 'icon': 'pie-chart', 'active': app_name == 'reporting' and 'item' in url_name},
             {'label': 'Modifier Analytics', 'url': safe_reverse('catalog:modifier_analytics'), 'icon': 'list-tree', 'active': app_name == 'catalog' and 'modifier_analytics' in url_name},
             {'label': 'Inventory Report', 'url': safe_reverse('reporting:inventory'), 'icon': 'clipboard-list', 'active': app_name == 'reporting' and 'inventory' in url_name},
@@ -238,7 +258,7 @@ def rbac_context(request):
             {
                 'label': 'Attendance Logs',
                 'url': safe_reverse('employees:attendance_list'),
-                'icon': 'clock-4',
+                'icon': 'clock',
                 'active': app_name == 'employees' and 'attendance' in url_name,
             },
             {
@@ -273,4 +293,6 @@ def rbac_context(request):
     return {
         'user_permissions': perms,
         'nav_groups': nav_groups,
+        'brand_text_main': 'NEXTORA CREATIONS',
+        'brand_text_sub': 'POINT OF SALE',
     }

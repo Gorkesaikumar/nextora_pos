@@ -64,7 +64,7 @@ visibleCols = {
 {% block report_kpis %}
   <div class="bg-white dark:bg-neutral-800 p-5 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center gap-4">
     <div class="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-lg flex items-center justify-center shrink-0">
-      <i data-lucide="package" class="w-6 h-6"></i>
+      {% include "icons/package.html" with class="w-6 h-6" %}
     </div>
     <div>
       <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Total Quantity Sold</span>
@@ -74,7 +74,7 @@ visibleCols = {
 
   <div class="bg-white dark:bg-neutral-800 p-5 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center gap-4">
     <div class="w-12 h-12 bg-green-50 dark:bg-green-900/20 text-green-600 rounded-lg flex items-center justify-center shrink-0">
-      <i data-lucide="indian-rupee" class="w-6 h-6"></i>
+      {% include "icons/indian-rupee.html" with class="w-6 h-6" %}
     </div>
     <div>
       <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Product Revenues</span>
@@ -84,7 +84,7 @@ visibleCols = {
 
   <div class="bg-white dark:bg-neutral-800 p-5 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center gap-4">
     <div class="w-12 h-12 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 rounded-lg flex items-center justify-center shrink-0">
-      <i data-lucide="pie-chart" class="w-6 h-6"></i>
+      {% include "icons/pie-chart.html" with class="w-6 h-6" %}
     </div>
     <div>
       <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Gross Profit Margin</span>
@@ -94,7 +94,7 @@ visibleCols = {
 
   <div class="bg-white dark:bg-neutral-800 p-5 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center gap-4">
     <div class="w-12 h-12 bg-purple-50 dark:bg-purple-900/20 text-purple-600 rounded-lg flex items-center justify-center shrink-0">
-      <i data-lucide="trophy" class="w-6 h-6"></i>
+      {% include "icons/trophy.html" with class="w-6 h-6" %}
     </div>
     <div class="min-w-0 flex-1">
       <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Best Seller</span>
@@ -195,7 +195,7 @@ visibleCols = {
     <tr>
       <td colspan="9" class="px-4 py-8 text-center text-neutral-500">
         <div class="flex flex-col items-center gap-2">
-          <i data-lucide="package-search" class="w-8 h-8 text-neutral-300"></i>
+          {% include "icons/package-search.html" with class="w-8 h-8 text-neutral-300" %}
           <span>No item metrics found for matching inputs.</span>
         </div>
       </td>

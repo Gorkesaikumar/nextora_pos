@@ -9,7 +9,7 @@
 
     {# Success mark #}
     <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-50 border border-emerald-100 mb-6">
-      <i data-lucide="check" class="w-8 h-8 text-emerald-600"></i>
+      {% include "icons/check.html" with class="w-8 h-8 text-emerald-600" %}
     </div>
 
     <h1 class="text-3xl font-bold tracking-tight text-neutral-900">You're all set, {{ request.user.full_name|default:request.user.email }} 👋</h1>
@@ -50,7 +50,7 @@
       <a href="{% url 'reporting:home' %}"
          class="inline-flex items-center gap-2 px-6 py-3 bg-neutral-900 text-white text-sm font-semibold rounded-xl shadow-sm hover:bg-neutral-800 focus:outline-none focus:ring-4 focus:ring-neutral-900/20 transition-all">
         Go to dashboard
-        <i data-lucide="arrow-right" class="w-4 h-4"></i>
+        {% include "icons/arrow-right.html" with class="w-4 h-4" %}
       </a>
       <a href="/"
          class="inline-flex items-center gap-2 px-6 py-3 bg-white border border-neutral-200 text-neutral-700 text-sm font-semibold rounded-xl hover:bg-neutral-50 transition-all">

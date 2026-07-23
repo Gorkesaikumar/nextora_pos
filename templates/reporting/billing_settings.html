@@ -13,7 +13,7 @@
     <div class="bg-white border border-neutral-200 rounded-card shadow-sm overflow-hidden">
       <div class="px-6 py-4 border-b border-neutral-200 bg-neutral-50 flex items-center gap-3">
         <div class="w-8 h-8 rounded bg-brand-subtle flex items-center justify-center text-brand-default">
-          <i data-lucide="file-text" class="w-4 h-4"></i>
+          {% include "icons/file-text.html" with class="w-4 h-4" %}
         </div>
         <h3 class="font-bold text-neutral-900">Invoice Identity</h3>
       </div>
@@ -35,7 +35,7 @@
     <div class="bg-white border border-neutral-200 rounded-card shadow-sm overflow-hidden">
       <div class="px-6 py-4 border-b border-neutral-200 bg-neutral-50 flex items-center gap-3">
         <div class="w-8 h-8 rounded bg-neutral-200 flex items-center justify-center text-neutral-600">
-          <i data-lucide="printer" class="w-4 h-4"></i>
+          {% include "icons/printer.html" with class="w-4 h-4" %}
         </div>
         <h3 class="font-bold text-neutral-900">Receipt Footer</h3>
       </div>
@@ -52,7 +52,7 @@
         Discard Changes
       </button>
       <button type="submit" class="px-5 py-2.5 bg-brand-default text-white rounded-md text-sm font-semibold hover:bg-brand-dark transition-colors flex items-center gap-2 shadow-sm">
-        <i data-lucide="save" class="w-4 h-4"></i>
+        {% include "icons/save.html" with class="w-4 h-4" %}
         Save Settings
       </button>
     </div>

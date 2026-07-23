@@ -27,25 +27,25 @@
 
   {% url 'super_admin:plan_list' as plan_url %}
   <a href="{{ plan_url }}" class="{% if '/platform/plans' in request.path %}bg-brand-50 text-brand-600 font-extrabold border-l-4 border-brand-600 shadow-sm pl-2{% else %}text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900{% endif %} group flex items-center px-3 py-2 text-sm font-medium rounded-xl transition-all mb-1">
-    <i data-lucide="layers" class="{% if '/platform/plans' in request.path %}text-brand-600{% else %}text-neutral-400 group-hover:text-neutral-600{% endif %} mr-3 flex-shrink-0 h-5 w-5 transition-colors"></i>
+    {% include "icons/layers.html" with class="{% if '/platform/plans' in request.path %}text-brand-600{% else %}text-neutral-400 group-hover:text-neutral-600{% endif %} mr-3 flex-shrink-0 h-5 w-5 transition-colors" %}
     <span>Plans &amp; Durations</span>
   </a>
 
   {% url 'super_admin:trial_config' as trial_url %}
   <a href="{{ trial_url }}" class="{% if '/platform/trials' in request.path %}bg-brand-50 text-brand-600 font-extrabold border-l-4 border-brand-600 shadow-sm pl-2{% else %}text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900{% endif %} group flex items-center px-3 py-2 text-sm font-medium rounded-xl transition-all mb-1">
-    <i data-lucide="clock" class="{% if '/platform/trials' in request.path %}text-brand-600{% else %}text-neutral-400 group-hover:text-neutral-600{% endif %} mr-3 flex-shrink-0 h-5 w-5 transition-colors"></i>
+    {% include "icons/clock.html" with class="{% if '/platform/trials' in request.path %}text-brand-600{% else %}text-neutral-400 group-hover:text-neutral-600{% endif %} mr-3 flex-shrink-0 h-5 w-5 transition-colors" %}
     <span>Trial Configuration</span>
   </a>
 
   {% url 'super_admin:visibility_config' as vis_url %}
   <a href="{{ vis_url }}" class="{% if '/platform/visibility' in request.path %}bg-brand-50 text-brand-600 font-extrabold border-l-4 border-brand-600 shadow-sm pl-2{% else %}text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900{% endif %} group flex items-center px-3 py-2 text-sm font-medium rounded-xl transition-all mb-1">
-    <i data-lucide="eye" class="{% if '/platform/visibility' in request.path %}text-brand-600{% else %}text-neutral-400 group-hover:text-neutral-600{% endif %} mr-3 flex-shrink-0 h-5 w-5 transition-colors"></i>
+    {% include "icons/eye.html" with class="{% if '/platform/visibility' in request.path %}text-brand-600{% else %}text-neutral-400 group-hover:text-neutral-600{% endif %} mr-3 flex-shrink-0 h-5 w-5 transition-colors" %}
     <span>Duration Visibility</span>
   </a>
 
   {% url 'super_admin:coupon_discount_list' as saas_coupon_url %}
   <a href="{{ saas_coupon_url }}" class="{% if '/platform/saas-coupons' in request.path %}bg-brand-50 text-brand-600 font-extrabold border-l-4 border-brand-600 shadow-sm pl-2{% else %}text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900{% endif %} group flex items-center px-3 py-2 text-sm font-medium rounded-xl transition-all mb-1">
-    <i data-lucide="tag" class="{% if '/platform/saas-coupons' in request.path %}text-brand-600{% else %}text-neutral-400 group-hover:text-neutral-600{% endif %} mr-3 flex-shrink-0 h-5 w-5 transition-colors"></i>
+    {% include "icons/tag.html" with class="{% if '/platform/saas-coupons' in request.path %}text-brand-600{% else %}text-neutral-400 group-hover:text-neutral-600{% endif %} mr-3 flex-shrink-0 h-5 w-5 transition-colors" %}
     <span>SaaS Coupons</span>
   </a>
 
@@ -125,25 +125,25 @@
 
   {% url 'super_admin:plan_list' as plan_url %}
   <a href="{{ plan_url }}" class="{% if '/platform/plans' in request.path %}bg-brand-50 text-brand-600 font-extrabold border-l-4 border-brand-600 shadow-sm pl-2{% else %}text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900{% endif %} group flex items-center px-3 py-2 text-sm font-medium rounded-xl transition-all mb-1">
-    <i data-lucide="layers" class="{% if '/platform/plans' in request.path %}text-brand-600{% else %}text-neutral-400 group-hover:text-neutral-600{% endif %} mr-3 flex-shrink-0 h-5 w-5 transition-colors"></i>
+    {% include "icons/layers.html" with class="{% if '/platform/plans' in request.path %}text-brand-600{% else %}text-neutral-400 group-hover:text-neutral-600{% endif %} mr-3 flex-shrink-0 h-5 w-5 transition-colors" %}
     <span>Plans &amp; Durations</span>
   </a>
 
   {% url 'super_admin:trial_config' as trial_url %}
   <a href="{{ trial_url }}" class="{% if '/platform/trials' in request.path %}bg-brand-50 text-brand-600 font-extrabold border-l-4 border-brand-600 shadow-sm pl-2{% else %}text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900{% endif %} group flex items-center px-3 py-2 text-sm font-medium rounded-xl transition-all mb-1">
-    <i data-lucide="clock" class="{% if '/platform/trials' in request.path %}text-brand-600{% else %}text-neutral-400 group-hover:text-neutral-600{% endif %} mr-3 flex-shrink-0 h-5 w-5 transition-colors"></i>
+    {% include "icons/clock.html" with class="{% if '/platform/trials' in request.path %}text-brand-600{% else %}text-neutral-400 group-hover:text-neutral-600{% endif %} mr-3 flex-shrink-0 h-5 w-5 transition-colors" %}
     <span>Trial Configuration</span>
   </a>
 
   {% url 'super_admin:visibility_config' as vis_url %}
   <a href="{{ vis_url }}" class="{% if '/platform/visibility' in request.path %}bg-brand-50 text-brand-600 font-extrabold border-l-4 border-brand-600 shadow-sm pl-2{% else %}text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900{% endif %} group flex items-center px-3 py-2 text-sm font-medium rounded-xl transition-all mb-1">
-    <i data-lucide="eye" class="{% if '/platform/visibility' in request.path %}text-brand-600{% else %}text-neutral-400 group-hover:text-neutral-600{% endif %} mr-3 flex-shrink-0 h-5 w-5 transition-colors"></i>
+    {% include "icons/eye.html" with class="{% if '/platform/visibility' in request.path %}text-brand-600{% else %}text-neutral-400 group-hover:text-neutral-600{% endif %} mr-3 flex-shrink-0 h-5 w-5 transition-colors" %}
     <span>Duration Visibility</span>
   </a>
 
   {% url 'super_admin:coupon_discount_list' as saas_coupon_url %}
   <a href="{{ saas_coupon_url }}" class="{% if '/platform/saas-coupons' in request.path %}bg-brand-50 text-brand-600 font-extrabold border-l-4 border-brand-600 shadow-sm pl-2{% else %}text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900{% endif %} group flex items-center px-3 py-2 text-sm font-medium rounded-xl transition-all mb-1">
-    <i data-lucide="tag" class="{% if '/platform/saas-coupons' in request.path %}text-brand-600{% else %}text-neutral-400 group-hover:text-neutral-600{% endif %} mr-3 flex-shrink-0 h-5 w-5 transition-colors"></i>
+    {% include "icons/tag.html" with class="{% if '/platform/saas-coupons' in request.path %}text-brand-600{% else %}text-neutral-400 group-hover:text-neutral-600{% endif %} mr-3 flex-shrink-0 h-5 w-5 transition-colors" %}
     <span>SaaS Coupons</span>
   </a>
 
@@ -213,5 +213,27 @@
   <a href="{{ settings_url }}" class="{% if '/platform/settings' in request.path %}bg-brand-50 text-brand-600 font-extrabold border-l-4 border-brand-600 shadow-sm pl-2{% else %}text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900{% endif %} group flex items-center px-3 py-2 text-sm font-medium rounded-xl transition-all mb-1">
     <svg class="{% if '/platform/settings' in request.path %}text-brand-600{% else %}text-neutral-400 group-hover:text-neutral-600{% endif %} mr-3 flex-shrink-0 h-5 w-5 transition-colors" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
     Settings
+  </a>
+</div>
+
+<div class="mt-8">
+  <h3 class="px-3 text-xs font-bold text-neutral-500 uppercase tracking-wider mb-2">Customer Success</h3>
+  
+  {% url 'super_admin:tutorial_list' as tut_url %}
+  <a href="{{ tut_url }}" class="{% if '/platform/customer-success/tutorials' in request.path %}bg-brand-50 text-brand-600 font-extrabold border-l-4 border-brand-600 shadow-sm pl-2{% else %}text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900{% endif %} group flex items-center px-3 py-2 text-sm font-medium rounded-xl transition-all mb-1">
+    {% include "icons/video.html" with class="{% if '/platform/customer-success/tutorials' in request.path %}text-brand-600{% else %}text-neutral-400 group-hover:text-neutral-600{% endif %} mr-3 flex-shrink-0 h-5 w-5 transition-colors" %}
+    Tutorial Management
+  </a>
+
+  {% url 'super_admin:product_tour_list' as tour_url %}
+  <a href="{{ tour_url }}" class="{% if '/platform/customer-success/tours' in request.path %}bg-brand-50 text-brand-600 font-extrabold border-l-4 border-brand-600 shadow-sm pl-2{% else %}text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900{% endif %} group flex items-center px-3 py-2 text-sm font-medium rounded-xl transition-all mb-1">
+    {% include "icons/map.html" with class="{% if '/platform/customer-success/tours' in request.path %}text-brand-600{% else %}text-neutral-400 group-hover:text-neutral-600{% endif %} mr-3 flex-shrink-0 h-5 w-5 transition-colors" %}
+    Product Tours
+  </a>
+
+  {% url 'super_admin:cs_settings' as cs_settings_url %}
+  <a href="{{ cs_settings_url }}" class="{% if '/platform/customer-success/settings' in request.path %}bg-brand-50 text-brand-600 font-extrabold border-l-4 border-brand-600 shadow-sm pl-2{% else %}text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900{% endif %} group flex items-center px-3 py-2 text-sm font-medium rounded-xl transition-all mb-1">
+    {% include "icons/headphones.html" with class="{% if '/platform/customer-success/settings' in request.path %}text-brand-600{% else %}text-neutral-400 group-hover:text-neutral-600{% endif %} mr-3 flex-shrink-0 h-5 w-5 transition-colors" %}
+    Support Settings
   </a>
 </div>

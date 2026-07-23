@@ -6,7 +6,7 @@
 
 {% block primary_action %}
 <button onclick="window.location.reload()" class="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-neutral-600 bg-white border border-neutral-200 rounded hover:bg-neutral-50 shadow-sm transition-colors">
-  <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+  {% include "icons/refresh-cw.html" with class="w-4 h-4" %}
   Refresh Log
 </button>
 {% endblock %}
@@ -95,7 +95,7 @@
           <tr>
             <td colspan="6" class="px-4 py-12 text-center text-neutral-500 text-sm">
               <div class="flex flex-col items-center gap-2">
-                <i data-lucide="shield" class="w-8 h-8 text-neutral-300"></i>
+                {% include "icons/shield.html" with class="w-8 h-8 text-neutral-300" %}
                 <p>No audit logs found for the selected criteria.</p>
               </div>
             </td>
@@ -114,13 +114,13 @@
       <div class="flex items-center gap-1">
         {% if page_obj.has_previous %}
         <a href="?page={{ page_obj.previous_page_number }}&action={{ selected_action }}&start_date={{ start_date }}&end_date={{ end_date }}" class="p-1 rounded text-neutral-500 hover:bg-neutral-200">
-          <i data-lucide="chevron-left" class="w-5 h-5"></i>
+          {% include "icons/chevron-left.html" with class="w-5 h-5" %}
         </a>
         {% endif %}
         <span class="text-sm font-medium px-2 text-neutral-700">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
         {% if page_obj.has_next %}
         <a href="?page={{ page_obj.next_page_number }}&action={{ selected_action }}&start_date={{ start_date }}&end_date={{ end_date }}" class="p-1 rounded text-neutral-500 hover:bg-neutral-200">
-          <i data-lucide="chevron-right" class="w-5 h-5"></i>
+          {% include "icons/chevron-right.html" with class="w-5 h-5" %}
         </a>
         {% endif %}
       </div>
