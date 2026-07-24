@@ -1,46 +1,40 @@
 <!-- Overlay -->
-<div id="table-map-overlay" class="fixed inset-0 bg-neutral-900/50 backdrop-blur-sm z-50 flex items-center justify-center animate-fade-in p-4 lg:p-0">
+<div id="table-map-overlay" class="modal-scrim">
   
   <!-- Modal Content -->
-  <div class="bg-neutral-0 dark:bg-neutral-dark-100 w-full max-w-4xl rounded-2xl shadow-xl overflow-hidden animate-slide-up flex flex-col" style="height: 85vh;">
+  <div class="modal modal--lg" style="height: 80vh;">
     
     <!-- Header -->
-    <div class="px-6 py-4 border-b border-neutral-200 dark:border-neutral-dark-200 flex items-center justify-between">
-      <h2 class="text-heading-2 text-neutral-900 dark:text-neutral-dark-900">Select Table</h2>
-      <button class="text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-dark-700 transition-colors" 
+    <div class="modal__header">
+      <h2 class="modal__title">Select Table</h2>
+      <button class="modal__close" 
+              style="background:none; border:none; cursor:pointer; padding: 4px; display: flex; align-items: center; justify-content: center; color: var(--forge-color-text-secondary);"
               onclick="document.getElementById('pos-modal-container').innerHTML = '';">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:24px; height:24px;">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
         </svg>
       </button>
     </div>
 
     <!-- Body / Map -->
-    <div class="p-6 overflow-y-auto flex-grow bg-neutral-50 dark:bg-neutral-dark-50">
-      <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+    <div class="modal__body" style="background-color: var(--forge-color-surface-base);">
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 16px;">
         {% for table in tables %}
-          <button class="flex flex-col items-center justify-center p-4 rounded-card border-2 shadow-sm transition-all hover:-translate-y-1 active:translate-y-0
-                         {% if table.status == 'vacant' %}border-neutral-200 bg-neutral-0 hover:border-brand-default dark:border-neutral-dark-200 dark:bg-neutral-dark-100 dark:hover:border-brand-default
-                         {% elif table.status == 'occupied' %}border-semantic-warning bg-semantic-warning-light/20 dark:bg-semantic-warning-dark/20
-                         {% elif table.status == 'dirty' %}border-semantic-danger bg-semantic-danger-light/20 dark:bg-semantic-danger-dark/20
-                         {% endif %}"
+          <button class="btn"
+                  style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 16px; min-height: 100px; border: 2px solid {% if table.status == 'vacant' %}var(--forge-color-border-default, #e2e8f0){% elif table.status == 'occupied' %}#fef08a{% else %}#fee2e2{% endif %}; background-color: {% if table.status == 'vacant' %}var(--forge-color-surface-raised, #ffffff){% elif table.status == 'occupied' %}#fef9c3{% else %}#fee2e2{% endif %}; border-radius: var(--forge-radius-card); transition: all 0.2s; cursor: pointer;"
                   hx-post="{% url 'ordering:pos_select_table' table.id %}"
                   hx-target="#pos-cart-panel"
                   hx-swap="outerHTML"
-                  onclick="setTimeout(() => document.getElementById('pos-modal-container').innerHTML = '', 300)">
-            <div class="text-heading-2 font-mono text-neutral-900 dark:text-neutral-dark-900 mb-1">{{ table.number }}</div>
-            <div class="text-caption font-medium uppercase tracking-wider
-                        {% if table.status == 'vacant' %}text-neutral-500
-                        {% elif table.status == 'occupied' %}text-semantic-warning-dark dark:text-semantic-warning
-                        {% elif table.status == 'dirty' %}text-semantic-danger-dark dark:text-semantic-danger
-                        {% endif %}">
+                  onclick="setTimeout(() => { document.getElementById('pos-modal-container').innerHTML = ''; }, 300)">
+            <div style="font-size: 1.5rem; font-family: monospace; font-weight: bold; color: var(--forge-color-text-primary); margin-bottom: 4px;">{{ table.number }}</div>
+            <div style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: {% if table.status == 'vacant' %}var(--forge-color-text-secondary){% elif table.status == 'occupied' %}#a16207{% else %}#b91c1c{% endif %};">
               {{ table.get_status_display }}
             </div>
           </button>
         {% empty %}
-        <div class="flex flex-col items-center justify-center h-full text-neutral-400 col-span-full">
-          <p class="text-body-strong">No tables configured for this location.</p>
-          <p class="text-caption mt-1">Add tables in the Management Dashboard.</p>
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; grid-column: 1 / -1; padding: 48px; text-align: center; color: var(--forge-color-text-tertiary);">
+          <p style="font-weight: 600;">No tables configured for this location.</p>
+          <p style="font-size: 0.875rem; margin-top: 4px;">Add tables in the Management Dashboard.</p>
         </div>
         {% endfor %}
       </div>

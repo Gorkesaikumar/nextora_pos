@@ -41,3 +41,10 @@
   background-color: var(--forge-color-border-subtle);
   margin: var(--forge-space-1) 0;
 }
+
+@media (max-width: 1024px) {
+  .dropdown__item {
+    padding: var(--forge-space-3);
+    min-height: 48px;
+  }
+}

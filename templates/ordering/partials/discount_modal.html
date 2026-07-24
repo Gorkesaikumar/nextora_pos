@@ -1,46 +1,54 @@
 <div id="pos-discount-modal" 
-     class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/40 backdrop-blur-sm"
+     class="modal-scrim"
      x-data="{ closing: false }"
      x-show="!closing"
      x-transition.opacity.duration.200ms>
      
-  <div class="bg-neutral-0 dark:bg-neutral-dark-50 rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]"
+  <div class="modal modal--sm" style="max-height: 85vh;"
        @click.away="closing = true; setTimeout(() => $el.closest('#pos-modal-container').innerHTML = '', 200)">
     
     <!-- Header -->
-    <div class="px-5 py-4 border-b border-neutral-150 dark:border-neutral-dark-150 flex items-center justify-between bg-neutral-50 dark:bg-neutral-dark-100">
-      <h2 class="text-heading-2 text-neutral-900 dark:text-neutral-dark-900 flex items-center gap-2">
-        <svg class="w-5 h-5 text-brand-default" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
+    <div class="modal__header">
+      <h2 class="modal__title" style="display: flex; align-items: center; gap: 8px;">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:20px; height:20px; color: var(--forge-color-brand-default);">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+        </svg>
         Available Offers
       </h2>
-      <button type="button" @click="closing = true; setTimeout(() => $el.closest('#pos-modal-container').innerHTML = '', 200)" class="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      <button type="button" 
+              style="background:none; border:none; cursor:pointer; color: var(--forge-color-text-secondary);"
+              @click="closing = true; setTimeout(() => $el.closest('#pos-modal-container').innerHTML = '', 200)">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:24px; height:24px;">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
       </button>
     </div>
 
     <!-- Body -->
-    <div class="p-5 overflow-y-auto flex-1 space-y-4 bg-neutral-50 dark:bg-neutral-dark-50">
+    <div class="modal__body" style="background-color: var(--forge-color-surface-base); display: flex; flex-direction: column; gap: 16px;">
       
       {% if eligible_offers %}
-        <div class="space-y-3">
+        <div style="display: flex; flex-direction: column; gap: 12px;">
           {% for offer in eligible_offers %}
-          <div class="bg-white dark:bg-neutral-dark-100 border border-semantic-success/30 rounded-xl p-4 shadow-sm flex flex-col justify-between relative overflow-hidden">
-            <div class="absolute top-0 right-0 bg-semantic-success text-white px-2 py-0.5 rounded-bl-lg text-[10px] font-bold tracking-wider uppercase">
+          <div style="background-color: var(--forge-color-surface-raised); border: 1px solid #86efac; border-radius: var(--forge-radius-card); padding: 16px; position: relative; display: flex; flex-direction: column; gap: 12px; box-shadow: var(--forge-shadow-card);">
+            <div style="position: absolute; top: 0; right: 0; background-color: #22c55e; color: white; padding: 2px 8px; border-bottom-left-radius: var(--forge-radius-card); font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em;">
               Eligible
             </div>
-            <div class="pr-12">
-              <h3 class="text-body-strong text-neutral-900 dark:text-white flex items-center gap-1.5">
-                <svg class="w-4 h-4 text-semantic-success" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            <div style="padding-right: 48px;">
+              <h3 style="font-size: 0.9375rem; font-weight: bold; color: var(--forge-color-text-primary); display: flex; align-items: center; gap: 6px; margin: 0;">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:16px; height:16px; color:#22c55e;">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
                 {{ offer.combo.name }}
               </h3>
-              <p class="text-caption text-neutral-500 mt-0.5">{{ offer.combo.description|default:"Combo Offer" }}</p>
+              <p style="font-size: 0.75rem; color: var(--forge-color-text-secondary); margin: 4px 0 0 0;">{{ offer.combo.description|default:"Combo Offer" }}</p>
             </div>
             
-            <div class="flex items-end justify-between mt-4">
-              <div class="text-semantic-success font-semibold tabular-nums text-heading-2">
+            <div style="display: flex; align-items: flex-end; justify-content: space-between; margin-top: 8px;">
+              <div style="color: #22c55e; font-weight: bold; font-size: 1.25rem; font-family: monospace;">
                 Save ₹{{ offer.savings|floatformat:2 }}
               </div>
-              <button class="btn btn-primary bg-black hover:bg-neutral-800 dark:bg-white dark:text-black dark:hover:bg-neutral-200"
+              <button class="btn btn--primary" style="height: 36px; padding: 0 16px; font-size: 0.8125rem; background-color: black; border-color: black;"
                       hx-post="{% url 'ordering:pos_apply_combo' offer.combo.id %}"
                       hx-target="#pos-cart-panel"
                       hx-swap="outerHTML"
@@ -52,24 +60,38 @@
           {% endfor %}
         </div>
       {% else %}
-        <div class="text-center py-6 text-neutral-500">
-          <svg class="w-12 h-12 mx-auto text-neutral-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-          <p class="text-body-strong">No Eligible Offers</p>
-          <p class="text-caption">Add more items to your cart to qualify.</p>
+        {% if not ineligible_offers %}
+        <div style="text-align: center; padding: 32px 16px; color: var(--forge-color-text-tertiary);">
+          <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 48px; height: 48px; margin: 0 auto 12px auto; color: var(--forge-color-border-strong);">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <p style="font-weight: 600; margin: 0;">No discount available</p>
+          <p style="font-size: 0.75rem; margin: 4px 0 0 0;">There are no active discounts configured in the system.</p>
         </div>
+        {% else %}
+        <div style="text-align: center; padding: 24px 16px; color: var(--forge-color-text-tertiary);">
+          <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 48px; height: 48px; margin: 0 auto 12px auto; color: var(--forge-color-border-strong);">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <p style="font-weight: 600; margin: 0;">No Eligible Offers</p>
+          <p style="font-size: 0.75rem; margin: 4px 0 0 0;">Add more items to your cart to qualify.</p>
+        </div>
+        {% endif %}
       {% endif %}
 
       {% if ineligible_offers %}
-        <h4 class="text-caption-strong uppercase tracking-wider text-neutral-400 mt-6 mb-2">Other Offers (Not Eligible)</h4>
-        <div class="space-y-2 opacity-75">
+        <h4 style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--forge-color-text-tertiary); margin: 16px 0 8px 0;">Other Offers (Not Eligible)</h4>
+        <div style="display: flex; flex-direction: column; gap: 8px; opacity: 0.85;">
           {% for offer in ineligible_offers %}
-          <div class="bg-white dark:bg-neutral-dark-100 border border-neutral-200 dark:border-neutral-dark-200 rounded-lg p-3 flex justify-between items-center">
+          <div style="background-color: var(--forge-color-surface-raised); border: 1px solid var(--forge-color-border-subtle); border-radius: var(--forge-radius-card); padding: 12px; display: flex; justify-content: space-between; align-items: center;">
             <div>
-              <h3 class="text-body font-medium text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5">
-                <svg class="w-4 h-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+              <h3 style="font-size: 0.875rem; font-weight: 500; color: var(--forge-color-text-secondary); display: flex; align-items: center; gap: 6px; margin: 0;">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:16px; height:16px; color: var(--forge-color-text-tertiary);">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
                 {{ offer.combo.name }}
               </h3>
-              <p class="text-caption text-neutral-400 mt-0.5">{{ offer.reason }}</p>
+              <p style="font-size: 0.75rem; color: var(--forge-color-text-tertiary); margin: 2px 0 0 0;">{{ offer.reason }}</p>
             </div>
           </div>
           {% endfor %}
@@ -79,10 +101,10 @@
     </div>
     
     <!-- Footer Summary -->
-    <div class="px-5 py-4 border-t border-neutral-150 dark:border-neutral-dark-150 bg-neutral-0 dark:bg-neutral-dark-50">
-      <div class="flex justify-between items-center text-body-strong text-neutral-800 dark:text-neutral-200">
+    <div class="modal__footer" style="background-color: var(--forge-color-surface-raised);">
+      <div style="display: flex; justify-content: space-between; width: 100%; font-weight: 600; color: var(--forge-color-text-primary); font-size: 0.9375rem;">
         <span>Cart Total Before Offers:</span>
-        <span class="tabular-nums">₹{{ active_order.gross_subtotal|default:"0.00"|floatformat:2 }}</span>
+        <span style="font-family: monospace;">₹{{ active_order.gross_subtotal|default:"0.00"|floatformat:2 }}</span>
       </div>
     </div>
     

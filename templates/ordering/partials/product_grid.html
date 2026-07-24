@@ -19,7 +19,7 @@
         <div class="flex-grow h-px bg-neutral-150 dark:bg-neutral-dark-150"></div>
       </div>
 
-      <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+      <div class="pos-grid" style="padding:0;">
         {% for product in group.list %}
         <article x-data="{ fav: false }"
                  class="group relative rounded-card border border-neutral-200 dark:border-neutral-dark-200 bg-neutral-0 dark:bg-neutral-dark-100 overflow-hidden shadow-sm hover:shadow-md hover:border-brand-default/40 dark:hover:border-brand-default/40 transition-all flex flex-col justify-between">

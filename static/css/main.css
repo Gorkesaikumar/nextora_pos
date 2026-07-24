@@ -10,6 +10,7 @@
  */
 
 /* 1. Design tokens (source of truth) */
+/* display=swap prevents FOIT — text renders in system fallback while Inter loads. */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @import url("./tokens.css");
 

@@ -290,9 +290,17 @@ def rbac_context(request):
     if settings_items:
         nav_groups.append({'label': 'SETTINGS', 'items': settings_items})
 
+    from contexts.tenants.models import Tenant
+    from shared.tenancy.context import bypass_tenant
+    tenant = None
+    if tenant_id:
+        with bypass_tenant():
+            tenant = Tenant.objects.filter(id=tenant_id).first()
+
     return {
         'user_permissions': perms,
         'nav_groups': nav_groups,
         'brand_text_main': 'NEXTORA CREATIONS',
         'brand_text_sub': 'POINT OF SALE',
+        'tenant': tenant,
     }

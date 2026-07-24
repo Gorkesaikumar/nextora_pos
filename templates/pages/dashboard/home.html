@@ -5,21 +5,20 @@
 {% block page_subtitle %}Overview of your restaurant business{% endblock %}
 
 {% block primary_action %}
-  <form id="date-filter-form" method="GET" class="flex items-center gap-3 bg-white border border-neutral-200 rounded-lg px-3 py-1.5 shadow-sm text-sm font-medium text-neutral-600 relative cursor-pointer hover:bg-neutral-50 transition-colors">
+  <form id="date-filter-form" method="GET" style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--forge-color-border-strong); border-radius: var(--forge-radius-card); padding: 8px 12px; font-size: 0.875rem; background-color: var(--forge-color-surface-raised); position: relative; cursor: pointer; transition: background-color 0.2s;">
     {% include "icons/calendar.html" with class="w-4 h-4 text-neutral-400" %}
-    <span>{{ display_date }}</span>
-    {% include "icons/calendar-days.html" with class="w-4 h-4 ml-2 text-neutral-400" %}
-    <input type="date" name="date" class="absolute inset-0 opacity-0 cursor-pointer" onchange="document.getElementById('date-filter-form').submit();" value="{{ selected_date_str }}">
+    <span style="color: var(--forge-color-text-primary); font-weight: 500;">{{ display_date }}</span>
+    <input type="date" name="date" style="position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;" onchange="document.getElementById('date-filter-form').submit();" value="{{ selected_date_str }}">
   </form>
-  <a href="{% url 'ordering:pos_main' %}" class="btn bg-[var(--forge-color-brand-default)] hover:bg-[var(--forge-color-brand-hover)] text-white font-medium rounded-lg px-4 py-2 flex items-center gap-2 shadow-sm transition-colors">
+  <a href="{% if tenant %}{% url 'ordering:pos_main_tenant' tenant.id %}{% else %}{% url 'ordering:pos_main' %}{% endif %}" class="btn btn--primary" style="display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 16px; border-radius: var(--forge-radius-card); font-weight: 600; text-decoration: none;">
     {% include "icons/plus.html" with class="w-4 h-4" %}
-    New Order
+    <span>New Order</span>
   </a>
 {% endblock %}
 
 {% block workspace %}
 <div id="dashboard-content" 
-     class="px-8 pb-12 space-y-6 relative" 
+     class="px-4 sm:px-8 pb-8 sm:pb-12 space-y-4 sm:space-y-6 relative" 
      x-data="productTour()" x-init="initTour()">
 
   <!-- Subscription Status Banner -->
@@ -113,9 +112,9 @@
   {% endif %}
 
   <!-- KPI Cards -->
-  <section class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4" aria-label="Key metrics">
+  <section class="grid grid-cols-1 min-[400px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4" aria-label="Key metrics">
     <!-- Revenue Today -->
-    <article class="bg-white rounded-xl border border-neutral-100 p-4 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow min-w-0">
+    <article class="bg-white rounded-xl border border-neutral-100 p-4 sm:p-5 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow min-w-0">
       <div class="flex items-start justify-between gap-2">
         <div class="min-w-0">
           <h3 class="text-xs font-semibold text-neutral-500 uppercase tracking-wide">Revenue Today</h3>
@@ -132,7 +131,7 @@
     </article>
 
     <!-- Orders Today -->
-    <article class="bg-white rounded-xl border border-neutral-100 p-4 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow min-w-0">
+    <article class="bg-white rounded-xl border border-neutral-100 p-4 sm:p-5 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow min-w-0">
       <div class="flex items-start justify-between gap-2">
         <div class="min-w-0">
           <h3 class="text-xs font-semibold text-neutral-500 uppercase tracking-wide">Orders Today</h3>
@@ -149,7 +148,7 @@
     </article>
 
     <!-- Avg Ticket Size -->
-    <article class="bg-white rounded-xl border border-neutral-100 p-4 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow min-w-0">
+    <article class="bg-white rounded-xl border border-neutral-100 p-4 sm:p-5 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow min-w-0">
       <div class="flex items-start justify-between gap-2">
         <div class="min-w-0">
           <h3 class="text-xs font-semibold text-neutral-500 uppercase tracking-wide">Avg. Ticket Size</h3>
@@ -166,7 +165,7 @@
     </article>
 
     <!-- Tables Turned -->
-    <article class="bg-white rounded-xl border border-neutral-100 p-4 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow min-w-0">
+    <article class="bg-white rounded-xl border border-neutral-100 p-4 sm:p-5 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow min-w-0">
       <div class="flex items-start justify-between gap-2">
         <div class="min-w-0">
           <h3 class="text-xs font-semibold text-neutral-500 uppercase tracking-wide">Tables Turned</h3>
@@ -183,7 +182,7 @@
     </article>
 
     <!-- Refunds Today -->
-    <article class="bg-white rounded-xl border border-neutral-100 p-4 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow min-w-0">
+    <article class="bg-white rounded-xl border border-neutral-100 p-4 sm:p-5 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow min-w-0">
       <div class="flex items-start justify-between gap-2">
         <div class="min-w-0">
           <h3 class="text-xs font-semibold text-neutral-500 uppercase tracking-wide">Refunds Today</h3>
@@ -200,7 +199,7 @@
     </article>
 
     <!-- Open KOTs -->
-    <article class="bg-white rounded-xl border border-neutral-100 p-4 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow min-w-0">
+    <article class="bg-white rounded-xl border border-neutral-100 p-4 sm:p-5 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow min-w-0">
       <div class="flex items-start justify-between gap-2">
         <div class="min-w-0">
           <h3 class="text-xs font-semibold text-neutral-500 uppercase tracking-wide">Open KOTs</h3>
@@ -217,20 +216,20 @@
   </section>
 
   <!-- Charts & Summary Row -->
-  <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
     <!-- Revenue Overview -->
-    <article class="lg:col-span-2 bg-white rounded-2xl border border-neutral-100 p-6 shadow-sm flex flex-col">
+    <article class="md:col-span-2 lg:col-span-2 bg-white rounded-2xl border border-neutral-100 p-4 sm:p-6 shadow-sm flex flex-col">
       <div class="flex items-center justify-between mb-6">
         <h2 class="text-base font-bold text-neutral-800">Revenue Overview</h2>
         <div class="flex items-center gap-1 text-sm text-neutral-500 cursor-pointer hover:bg-neutral-50 px-2 py-1 rounded">
           Last 14 days {% include "icons/chevron-down.html" with class="w-4 h-4" %}
         </div>
       </div>
-      <div class="flex-1 flex items-end justify-between min-h-[250px] border border-neutral-100 rounded-xl bg-white p-4">
+      <div class="flex-1 overflow-x-auto overflow-y-hidden min-h-[220px] sm:min-h-[250px] border border-neutral-100 rounded-xl bg-white p-3 sm:p-4 scrollbar-none">
         {% if revenue_chart %}
-          <div class="flex-1 flex items-end justify-between h-full space-x-1 sm:space-x-2">
+          <div class="flex items-end justify-between h-full space-x-2 sm:space-x-3 min-w-[480px] sm:min-w-none pr-8 sm:pr-0 pb-1">
             {% for data in revenue_chart %}
-              <div class="group relative flex flex-col items-center justify-end h-full w-full">
+              <div class="group relative flex flex-col items-center justify-end h-[180px] sm:h-full w-full">
                 <!-- Tooltip -->
                 <div class="absolute bottom-full mb-2 hidden group-hover:flex flex-col items-center z-10">
                   <div class="bg-neutral-800 text-white text-[10px] font-bold py-1 px-2 rounded whitespace-nowrap shadow-lg">
@@ -239,7 +238,7 @@
                   <div class="w-2 h-2 bg-neutral-800 transform rotate-45 -mt-1"></div>
                 </div>
                 <!-- Bar -->
-                <div class="w-full bg-[var(--forge-color-brand-default)] hover:bg-[var(--forge-color-brand-hover)] rounded-t transition-all duration-300" style="height: {{ data.height }}%; min-height: 4px;"></div>
+                <div class="w-full max-w-[20px] bg-[var(--forge-color-brand-default)] hover:bg-[var(--forge-color-brand-hover)] rounded-t transition-all duration-300" style="height: calc({{ data.height }}% * 0.75); min-height: 4px;"></div>
                 <!-- Label -->
                 <span class="text-[9px] sm:text-[10px] font-medium text-neutral-400 mt-2 rotate-45 sm:rotate-0 origin-left whitespace-nowrap">{{ data.date }}</span>
               </div>
@@ -256,7 +255,7 @@
     </article>
 
     <!-- Order Summary -->
-    <article class="bg-white rounded-2xl border border-neutral-100 p-6 shadow-sm">
+    <article class="bg-white rounded-2xl border border-neutral-100 p-4 sm:p-6 shadow-sm">
       <h2 class="text-base font-bold text-neutral-800 mb-6">Order Summary</h2>
       <ul class="space-y-4">
         <li class="flex items-center justify-between">
@@ -299,22 +298,23 @@
   </section>
 
   <!-- Data Tables Row -->
-  <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
     <!-- Top Selling Items -->
-    <article class="bg-white rounded-2xl border border-neutral-100 p-6 shadow-sm">
+    <article class="bg-white rounded-2xl border border-neutral-100 p-4 sm:p-6 shadow-sm">
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-base font-bold text-neutral-800">Top Selling Items</h2>
         <a href="#" class="text-xs font-semibold text-[var(--forge-color-brand-default)] hover:underline">View all</a>
       </div>
-      <table class="w-full text-left text-xs text-neutral-500 mb-4">
-        <thead>
-          <tr class="border-b border-neutral-100">
-            <th class="pb-2 font-medium">#</th>
-            <th class="pb-2 font-medium">Item</th>
-            <th class="pb-2 font-medium text-right">Qty Sold</th>
-            <th class="pb-2 font-medium text-right">Revenue</th>
-          </tr>
-        </thead>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs text-neutral-500 mb-4 whitespace-nowrap">
+          <thead>
+            <tr class="border-b border-neutral-100">
+              <th class="pb-2 font-medium px-1">#</th>
+              <th class="pb-2 font-medium">Item</th>
+              <th class="pb-2 font-medium text-right">Qty Sold</th>
+              <th class="pb-2 font-medium text-right px-1">Revenue</th>
+            </tr>
+          </thead>
         <tbody>
           {% for item in top_items %}
           <tr class="border-b border-neutral-50 hover:bg-neutral-50 transition-colors">
@@ -326,6 +326,7 @@
           {% endfor %}
         </tbody>
       </table>
+      </div>
       {% if not top_items %}
       <div class="flex flex-col items-center justify-center text-center py-6">
         <div class="w-10 h-10 bg-neutral-50 rounded-lg flex items-center justify-center mb-3">
@@ -338,20 +339,21 @@
     </article>
 
     <!-- Top Branches -->
-    <article class="bg-white rounded-2xl border border-neutral-100 p-6 shadow-sm">
+    <article class="bg-white rounded-2xl border border-neutral-100 p-4 sm:p-6 shadow-sm">
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-base font-bold text-neutral-800">Top Branches</h2>
         <a href="#" class="text-xs font-semibold text-[var(--forge-color-brand-default)] hover:underline">View all</a>
       </div>
-      <table class="w-full text-left text-xs text-neutral-500 mb-4">
-        <thead>
-          <tr class="border-b border-neutral-100">
-            <th class="pb-2 font-medium">#</th>
-            <th class="pb-2 font-medium">Branch</th>
-            <th class="pb-2 font-medium text-right">Revenue</th>
-            <th class="pb-2 font-medium text-right">Orders</th>
-          </tr>
-        </thead>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs text-neutral-500 mb-4 whitespace-nowrap">
+          <thead>
+            <tr class="border-b border-neutral-100">
+              <th class="pb-2 font-medium px-1">#</th>
+              <th class="pb-2 font-medium">Branch</th>
+              <th class="pb-2 font-medium text-right">Revenue</th>
+              <th class="pb-2 font-medium text-right px-1">Orders</th>
+            </tr>
+          </thead>
         <tbody>
           {% for branch in top_branches %}
           <tr class="border-b border-neutral-50 hover:bg-neutral-50 transition-colors">
@@ -363,6 +365,7 @@
           {% endfor %}
         </tbody>
       </table>
+      </div>
       {% if not top_branches %}
       <div class="flex flex-col items-center justify-center text-center py-6">
         <div class="w-10 h-10 bg-neutral-50 rounded-lg flex items-center justify-center mb-3">
@@ -375,21 +378,22 @@
     </article>
 
     <!-- Recent Orders -->
-    <article class="bg-white rounded-2xl border border-neutral-100 p-6 shadow-sm">
+    <article class="md:col-span-2 lg:col-span-1 bg-white rounded-2xl border border-neutral-100 p-4 sm:p-6 shadow-sm">
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-base font-bold text-neutral-800">Recent Orders</h2>
         <a href="#" class="text-xs font-semibold text-[var(--forge-color-brand-default)] hover:underline">View all</a>
       </div>
-      <table class="w-full text-left text-xs text-neutral-500 mb-4">
-        <thead>
-          <tr class="border-b border-neutral-100">
-            <th class="pb-2 font-medium">Order ID</th>
-            <th class="pb-2 font-medium">Type</th>
-            <th class="pb-2 font-medium text-right">Amount</th>
-            <th class="pb-2 font-medium text-right">Status</th>
-            <th class="pb-2 font-medium text-right">Time</th>
-          </tr>
-        </thead>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs text-neutral-500 mb-4 whitespace-nowrap">
+          <thead>
+            <tr class="border-b border-neutral-100">
+              <th class="pb-2 font-medium px-1">Order ID</th>
+              <th class="pb-2 font-medium">Type</th>
+              <th class="pb-2 font-medium text-right">Amount</th>
+              <th class="pb-2 font-medium text-right">Status</th>
+              <th class="pb-2 font-medium text-right px-1">Time</th>
+            </tr>
+          </thead>
         <tbody>
           {% for order in recent_orders %}
           <tr class="border-b border-neutral-50 hover:bg-neutral-50 transition-colors">
@@ -404,6 +408,7 @@
           {% endfor %}
         </tbody>
       </table>
+      </div>
       {% if not recent_orders %}
       <div class="flex flex-col items-center justify-center text-center py-6">
         <div class="w-10 h-10 bg-neutral-50 rounded-lg flex items-center justify-center mb-3">
@@ -417,25 +422,25 @@
   </section>
 
   <!-- Quick Actions & Tutorials -->
-  <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-    <section class="lg:col-span-3 bg-white rounded-2xl border border-neutral-100 p-6 shadow-sm">
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+    <section class="md:col-span-2 lg:col-span-3 bg-white rounded-2xl border border-neutral-100 p-4 sm:p-6 shadow-sm">
       <h2 class="text-base font-bold text-neutral-800 mb-4">Quick Actions</h2>
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        <a href="{% url 'ordering:pos_main' %}" class="flex items-center gap-3 p-3 rounded-xl border border-neutral-100 hover:border-[var(--forge-color-brand-default)] hover:shadow-sm transition-all group">
+        <a href="{% if tenant %}{% url 'ordering:pos_main_tenant' tenant.id %}{% else %}{% url 'ordering:pos_main' %}{% endif %}" class="flex items-center gap-3 p-3 rounded-xl border border-neutral-100 hover:border-[var(--forge-color-brand-default)] hover:shadow-sm transition-all group">
           <div class="w-10 h-10 rounded-lg bg-neutral-100 flex items-center justify-center text-neutral-900 group-hover:bg-neutral-900 group-hover:text-white transition-colors">{% include "icons/plus.html" with class="w-5 h-5" %}</div>
           <div>
             <div class="text-sm font-bold text-neutral-800">New Order</div>
             <div class="text-[10px] text-neutral-500">Create a new order</div>
           </div>
         </a>
-        <a href="{% url 'ordering:pos_tables_main' %}" class="flex items-center gap-3 p-3 rounded-xl border border-neutral-100 hover:border-neutral-300 hover:shadow-sm transition-all group">
+        <a href="{% if tenant %}{% url 'ordering:pos_tables_main_tenant' tenant.id %}{% else %}{% url 'ordering:pos_tables_main' %}{% endif %}" class="flex items-center gap-3 p-3 rounded-xl border border-neutral-100 hover:border-neutral-300 hover:shadow-sm transition-all group">
           <div class="w-10 h-10 rounded-lg bg-neutral-50 flex items-center justify-center text-neutral-600 group-hover:bg-neutral-100 transition-colors">{% include "icons/armchair.html" with class="w-5 h-5" %}</div>
           <div>
             <div class="text-sm font-bold text-neutral-800">Table Management</div>
             <div class="text-[10px] text-neutral-500">View and manage tables</div>
           </div>
         </a>
-        <a href="{% url 'ordering:kds_main' %}" class="flex items-center gap-3 p-3 rounded-xl border border-neutral-100 hover:border-neutral-300 hover:shadow-sm transition-all group">
+        <a href="{% if tenant %}{% url 'ordering:kds_main_tenant' tenant.id %}{% else %}{% url 'ordering:kds_main' %}{% endif %}" class="flex items-center gap-3 p-3 rounded-xl border border-neutral-100 hover:border-neutral-300 hover:shadow-sm transition-all group">
           <div class="w-10 h-10 rounded-lg bg-neutral-50 flex items-center justify-center text-neutral-600 group-hover:bg-neutral-100 transition-colors">{% include "icons/chef-hat.html" with class="w-5 h-5" %}</div>
           <div>
             <div class="text-sm font-bold text-neutral-800">KOT View</div>
@@ -445,7 +450,7 @@
       </div>
     </section>
     
-    <article class="bg-indigo-600 rounded-2xl border border-indigo-500 p-6 shadow-sm text-white relative overflow-hidden group">
+    <article class="md:col-span-2 lg:col-span-1 bg-indigo-600 rounded-2xl border border-indigo-500 p-6 shadow-sm text-white relative overflow-hidden group">
       <div class="relative z-10 flex flex-col h-full justify-between">
         <div>
           <h2 class="text-lg font-black mb-1 group-hover:scale-105 origin-left transition-transform">Learn Nextora POS</h2>
@@ -499,7 +504,7 @@
         <div class="p-8 flex flex-col justify-center bg-white">
           <h3 class="text-xs font-bold text-neutral-500 uppercase tracking-wider mb-4">Quick Links</h3>
           <div class="space-y-3">
-            <a href="{% url 'ordering:pos_main' %}" @click="$dispatch('close-welcome')" class="flex items-center gap-4 p-3 rounded-xl border border-neutral-100 hover:border-indigo-500 hover:bg-indigo-50 transition-colors group">
+            <a href="{% if tenant %}{% url 'ordering:pos_main_tenant' tenant.id %}{% else %}{% url 'ordering:pos_main' %}{% endif %}" @click="$dispatch('close-welcome')" class="flex items-center gap-4 p-3 rounded-xl border border-neutral-100 hover:border-indigo-500 hover:bg-indigo-50 transition-colors group">
               <div class="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center text-indigo-600 group-hover:bg-indigo-200 transition-colors">{% include "icons/monitor.html" with class="w-5 h-5" %}</div>
               <div>
                 <div class="text-sm font-bold text-neutral-900 group-hover:text-indigo-900 transition-colors">Open POS Register</div>

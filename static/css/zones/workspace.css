@@ -38,6 +38,7 @@
 .workspace__body {
   flex: 1;
   padding: var(--forge-space-4) var(--forge-space-6) var(--forge-space-10);
+  contain: layout;
 }
 
 /* Density variants — Forge §IV. */
@@ -56,6 +57,9 @@
 
 @media (max-width: 767px) {
   .workspace__header { padding: var(--forge-space-3) var(--forge-space-4) var(--forge-space-2); }
-  .workspace__body { padding: var(--forge-space-3) var(--forge-space-4) var(--forge-space-16); }
+  .workspace__body {
+    padding: var(--forge-space-3) var(--forge-space-3) var(--forge-space-6);
+    overflow-x: hidden;
+  }
   .workspace__filter-strip { padding: var(--forge-space-2) var(--forge-space-4); }
 }

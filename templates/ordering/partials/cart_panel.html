@@ -265,3 +265,14 @@
   </div>
 
 </div>
+
+<!-- Out of Band trigger swap for real-time mobile cart summary -->
+<button type="button" 
+        id="mobile-cart-trigger"
+        hx-swap-oob="true"
+        x-show="!cartOpen"
+        @click="cartOpen = !cartOpen"
+        class="context-panel__sheet-trigger" 
+        aria-controls="context-panel">
+  Cart · {% if active_order and active_order.items.all|length > 0 %}{{ active_order.items.all|length }} items · ₹{{ active_order.total|default:"0.00"|floatformat:2 }}{% else %}0 items · ₹0.00{% endif %}
+</button>

@@ -93,9 +93,9 @@
 
         <!-- Mobile Menu Button -->
         <div class="md:hidden flex items-center">
-          <button @click="mobileMenuOpen = !mobileMenuOpen" class="text-slate-500 hover:text-slate-900 focus:outline-none">
-            {% include "icons/menu.html" with class="w-6 h-6" %}
-            {% include "icons/x.html" with class="w-6 h-6" %}
+          <button @click="mobileMenuOpen = !mobileMenuOpen" class="text-slate-500 hover:text-slate-900 focus:outline-none" :aria-expanded="mobileMenuOpen" aria-label="Toggle navigation menu">
+            <span x-show="!mobileMenuOpen">{% include "icons/menu.html" with class="w-6 h-6" %}</span>
+            <span x-show="mobileMenuOpen" x-cloak>{% include "icons/x.html" with class="w-6 h-6" %}</span>
           </button>
         </div>
       </div>

@@ -64,7 +64,7 @@
   box-shadow: var(--forge-shadow-overlay);
 }
 
-@media (max-width: 767px) {
+@media (max-width: 1023px) {
   .context-panel {
     position: fixed;
     inset: 0; top: auto;
@@ -74,8 +74,22 @@
     border-radius: var(--forge-radius-card) var(--forge-radius-card) 0 0;
     transform: translateY(100%);
     transition: transform var(--forge-duration-moderate, 220ms) ease-out;
+    will-change: transform;
     z-index: var(--forge-z-modal, 300);
   }
   .context-panel.is-open { transform: translateY(0); }
+  .context-panel.is-open ~ .context-panel__sheet-trigger,
+  body.cart-expanded .context-panel__sheet-trigger { display: none !important; }
   .context-panel__sheet-trigger { display: inline-flex; align-items: center; gap: var(--forge-space-2); }
+  .context-panel__backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 290;
+  }
+}
+
+.context-panel__backdrop {
+  display: none;
 }

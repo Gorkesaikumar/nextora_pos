@@ -66,7 +66,7 @@ function posModifierModal(config) {
 }
 </script>
 
-<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-sm"
+<div class="modal-scrim"
      x-data="posModifierModal({
        productName: '{{ product.name|escapejs }}',
        basePrice: {{ product.base_price }},
@@ -100,29 +100,30 @@ function posModifierModal(config) {
      })"
      @keydown.escape.window="$el.remove()">
 
-  <div class="bg-neutral-0 dark:bg-neutral-dark-100 rounded-2xl shadow-2xl border border-neutral-200 dark:border-neutral-dark-200 w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-fade-in">
+  <div class="modal modal--lg">
 
     <!-- Header -->
-    <div class="px-6 py-5 border-b border-neutral-200 dark:border-neutral-dark-200 flex items-start justify-between bg-neutral-50/60 dark:bg-neutral-dark-150/60">
+    <div class="modal__header" style="align-items: flex-start; justify-content: space-between;">
       <div>
-        <div class="flex items-center gap-2 mb-1">
-          <span class="px-2 py-0.5 text-xs font-mono font-semibold rounded bg-brand-subtle text-brand-default">{{ product.sku }}</span>
+        <div class="flex items-center gap-2 mb-1" style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+          <span class="px-2 py-0.5 text-xs font-mono font-semibold rounded bg-brand-subtle text-brand-default" style="padding:2px 6px; font-family:monospace; font-size:11px; border-radius:4px; background-color:var(--forge-color-brand-subtle); color:var(--forge-color-brand-default)">{{ product.sku }}</span>
           {% if is_edit %}
-          <span class="px-2 py-0.5 text-xs font-semibold rounded bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">Editing Modifiers</span>
+          <span class="px-2 py-0.5 text-xs font-semibold rounded bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300" style="padding:2px 6px; font-size:11px; border-radius:4px; background-color:#fef3c7; color:#92400e;">Editing Modifiers</span>
           {% endif %}
         </div>
-        <h2 class="text-heading-2 text-neutral-900 dark:text-neutral-dark-900">{{ product.name }}</h2>
-        <p class="text-caption text-neutral-500 dark:text-neutral-dark-500 mt-0.5">{{ product.description|default:"Customize options and add-ons below" }}</p>
+        <h2 class="modal__title">{{ product.name }}</h2>
+        <p class="text-caption text-neutral-500 dark:text-neutral-dark-500 mt-0.5" style="margin:4px 0 0 0; font-size:12px; color:var(--forge-color-text-secondary);">{{ product.description|default:"Customize options and add-ons below" }}</p>
       </div>
       <button type="button"
-              @click="$el.closest('.fixed').remove()"
-              class="p-2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 rounded-lg transition-colors">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+              @click="$el.closest('.modal-scrim').remove()"
+              class="modal__close"
+              style="background:none; border:none; cursor:pointer; color:var(--forge-color-text-secondary);">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:24px; height:24px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
       </button>
     </div>
 
     <!-- Form Container -->
-    <form class="flex-grow overflow-y-auto px-6 py-5 space-y-6"
+    <form class="modal__body" style="background-color: var(--forge-color-surface-base); display: flex; flex-direction: column; gap: 20px;"
           {% if is_edit %}
           hx-post="{% url 'ordering:pos_edit_modifier_modal' item.id %}"
           {% else %}
@@ -130,7 +131,7 @@ function posModifierModal(config) {
           {% endif %}
           hx-target="#pos-cart-panel"
           hx-swap="outerHTML"
-          @htmx:after-request="$el.closest('.fixed').remove()">
+          @htmx:after-request="$el.closest('.modal-scrim').remove()">
 
       {% csrf_token %}
 
@@ -236,27 +237,27 @@ function posModifierModal(config) {
       </div>
 
       <!-- Footer Actions -->
-      <div class="sticky bottom-0 -mx-6 -mb-5 px-6 py-4 bg-neutral-50 dark:bg-neutral-dark-150 border-t border-neutral-200 dark:border-neutral-dark-200 flex items-center justify-between">
+      <div class="modal__footer" style="justify-content: space-between; align-items: center; background-color: var(--forge-color-surface-raised); border-top: 1px solid var(--forge-color-border-subtle); padding: 16px 24px; margin: 20px -24px -24px -24px;">
         <div>
-          <div class="text-caption text-neutral-500">Total Calculated Price</div>
-          <div class="text-heading-2 text-neutral-900 dark:text-neutral-dark-900 tabular-nums">
+          <div class="text-caption text-neutral-500" style="font-size:12px; color:var(--forge-color-text-tertiary);">Total Calculated Price</div>
+          <div class="text-heading-2 text-neutral-900 dark:text-neutral-dark-900 tabular-nums" style="font-size:1.5rem; font-weight:bold; color:var(--forge-color-text-primary); font-family:monospace;">
             ₹<span x-text="calculateTotal().toFixed(2)"></span>
           </div>
         </div>
 
-        <div class="flex items-center gap-3">
+        <div style="display: flex; gap: 12px; align-items: center;">
           <button type="button"
-                  @click="$el.closest('.fixed').remove()"
-                  class="btn btn-secondary h-11 px-5">
+                  @click="$el.closest('.modal-scrim').remove()"
+                  class="btn btn--secondary" style="height:40px; padding:0 16px;">
             Cancel
           </button>
 
           <button type="submit"
                   :disabled="!isValid()"
                   :class="!isValid() ? 'opacity-50 cursor-not-allowed !bg-neutral-300 !text-neutral-500 border-transparent' : ''"
-                  class="h-11 px-6 rounded-lg font-semibold flex items-center gap-2 transition-all !bg-black !text-white hover:!bg-neutral-800 border border-transparent">
+                  class="btn btn--primary" style="height:40px; padding:0 20px; display:flex; align-items:center; gap:8px;">
             <span>{% if is_edit %}Save Customization{% else %}Add to Order{% endif %}</span>
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:16px; height:16px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
           </button>
         </div>
       </div>

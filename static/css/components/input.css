@@ -70,7 +70,10 @@
   .input:not(.input--sm):not(.input--lg),
   .input-text:not(.input--sm):not(.input--lg),
   .select:not(.select--sm):not(.select--lg) {
-    height: 44px;
+    height: 48px;
+  }
+  .input--lg, .select--lg {
+    height: 56px;
   }
 }
 
@@ -90,6 +93,16 @@
 
 /* Number inputs — right align for tabular comparison. */
 .input--number { text-align: right; font-variant-numeric: tabular-nums; }
+.input--number::-webkit-outer-spin-button,
+.input--number::-webkit-inner-spin-button,
+.input[type="number"]::-webkit-outer-spin-button,
+.input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.input[type="number"] {
+  -moz-appearance: textfield;
+}
 
 /* Group: label + control + hint/error. */
 .field--inline { flex-direction: row; align-items: center; gap: var(--forge-space-3); }

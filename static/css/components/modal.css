@@ -16,6 +16,8 @@
   display: flex; flex-direction: column;
   max-height: 90vh;
   animation: forge-scale-in var(--forge-duration-deliberate, 300ms) ease-out;
+  will-change: opacity, transform;
+  contain: layout;
 }
 .modal__header {
   display: flex; align-items: center; gap: var(--forge-space-2);
@@ -35,15 +37,23 @@
 .modal--lg { max-width: 720px; }
 .modal--xl { max-width: 960px; }
 
-@keyframes forge-scale-in {
-  from { opacity: 0; transform: scale(0.96); }
-  to   { opacity: 1; transform: scale(1); }
-}
+/* forge-scale-in and forge-slide-up are canonical in tokens.css SECTION 16.
+ * Removed duplicates to prevent cascade conflicts and reduce CSS parse time. */
+
 @media (prefers-reduced-motion: reduce) {
   .modal { animation: none; }
 }
 
 @media (max-width: 767px) {
-  .modal-scrim { padding: 0; align-items: stretch; }
-  .modal { max-width: none; max-height: 100vh; border-radius: 0; }
+  .modal-scrim { 
+    align-items: flex-end; /* Align to bottom */
+    padding: 0; 
+  }
+  .modal { 
+    max-width: none; 
+    max-height: 90vh; /* Don't cover entire screen, act like sheet */
+    border-radius: var(--forge-radius-card) var(--forge-radius-card) 0 0; 
+    animation: forge-slide-up var(--forge-duration-deliberate, 300ms) cubic-bezier(0.16, 1, 0.3, 1);
+    margin-top: auto;
+  }
 }

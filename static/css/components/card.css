@@ -36,3 +36,9 @@
   transition: background-color var(--forge-duration-fast, 80ms) ease-out;
 }
 .card--clickable:hover { background-color: var(--forge-color-surface-row-hover); }
+
+@media (max-width: 767px) {
+  .card__header, .card__footer { padding: var(--forge-space-3); }
+  .card__body { padding: var(--forge-space-3); }
+  .card--comfortable .card__body { padding: var(--forge-space-4); }
+}

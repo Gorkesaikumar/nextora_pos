@@ -103,11 +103,18 @@
 /* Touch target optimizations for mobile & tablet */
 @media (max-width: 1024px) {
   .btn:not(.btn--sm):not(.btn-sm) {
-    min-height: 44px;
+    min-height: 48px;
+  }
+  .btn--lg, .btn-lg {
+    min-height: 56px;
   }
   .btn--icon:not(.btn--sm):not(.btn-sm):not(.btn--lg):not(.btn-lg) {
-    width: 44px;
-    height: 44px;
+    width: 48px;
+    height: 48px;
+  }
+  .btn--icon.btn--lg, .btn--icon.btn-lg {
+    width: 56px;
+    height: 56px;
   }
 }
 
@@ -118,8 +125,8 @@
 .btn[aria-busy="true"]::after {
   content: "";
   position: absolute; inset: 0; margin: auto;
-  width: 14px; height: 14px;
-  border: 2px solid currentColor; border-right-color: transparent;
+  width: 18px; height: 18px;
+  border: 3px solid currentColor; border-right-color: transparent;
   border-radius: 50%;
   color: inherit;
   animation: forge-spin 0.6s linear infinite;
@@ -128,7 +135,7 @@
 .btn--secondary[aria-busy="true"]::after, .btn-secondary[aria-busy="true"]::after,
 .btn--ghost[aria-busy="true"]::after, .btn-ghost[aria-busy="true"]::after { color: var(--forge-color-text-primary); }
 
-@keyframes forge-spin { to { transform: rotate(360deg); } }
+/* forge-spin is defined in tokens.css SECTION 16 — no duplicate needed */
 
 /* Disabled. */
 .btn:disabled,

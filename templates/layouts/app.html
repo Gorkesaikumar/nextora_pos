@@ -13,12 +13,12 @@
 
     <main id="main" class="zone-workspace workspace" tabindex="-1">
       {% block workspace_header_override %}
-      <div class="px-8 pt-8 pb-4 flex items-center justify-between">
-        <div>
-          <h1 class="text-2xl font-bold text-neutral-800 tracking-tight">{% block page_title %}{% endblock %}</h1>
-          <div class="text-sm text-neutral-500 mt-1">{% block page_subtitle %}{% endblock %}</div>
+      <div class="px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-3 flex flex-wrap items-start sm:items-center justify-between gap-3">
+        <div class="min-w-0">
+          <h1 class="text-xl sm:text-2xl font-bold text-neutral-800 tracking-tight truncate">{% block page_title %}{% endblock %}</h1>
+          <div class="text-sm text-neutral-500 mt-0.5">{% block page_subtitle %}{% endblock %}</div>
         </div>
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2 flex-wrap shrink-0">
           {% block primary_action %}{% endblock %}
         </div>
       </div>

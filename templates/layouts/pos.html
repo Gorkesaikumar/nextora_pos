@@ -49,15 +49,40 @@
 {% block page_footer %}{% endblock %}
 
 {% block layout_context_panel %}
-  <aside class="zone-context-panel context-panel" aria-label="Current order">
-    {% block context_panel %}{% endblock %}
-  </aside>
+  <div x-data="{ cartOpen: false }"
+       x-effect="document.body.classList.toggle('cart-expanded', cartOpen)"
+       @open-cart.window="cartOpen = true"
+       @close-cart.window="cartOpen = false">
+    
+    <!-- Mobile Cart backdrop -->
+    <div x-show="cartOpen"
+         @click="cartOpen = false"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="context-panel__backdrop"
+         x-cloak
+         aria-hidden="true">
+    </div>
 
-  {% block pos_modals %}{% endblock %}
+    <aside class="zone-context-panel context-panel" :class="cartOpen ? 'is-open' : ''" aria-label="Current order">
+      {% block context_panel %}{% endblock %}
+    </aside>
 
-  <button type="button" class="context-panel__sheet-trigger" aria-controls="context-panel">
-    Cart · {% block sheet_trigger_summary %}0 items · ₹0.00{% endblock %}
-  </button>
+    {% block pos_modals %}{% endblock %}
+
+    <button type="button" 
+            id="mobile-cart-trigger"
+            x-show="!cartOpen"
+            @click="cartOpen = !cartOpen"
+            class="context-panel__sheet-trigger" 
+            aria-controls="context-panel">
+      Cart · {% block sheet_trigger_summary %}{% if active_order and active_order.items.all|length > 0 %}{{ active_order.items.all|length }} items · ₹{{ active_order.total|default:"0.00"|floatformat:2 }}{% else %}0 items · ₹0.00{% endif %}{% endblock %}
+    </button>
+  </div>
 {% endblock %}
 
 {% block layout_status_rail %}

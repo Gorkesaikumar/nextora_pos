@@ -923,3 +923,12 @@ html {
   background-color: var(--forge-color-surface-selection);
   color:            var(--forge-color-text-primary);
 }
+
+/* Scrollbar visibility utility */
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}

@@ -11,6 +11,7 @@
   z-index: var(--forge-z-modal, 300);
   transform: translateX(100%);
   transition: transform var(--forge-duration-moderate, 220ms) ease-out;
+  will-change: transform;
 }
 .drawer.is-open { transform: translateX(0); }
 .drawer--lg { max-width: 720px; }
@@ -43,4 +44,22 @@
 
 @media (prefers-reduced-motion: reduce) {
   .drawer { transition: none; }
+}
+
+@media (max-width: 767px) {
+  .drawer {
+    top: auto;
+    width: 100%;
+    max-width: none;
+    max-height: 90vh;
+    border-left: none;
+    border-top: 1px solid var(--forge-color-border-subtle);
+    border-radius: var(--forge-radius-card) var(--forge-radius-card) 0 0;
+    transform: translateY(100%);
+  }
+  .drawer.is-open { transform: translateY(0); }
+  .drawer__header, .drawer__body, .drawer__footer {
+    padding-left: var(--forge-space-4);
+    padding-right: var(--forge-space-4);
+  }
 }

@@ -26,12 +26,28 @@
 .pos-strip__spacer { flex: 1; }
 
 /* Category strip above grid. */
-.pos-categories {
-  display: flex; gap: var(--forge-space-1);
-  padding: var(--forge-space-2) var(--forge-space-3);
-  overflow-x: auto;
+.pos-categories-container {
+  display: flex;
+  align-items: center;
+  gap: var(--forge-space-3);
+  padding: var(--forge-space-3) var(--forge-space-4);
+  border-bottom: 1px solid var(--forge-color-border-subtle);
+  background-color: var(--forge-color-surface-base);
+  min-width: 0;
 }
-.pos-categories::-webkit-scrollbar { height: 4px; }
+.pos-categories-ribbon {
+  display: flex;
+  gap: var(--forge-space-2);
+  overflow-x: auto;
+  white-space: nowrap;
+  flex-grow: 1;
+  min-width: 0;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.pos-categories-ribbon::-webkit-scrollbar {
+  display: none;
+}
 
 /* Quick Key grid — 4 to 8 cols responsive. */
 .pos-grid {
@@ -54,6 +70,7 @@
   cursor: pointer;
   min-height: 84px;
   transition: background-color var(--forge-duration-fast, 80ms) ease-out, transform var(--forge-duration-fast, 80ms) ease-out;
+  will-change: transform;
 }
 .pos-key:hover { background-color: var(--forge-color-surface-row-hover); }
 .pos-key:active { transform: scale(0.97); }
@@ -108,4 +125,22 @@
 .pos-pay {
   height: 48px;
   font-size: 1rem;
+}
+
+/* Category buttons on POS page */
+.pos-category-btn {
+  height: 38px !important;
+  padding: 0 var(--forge-space-3) !important;
+  font-size: 0.8125rem !important;
+  gap: var(--forge-space-2) !important;
+  border-radius: var(--forge-radius-pill) !important;
+}
+
+@media (max-width: 1023px) {
+  .pos-category-btn {
+    height: 32px !important;
+    padding: 0 var(--forge-space-2) !important;
+    font-size: 0.75rem !important;
+    gap: var(--forge-space-1) !important;
+  }
 }

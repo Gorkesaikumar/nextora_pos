@@ -9,19 +9,22 @@
   
   <!-- iOS PWA Support (Phase 1) -->
   <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Nextora POS">
   <link rel="apple-touch-icon" href="{% static 'img/icon-192.png' %}">
 
   <title>{% block title %}Nextora POS{% endblock %}</title>
 
-  {# Inter Variable per Forge §VI. #}
+  <!-- Fonts: preconnect for DNS resolution, DNS prefetch for CDN assets -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap">
+  <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+  <link rel="dns-prefetch" href="https://unpkg.com">
+  <!-- Inter is loaded via main.css @import with display=swap.
+       This HTML tag is intentionally removed to avoid a duplicate network request. -->
 
-  <!-- Alpine.js with Persist Plugin -->
-  <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/persist@3.x.x/dist/cdn.min.js"></script>
+  <!-- Alpine.js -->
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   <!-- HTMX -->
   <script defer src="https://unpkg.com/htmx.org@1.9.10"></script>
@@ -62,7 +65,7 @@
   {% block head_extra %}{% endblock %}
   {% block extra_head %}{% endblock %}
 </head>
-<body x-data="{ sidebarOpen: $persist(false) }" x-init="$watch('sidebarOpen', val => document.documentElement.classList.toggle('sidebar-expanded', val))">
+<body x-data="{ sidebarOpen: localStorage.getItem('_x_sidebarOpen') === 'true' }" x-init="$watch('sidebarOpen', val => { localStorage.setItem('_x_sidebarOpen', val); document.documentElement.classList.toggle('sidebar-expanded', val); }); document.documentElement.classList.toggle('sidebar-expanded', sidebarOpen);">
   <a href="#main" class="skip-link">Skip to main content</a>
   {% block body %}{% endblock %}
 

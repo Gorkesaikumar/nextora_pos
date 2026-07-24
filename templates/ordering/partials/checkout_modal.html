@@ -1,32 +1,33 @@
 <!-- Overlay -->
-<div id="checkout-overlay" class="fixed inset-0 bg-neutral-900/50 backdrop-blur-sm z-50 flex items-center justify-center animate-fade-in p-4 lg:p-0">
+<div id="checkout-overlay" class="modal-scrim">
   
   <!-- Modal Content -->
-  <div class="bg-neutral-0 dark:bg-neutral-dark-100 w-full max-w-lg rounded-2xl shadow-xl overflow-hidden animate-slide-up flex flex-col max-h-full">
+  <div class="modal modal--sm" style="max-height: 95vh;">
     
     <!-- Header -->
-    <div class="px-6 py-4 border-b border-neutral-200 dark:border-neutral-dark-200 flex items-center justify-between">
-      <h2 class="text-heading-2 text-neutral-900 dark:text-neutral-dark-900">Checkout</h2>
-      <button class="text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-dark-700 transition-colors" 
+    <div class="modal__header">
+      <h2 class="modal__title">Checkout</h2>
+      <button class="modal__close" 
+              style="background:none; border:none; cursor:pointer; padding: 4px; display: flex; align-items: center; justify-content: center; color: var(--forge-color-text-secondary);"
               onclick="document.getElementById('pos-modal-container').innerHTML = '';">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:24px; height:24px;">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
         </svg>
       </button>
     </div>
 
     <!-- Body -->
-    <div class="p-6 overflow-y-auto">
-      <div class="flex items-center justify-between mb-8 pb-6 border-b border-neutral-200 dark:border-neutral-dark-200">
-        <span class="text-body-strong text-neutral-600 dark:text-neutral-dark-600">Total Due</span>
-        <span class="text-[32px] leading-tight font-bold text-neutral-900 dark:text-neutral-dark-900 font-mono">₹{{ active_order.total }}</span>
+    <div class="modal__body" style="background-color: var(--forge-color-surface-base);">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--forge-color-border-subtle);">
+        <span style="font-weight: 600; color: var(--forge-color-text-secondary);">Total Due</span>
+        <span style="font-size: 1.75rem; font-weight: bold; color: var(--forge-color-text-primary); font-family: monospace;">₹{{ active_order.total }}</span>
       </div>
 
       <form id="checkout-form"
             hx-post="{% url 'ordering:pos_process_payment' %}"
             hx-target="#pos-modal-container"
             hx-swap="innerHTML"
-            class="space-y-6"
+            style="display: flex; flex-direction: column; gap: 16px;"
             x-data="{ 
               processing: false,
               progressText: 'Complete Payment',
@@ -59,52 +60,50 @@
         
         <!-- Payment Methods -->
         <div>
-          <label class="block text-caption-strong text-neutral-700 dark:text-neutral-dark-700 mb-3">Payment Method</label>
-          <div class="grid grid-cols-3 gap-3">
-            <label class="cursor-pointer relative">
-              <input type="radio" name="method" value="CASH" class="peer sr-only" checked>
-              <div class="px-4 py-3 rounded-card border-2 border-neutral-200 dark:border-neutral-dark-200 text-center text-body-strong text-neutral-700 dark:text-neutral-dark-700 peer-checked:border-brand-default peer-checked:bg-brand-50 peer-checked:text-brand-700 transition-colors">
+          <label style="display: block; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: var(--forge-color-text-secondary); margin-bottom: 8px;">Payment Method</label>
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+            <label style="cursor: pointer; position: relative;">
+              <input type="radio" name="method" value="CASH" class="peer sr-only" checked style="display:none">
+              <div class="px-4 py-3 rounded-card border-2 text-center transition-colors" style="border: 2px solid var(--forge-color-border-default); background-color: var(--forge-color-surface-raised); font-weight: 600; color: var(--forge-color-text-primary);">
                 Cash
               </div>
             </label>
-            <label class="cursor-pointer relative">
-              <input type="radio" name="method" value="CARD" class="peer sr-only">
-              <div class="px-4 py-3 rounded-card border-2 border-neutral-200 dark:border-neutral-dark-200 text-center text-body-strong text-neutral-700 dark:text-neutral-dark-700 peer-checked:border-brand-default peer-checked:bg-brand-50 peer-checked:text-brand-700 transition-colors">
+            <label style="cursor: pointer; position: relative;">
+              <input type="radio" name="method" value="CARD" class="peer sr-only" style="display:none">
+              <div class="px-4 py-3 rounded-card border-2 text-center transition-colors" style="border: 2px solid var(--forge-color-border-default); background-color: var(--forge-color-surface-raised); font-weight: 600; color: var(--forge-color-text-primary);">
                 Card
               </div>
             </label>
-            <label class="cursor-pointer relative">
-              <input type="radio" name="method" value="UPI" class="peer sr-only">
-              <div class="px-4 py-3 rounded-card border-2 border-neutral-200 dark:border-neutral-dark-200 text-center text-body-strong text-neutral-700 dark:text-neutral-dark-700 peer-checked:border-brand-default peer-checked:bg-brand-50 peer-checked:text-brand-700 transition-colors">
+            <label style="cursor: pointer; position: relative;">
+              <input type="radio" name="method" value="UPI" class="peer sr-only" style="display:none">
+              <div class="px-4 py-3 rounded-card border-2 text-center transition-colors" style="border: 2px solid var(--forge-color-border-default); background-color: var(--forge-color-surface-raised); font-weight: 600; color: var(--forge-color-text-primary);">
                 UPI
               </div>
             </label>
           </div>
         </div>
 
-        <!-- Tendered Amount (Only relevant for cash usually, but keeping it generic for demo) -->
+        <!-- Tendered Amount -->
         <div>
-          <label class="block text-caption-strong text-neutral-700 dark:text-neutral-dark-700 mb-2">Tendered Amount</label>
-          <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <span class="text-neutral-500 font-mono">₹</span>
-            </div>
+          <label style="display: block; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: var(--forge-color-text-secondary); margin-bottom: 8px;">Tendered Amount</label>
+          <div style="position: relative; display: flex; align-items: center;">
+            <div style="position: absolute; left: 16px; pointer-events: none; color: var(--forge-color-text-secondary); font-family: monospace;">₹</div>
             <input type="number" name="tendered" step="0.01"
-                   class="form-input pl-8 h-12 w-full text-heading-2 font-mono" 
+                   class="input" style="width: 100%; padding-left: 32px; height: 48px; font-family: monospace; font-size: 1.25rem; font-weight: bold; border: 1px solid var(--forge-color-border-strong); border-radius: var(--forge-radius-card); background-color: var(--forge-color-surface-raised);"
                    value="{{ active_order.total }}">
           </div>
         </div>
         
-        <div class="pt-2 flex gap-3">
-            <button type="button" class="btn-secondary w-1/3 h-14 text-heading-3 shadow-sm flex items-center justify-center"
+        <div style="display: flex; gap: 12px; margin-top: 16px;">
+            <button type="button" class="btn btn--secondary" style="width: 33.333%; height: 48px; font-weight: bold;"
                     onclick="document.getElementById('pos-modal-container').innerHTML = '';"
                     :disabled="processing">
               Cancel
             </button>
-            <button type="submit" class="btn-primary flex-1 h-14 text-heading-3 shadow-md flex items-center justify-center gap-2"
+            <button type="submit" class="btn btn--primary" style="flex: 1; height: 48px; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px;"
                     :disabled="processing"
                     :class="processing ? 'opacity-50 cursor-not-allowed' : ''">
-              <svg x-show="processing" x-cloak class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+              <svg x-show="processing" x-cloak class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24" style="width:20px; height:20px;">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
@@ -115,3 +114,12 @@
     </div>
   </div>
 </div>
+
+<style>
+  /* Add focus styling helper for customized radios */
+  input[type="radio"]:checked + div {
+    border-color: var(--forge-color-brand-default) !important;
+    background-color: var(--forge-color-brand-subtle) !important;
+    color: var(--forge-color-brand-default) !important;
+  }
+</style>

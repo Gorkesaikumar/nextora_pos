@@ -5,7 +5,7 @@
   align-items: center;
   gap: var(--forge-space-4);
   padding: 0 var(--forge-space-4);
-  height: var(--forge-zone-top-rail-height, 44px);
+  height: var(--forge-zone-top-rail-height, 64px); /* Increased from 44px to fit 44px targets comfortably */
   background-color: var(--forge-color-surface-header);
   border-bottom: 1px solid var(--forge-color-border-subtle);
   position: sticky;
@@ -41,7 +41,7 @@
 }
 
 .top-rail__icon-btn {
-  width: 32px; height: 32px;
+  width: 44px; height: 44px;
   display: inline-flex; align-items: center; justify-content: center;
   border-radius: var(--forge-radius-pill);
   color: var(--forge-color-icon-secondary);
@@ -72,7 +72,14 @@
 .top-rail__status-pill--warn  { color: var(--forge-color-warning-text); }
 .top-rail__status-pill--error { color: var(--forge-color-danger-text); }
 
+.top-rail__mobile-menu-btn {
+  display: none;
+}
+
 @media (max-width: 767px) {
+  .top-rail__mobile-menu-btn {
+    display: flex;
+  }
   .top-rail__breadcrumb-slot,
   .top-rail__context-slot { display: none; }
 }

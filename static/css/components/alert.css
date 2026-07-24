@@ -22,3 +22,14 @@
 .alert--danger  .alert__icon { color: var(--forge-color-danger-default); }
 .alert--info    { background-color: var(--forge-color-info-subtle);    border-color: var(--forge-color-info-border); }
 .alert--info    .alert__icon { color: var(--forge-color-info-default); }
+
+@media (max-width: 767px) {
+  .alert {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+  .alert__actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}

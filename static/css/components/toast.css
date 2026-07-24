@@ -24,6 +24,8 @@
   box-shadow: var(--forge-shadow-toast);
   min-width: 280px; max-width: 420px;
   animation: forge-slide-in-top var(--forge-duration-moderate, 220ms) ease-out;
+  will-change: opacity, transform;
+  contain: layout;
 }
 .toast__icon  { width: 18px; height: 18px; flex-shrink: 0; margin-top: 1px; }
 .toast__body  { flex: 1; min-width: 0; }
@@ -37,10 +39,23 @@
 .toast--danger  .toast__icon { color: var(--forge-color-danger-default); }
 .toast--info    .toast__icon { color: var(--forge-color-info-default); }
 
-@keyframes forge-slide-in-top {
-  from { opacity: 0; transform: translateY(-8px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
+/* forge-slide-in-top and forge-slide-in-bottom are canonical in tokens.css SECTION 16.
+ * Removed duplicates to prevent cascade conflicts and reduce CSS parse time. */
+
 @media (prefers-reduced-motion: reduce) {
   .toast { animation: none; }
+}
+
+@media (max-width: 767px) {
+  .toast-region {
+    top: auto; bottom: calc(var(--forge-space-4) + env(safe-area-inset-bottom));
+    left: var(--forge-space-4); right: var(--forge-space-4);
+    transform: none;
+  }
+  .toast {
+    min-width: 0;
+    max-width: none;
+    width: 100%;
+    animation: forge-slide-in-bottom var(--forge-duration-moderate, 220ms) ease-out;
+  }
 }
