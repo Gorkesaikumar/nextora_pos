@@ -13,7 +13,10 @@ from contexts.billing.models import (
     Subscription,
     SubscriptionVisibilityConfig,
     GlobalTrialConfig,
+    SubscriptionInvoice,
 )
+from contexts.billing.gateways import get_gateway
+from contexts.billing.services import invoice_service
 from contexts.billing.services.license_service import LicenseService
 from contexts.billing.services.pricing_engine import PricingEngine
 from contexts.tenants.models import Tenant
@@ -24,12 +27,22 @@ class SubscriptionUpgradeView(LoginRequiredMixin, View):
     template_name = "billing/upgrade.html"
 
     def _get_tenant(self, request):
-        # Resolve tenant from request context or user membership
+        # Resolve tenant from context first (set by middleware)
+        from shared.tenancy.context import get_current_tenant
+        tenant_id = get_current_tenant()
+        if tenant_id:
+            try:
+                return Tenant.objects.get(id=tenant_id)
+            except Tenant.DoesNotExist:
+                pass
+                
         tenant = getattr(request, "tenant", None)
         if not tenant:
             membership = getattr(request.user, "memberships", None)
             if membership and membership.exists():
-                tenant = membership.first().tenant
+                first_membership = membership.filter(tenant__isnull=False).first()
+                if first_membership:
+                    tenant = first_membership.tenant
         return tenant
 
     def get(self, request, *args, **kwargs):
@@ -55,6 +68,8 @@ class SubscriptionUpgradeView(LoginRequiredMixin, View):
                 "duration_days": plan.duration_days,
                 "duration_display": plan.get_duration_type_display(),
                 "total_amount": pricing["total_amount"],
+                "effective_before_tax": pricing["effective_before_tax"],
+                "gst_amount": pricing["gst_amount"],
                 "currency": plan.currency or "INR",
                 "is_featured": plan.is_featured,
                 "is_recommended": plan.is_recommended,
@@ -93,21 +108,66 @@ class SubscriptionUpgradeView(LoginRequiredMixin, View):
             if request.headers.get("X-Requested-With") == "XMLHttpRequest" or request.accepts("application/json"):
                 return JsonResponse({"status": "error", "message": pricing["coupon_error"]}, status=400)
 
-        # Execute renewal / upgrade
-        # Note: LicenseService.renew_or_upgrade may need interval removed if it relies on it. 
-        # But we pass plan's duration_type
-        sub = LicenseService.renew_or_upgrade(
-            tenant=tenant, new_plan=plan, interval=plan.duration_type, coupon_code=coupon_code
+        from shared.tenancy.context import tenant_context
+        # Generate Razorpay Order and INCOMPLETE Subscription
+        with tenant_context(tenant.id):
+            session = LicenseService.create_checkout_session(
+                tenant=tenant, new_plan=plan, interval=plan.duration_type, coupon_code=coupon_code
+            )
+
+        from django.conf import settings
+        return JsonResponse({
+            "status": "success",
+            "razorpay_key_id": settings.RAZORPAY_KEY_ID,
+            "order_id": session["order_id"],
+            "amount_minor": session["amount_minor"],
+            "currency": session["currency"],
+            "invoice_number": session["invoice_number"],
+            "plan_name": plan.name,
+            "tenant_name": tenant.name,
+        })
+
+class VerifyPaymentAPIView(LoginRequiredMixin, View):
+    """Synchronous payment verification for immediate dashboard redirection."""
+
+    def post(self, request, *args, **kwargs):
+        try:
+            data = json.loads(request.body)
+        except Exception:
+            data = request.POST
+
+        payment_id = data.get("razorpay_payment_id")
+        order_id = data.get("razorpay_order_id")
+        signature = data.get("razorpay_signature")
+
+        if not all([payment_id, order_id, signature]):
+            return JsonResponse({"status": "error", "message": "Missing payment parameters."}, status=400)
+
+        # 1. Verify signature
+        gateway = get_gateway()
+        if not gateway.verify_payment_signature(order_id, payment_id, signature):
+            return JsonResponse({"status": "error", "message": "Invalid payment signature."}, status=400)
+
+        # 2. Find the invoice and mark it paid (which also activates the subscription)
+        from shared.tenancy import bypass_tenant
+        with bypass_tenant():
+            invoice = SubscriptionInvoice.all_objects.filter(provider_order_id=order_id).first()
+        
+        if not invoice:
+            return JsonResponse({"status": "error", "message": "Invoice not found for this order."}, status=404)
+
+        invoice_service.mark_paid(
+            tenant_id=invoice.tenant_id,
+            invoice=invoice,
+            provider=gateway.name,
+            provider_payment_id=payment_id,
         )
 
-        if request.headers.get("X-Requested-With") == "XMLHttpRequest" or request.accepts("application/json"):
-            return JsonResponse({
-                "status": "success",
-                "message": f"Successfully upgraded/renewed to {plan.name}!",
-                "redirect_url": "/billing/dashboard/",
-            })
-
-        return redirect("billing:dashboard")
+        return JsonResponse({
+            "status": "success",
+            "message": "Payment verified and subscription activated successfully!",
+            "redirect_url": "/platform/tenant/dashboard/"
+        })
 
 
 class ValidateCouponAPIView(LoginRequiredMixin, View):
@@ -152,3 +212,13 @@ class ValidateCouponAPIView(LoginRequiredMixin, View):
             "total_amount": float(pricing["total_amount"]),
             "currency": pricing["currency"],
         })
+
+class SubscriptionRestrictedView(LoginRequiredMixin, TemplateView):
+    """View rendered when a user tries to access a protected feature without an active subscription."""
+    template_name = "billing/restricted.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if hasattr(self.request, "tenant") and self.request.tenant:
+            context["license_summary"] = LicenseService.get_license_summary(self.request.tenant)
+        return context

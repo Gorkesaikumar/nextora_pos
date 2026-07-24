@@ -100,6 +100,17 @@
 .btn--icon.btn--sm, .btn-icon.btn-sm { width: 28px; height: 28px; }
 .btn--icon.btn--lg, .btn-icon.btn-lg { width: 44px; height: 44px; }
 
+/* Touch target optimizations for mobile & tablet */
+@media (max-width: 1024px) {
+  .btn:not(.btn--sm):not(.btn-sm) {
+    min-height: 44px;
+  }
+  .btn--icon:not(.btn--sm):not(.btn-sm):not(.btn--lg):not(.btn-lg) {
+    width: 44px;
+    height: 44px;
+  }
+}
+
 /* Loading state. */
 .btn[aria-busy="true"] {
   pointer-events: none; position: relative; color: transparent;

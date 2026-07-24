@@ -35,7 +35,7 @@
 </div>
 
 <div class="pt-6">
-  <form method="POST" action="{% url 'identity:logout' %}">
+  <form method="POST" action="{% url 'identity:logout' %}" onsubmit="if(navigator.serviceWorker && navigator.serviceWorker.controller) { navigator.serviceWorker.controller.postMessage({type: 'CLEAR_CACHES'}); }">
     {% csrf_token %}
     <button type="submit" class="w-full text-center text-caption text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-dark-800 font-medium transition-colors">
       Sign out instead

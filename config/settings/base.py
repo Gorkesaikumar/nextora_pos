@@ -100,6 +100,8 @@ MIDDLEWARE = [
     "shared.infrastructure.logging.middleware.RequestIDMiddleware",
     # Resolves the tenant and binds it to context + DB session (RLS).
     "shared.tenancy.middleware.TenantResolutionMiddleware",
+    # Enforces subscription access for premium modules.
+    "contexts.billing.middleware.SubscriptionAccessMiddleware",
     # Captures actor + IP for the audit trail (after auth + tenant).
     "contexts.audit.middleware.AuditContextMiddleware",
 ]

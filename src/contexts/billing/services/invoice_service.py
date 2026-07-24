@@ -92,6 +92,12 @@ def mark_paid(
 def _activate_subscription(
     subscription: Subscription, invoice: SubscriptionInvoice
 ) -> None:
+    # Deactivate any previous live subscriptions for this tenant to satisfy the unique constraint
+    Subscription.objects.filter(
+        tenant_id=subscription.tenant_id,
+        status__in=SubscriptionStatus.occupied()
+    ).exclude(pk=subscription.pk).update(status=SubscriptionStatus.EXPIRED)
+
     subscription.current_period_start = invoice.period_start
     subscription.current_period_end = invoice.period_end
     subscription.status = SubscriptionStatus.ACTIVE

@@ -76,6 +76,15 @@
       }
 
       pill.innerHTML = `<span class="status-rail__dot ${dotColorClass}" aria-hidden="true"></span>${statusText}`;
+      
+      // Dispatch global events for toast notifications
+      if (statusText === 'Sync Completed') {
+        window.dispatchEvent(new CustomEvent('notify', { detail: { type: 'success', message: 'Offline changes synced successfully.' } }));
+      } else if (statusText === 'Sync Failed') {
+        window.dispatchEvent(new CustomEvent('notify', { detail: { type: 'error', message: 'Failed to sync offline changes. Will retry.' } }));
+      } else if (statusText === 'Offline Mode') {
+        window.dispatchEvent(new CustomEvent('notify', { detail: { type: 'warning', message: 'You are offline. Changes are saved locally.' } }));
+      }
     },
 
     /**
@@ -146,8 +155,8 @@
       if (this.isSyncing || !navigator.onLine || !global.NextoraOfflineDB) return;
 
       const pendingItems = await global.NextoraOfflineDB.sync_queue
-        .where('status')
-        .equals('pending');
+        .filter(item => item.status === 'pending')
+        .toArray();
 
       if (!pendingItems || pendingItems.length === 0) {
         return;
@@ -187,6 +196,16 @@
           this.updateStatusBadge('Sync Completed');
           // Re-bootstrap catalog after sync to ensure updated inventory levels
           await this.bootstrapCatalog();
+        } else if (response.status === 401 || response.status === 403) {
+          console.warn('[OfflineSync] Session expired on server. Forcing re-authentication.');
+          this.updateStatusBadge('Authentication Required');
+          if (global.NextoraOfflineAuth) {
+            await global.NextoraOfflineAuth.clearSession();
+          }
+          window.dispatchEvent(new CustomEvent('notify', { detail: { type: 'error', message: 'Session expired. Please log in again to sync pending bills.' } }));
+          setTimeout(() => {
+            window.location.href = '/auth/login/?next=' + encodeURIComponent(window.location.pathname);
+          }, 2000);
         } else {
           // Increment retry_count with exponential backoff capping
           for (const item of pendingItems) {

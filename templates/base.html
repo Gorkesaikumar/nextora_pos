@@ -3,8 +3,15 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#F2F2F2">
-  <link rel="manifest" href="{% static 'manifest.json' %}">
+  <meta name="description" content="Nextora POS — Enterprise Restaurant Point of Sale and Kitchen Display System.">
+  <meta name="theme-color" content="#1A1A1C">
+  <link rel="manifest" href="{% static 'manifest.json' %}?v=3">
+  
+  <!-- iOS PWA Support (Phase 1) -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Nextora POS">
+  <link rel="apple-touch-icon" href="{% static 'img/icon-192.png' %}">
 
   <title>{% block title %}Nextora POS{% endblock %}</title>
 
@@ -17,82 +24,11 @@
   <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/persist@3.x.x/dist/cdn.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   <!-- HTMX -->
-  <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+  <script defer src="https://unpkg.com/htmx.org@1.9.10"></script>
   <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <!-- Tailwind CSS CDN (Development) -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind = {
-      config: {
-        darkMode: ['class', '[data-theme="dark"]'],
-        theme: {
-          extend: {
-            colors: {
-              brand: {
-                default: '#4F6EF7',
-                hover: '#3D5CE5',
-                pressed: '#2E4DD4',
-                subtle: '#EEF1FE',
-                'on-brand': '#FFFFFF',
-                'focus-ring': '#4F6EF7',
-                'on-dark': '#7B96FF',
-              },
-              semantic: {
-                success: '#16A34A',
-                'success-subtle': '#DCFCE7',
-                'success-dark': '#4ADE80',
-                'success-subtle-dark': '#14532D',
-                warning: '#D97706',
-                'warning-subtle': '#FEF3C7',
-                'warning-dark': '#FCD34D',
-                'warning-subtle-dark': '#451A03',
-                danger: '#DC2626',
-                'danger-subtle': '#FEE2E2',
-                'danger-dark': '#F87171',
-                'danger-subtle-dark': '#450A0A',
-                info: '#0284C7',
-                'info-subtle': '#E0F2FE',
-                'info-dark': '#38BDF8',
-                'info-subtle-dark': '#0C4A6E',
-              },
-              neutral: {
-                0: '#FFFFFF',
-                50: '#F8F8F8',
-                100: '#F2F2F2',
-                150: '#EBEBEB',
-                200: '#E0E0E0',
-                300: '#CBCBCB',
-                400: '#A8A8A8',
-                500: '#848484',
-                600: '#5C5C5C',
-                700: '#3D3D3D',
-                800: '#252525',
-                900: '#141414',
-                'dark-0': '#1A1A1C',
-                'dark-50': '#212124',
-                'dark-100': '#2A2A2E',
-                'dark-150': '#313136',
-                'dark-200': '#3C3C42',
-                'dark-300': '#4F4F57',
-                'dark-400': '#6B6B75',
-                'dark-500': '#8C8C98',
-                'dark-600': '#ABABBA',
-                'dark-700': '#C8C8D8',
-                'dark-800': '#E0E0EE',
-                'dark-900': '#F0F0F8',
-              }
-            },
-            borderRadius: {
-              'sharp': '4px',
-              'card': '8px',
-              'pill': '9999px',
-            }
-          }
-        }
-      }
-    }
-  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- Tailwind CSS (Production) -->
+  <link rel="stylesheet" href="{% static 'css/tailwind.css' %}">
   
   <link rel="stylesheet" href="{% static 'css/main.css' %}?v=2">
   <style>[x-cloak] { display: none !important; }</style>
@@ -131,8 +67,30 @@
   {% block body %}{% endblock %}
 
   {# Toast region — shared across all chromed layouts. #}
-  <div id="toast-region" class="toast-region {% block toast_region_class %}{% endblock %}" role="status" aria-live="polite" aria-atomic="false">
+  <div id="toast-region" class="toast-region {% block toast_region_class %}{% endblock %}" role="status" aria-live="polite" aria-atomic="false"
+       x-data="{ toasts: [] }"
+       @notify.window="toasts.push({ id: Date.now(), type: $event.detail.type || 'info', msg: $event.detail.message }); setTimeout(() => { toasts = toasts.filter(t => t.id !== toasts[toasts.length-1].id) }, 4000)">
     {% block toasts %}{% endblock %}
+    
+    <template x-for="toast in toasts" :key="toast.id">
+      <div class="toast" :class="'toast--' + toast.type"
+           x-transition:enter="transition ease-out duration-300"
+           x-transition:enter-start="opacity-0 translate-y-2"
+           x-transition:enter-end="opacity-100 translate-y-0"
+           x-transition:leave="transition ease-in duration-200"
+           x-transition:leave-start="opacity-100"
+           x-transition:leave-end="opacity-0">
+        <div class="toast__icon">
+          <svg x-show="toast.type === 'success'" class="w-full h-full" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          <svg x-show="toast.type === 'error'" class="w-full h-full" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          <svg x-show="toast.type === 'warning'" class="w-full h-full" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+          <svg x-show="toast.type === 'info'" class="w-full h-full" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        </div>
+        <div class="toast__body">
+          <div class="toast__msg" x-text="toast.msg"></div>
+        </div>
+      </div>
+    </template>
   </div>
 
   {# Global Modal Region for HTMX #}
@@ -141,6 +99,10 @@
   {# Global Alpine Dialogs #}
   {% include "components/dialogs.html" %}
   {% include "components/npos_popup.html" %}
+  
+  {# Progressive Web App UI Components #}
+  {% include "components/pwa_install_prompt.html" %}
+  {% include "components/pwa_update_prompt.html" %}
 
   <script>
     // Modal Dismiss Logic
@@ -224,11 +186,11 @@
   </script>
 
   <!-- Enterprise Offline Engine Scripts -->
-  <script src="{% static 'js/vendor/dexie.min.js' %}"></script>
-  <script src="{% static 'js/offline/db.js' %}"></script>
-  <script src="{% static 'js/offline/auth.js' %}"></script>
-  <script src="{% static 'js/offline/sync.js' %}"></script>
-  <script src="{% static 'js/offline/pos-offline.js' %}"></script>
+  <script defer src="{% static 'js/vendor/dexie.min.js' %}"></script>
+  <script defer src="{% static 'js/offline/db.js' %}"></script>
+  <script defer src="{% static 'js/offline/auth.js' %}"></script>
+  <script defer src="{% static 'js/offline/sync.js' %}"></script>
+  <script defer src="{% static 'js/offline/pos-offline.js' %}"></script>
   {% block scripts %}{% endblock %}
 </body>
 </html>

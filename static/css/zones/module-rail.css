@@ -157,14 +157,36 @@ html.sidebar-expanded .module-rail__item-badge { display: inline-flex; }
   .module-rail__brand,
   .module-rail__group-label,
   .module-rail__footer { display: none; }
-  .module-rail__group {
+  
+  #module-sidebar {
+    display: flex;
     flex-direction: row;
-    border-top: 0;
+    width: 100%;
     padding: 0;
-    gap: var(--forge-space-1);
-    flex: 1;
-    justify-content: space-around;
+    margin: 0;
   }
+  #module-sidebar > .module-rail__group {
+    display: flex;
+    flex-direction: row;
+    flex: 1;
+    margin-top: 0 !important;
+    padding: 0;
+    border-top: 0;
+  }
+  #module-sidebar > .module-rail__group > ul {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    justify-content: space-around;
+    margin: 0;
+    padding: 0;
+  }
+  #module-sidebar > .module-rail__group > ul > li {
+    display: flex;
+    flex: 1;
+    margin-top: 0 !important;
+  }
+
   .module-rail__item {
     flex-direction: column;
     min-height: 56px;

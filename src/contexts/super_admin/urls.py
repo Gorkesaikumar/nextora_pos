@@ -9,7 +9,11 @@ urlpatterns = [
     path("login/", views.PlatformLoginView.as_view(), name="login"),
     path("logout/", views.PlatformLogoutView.as_view(), name="logout"),
     path("", views.PlatformDashboardView.as_view(), name="dashboard"),
+    path("stats/", views.PlatformDashboardStatsView.as_view(), name="dashboard_stats"),
+    path("export/", views.PlatformExportReportView.as_view(), name="export_report"),
     path("tenants/", views.PlatformTenantListView.as_view(), name="tenant_list"),
+    path("tenants/<uuid:tenant_id>/details/", views.PlatformTenantDetailsView.as_view(), name="tenant_details"),
+    path("tenants/<uuid:tenant_id>/revenue/", views.PlatformTenantRevenueView.as_view(), name="tenant_revenue"),
     path("users/", views.PlatformUserListView.as_view(), name="user_list"),
     path("subscriptions/", views.PlatformSubscriptionListView.as_view(), name="subscription_list"),
     

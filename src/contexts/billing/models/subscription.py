@@ -71,7 +71,10 @@ class Subscription(TenantAwareModel):
     def has_access(self, *, now=None) -> bool:
         """Whether the tenant should currently be served."""
         now = now or timezone.now()
-        if self.status in (SubscriptionStatus.TRIALING, SubscriptionStatus.ACTIVE):
+        if self.status == SubscriptionStatus.TRIALING:
+            end_time = self.trial_end or self.current_period_end
+            return end_time > now
+        if self.status == SubscriptionStatus.ACTIVE:
             return self.current_period_end > now or self.in_grace
         if self.status == SubscriptionStatus.PAST_DUE:
             return self.grace_until is not None and self.grace_until > now

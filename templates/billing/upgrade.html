@@ -10,6 +10,9 @@
        couponCode: '',
        couponStatus: '',
        couponMessage: '',
+       errorModalOpen: false,
+       errorMessage: '',
+       showError(msg) { this.errorMessage = msg; this.errorModalOpen = true; },
        isLoading: false,
        async applyCoupon() {
          if (!this.couponCode.trim()) return;
@@ -40,44 +43,142 @@
          } finally {
            this.isLoading = false;
          }
+       },
+       async checkout() {
+         this.isLoading = true;
+         try {
+           // 1. Create order
+           const formData = new FormData();
+           formData.append('plan_code', this.selectedPlan);
+           formData.append('coupon_code', this.couponCode);
+           const createRes = await fetch('{% url "billing:upgrade" %}', {
+             method: 'POST',
+             headers: {
+               'X-CSRFToken': '{{ csrf_token }}',
+               'Accept': 'application/json'
+             },
+             body: formData
+           });
+           const orderData = await createRes.json();
+           
+           if (orderData.status !== 'success') {
+             this.showError(orderData.message || 'Failed to generate order.');
+             this.isLoading = false;
+             return;
+           }
+
+           // 2. Open Razorpay Checkout Modal
+           const options = {
+             key: orderData.razorpay_key_id,
+             amount: orderData.amount_minor,
+             currency: orderData.currency,
+             name: 'Nextora POS',
+             description: `Subscription: ${orderData.plan_name}`,
+             order_id: orderData.order_id,
+             handler: async (response) => {
+               // 3. Verify Payment Sync
+               try {
+                 const verifyRes = await fetch('{% url "billing:verify_payment" %}', {
+                   method: 'POST',
+                   headers: {
+                     'Content-Type': 'application/json',
+                     'X-CSRFToken': '{{ csrf_token }}'
+                   },
+                   body: JSON.stringify({
+                     razorpay_payment_id: response.razorpay_payment_id,
+                     razorpay_order_id: response.razorpay_order_id,
+                     razorpay_signature: response.razorpay_signature
+                   })
+                 });
+                 const verifyData = await verifyRes.json();
+                 if (verifyData.status === 'success') {
+                   window.location.href = verifyData.redirect_url;
+                 } else {
+                   this.showError(verifyData.message || 'Payment verification failed.');
+                   setTimeout(() => window.location.reload(), 3000);
+                 }
+               } catch (e) {
+                 this.showError('Error verifying payment. If amount was deducted, it will be credited automatically.');
+               }
+             },
+             prefill: {
+               name: orderData.tenant_name,
+             },
+             theme: {
+               color: '#0f766e' // brand-600
+             },
+             modal: {
+               ondismiss: () => {
+                 this.isLoading = false;
+               }
+             }
+           };
+           
+           const rzp = new Razorpay(options);
+           rzp.on('payment.failed', (response) => {
+               this.showError(response.error.description);
+           });
+           rzp.open();
+         } catch (e) {
+           this.showError('An error occurred while initiating checkout. ' + (e.message || ''));
+           this.isLoading = false;
+         }
        }
      }">
 
-  <!-- Current License Summary Card -->
-  <div class="card p-6 border-l-4"
-       :class="'{{ summary.banner_type }}' === 'expired' ? 'border-l-semantic-danger bg-red-50/50' : ('{{ summary.banner_type }}' === 'warning' ? 'border-l-semantic-warning bg-amber-50/50' : 'border-l-brand-default bg-neutral-0')">
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-      <div>
-        <div class="flex items-center gap-2">
-          <h3 class="text-heading-2 text-neutral-900 dark:text-neutral-dark-900">Current Status: <span class="uppercase font-extrabold">{{ summary.status }}</span></h3>
-          {% if summary.is_expired %}
-            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-800">Expired</span>
-          {% else %}
-            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">{{ summary.remaining_days }} Days Remaining</span>
-          {% endif %}
+  <!-- Current License Summary Card - Premium Design -->
+  <div class="relative overflow-hidden rounded-2xl p-[1px] shadow-lg transition-transform hover:-translate-y-0.5 duration-300"
+       :class="'{{ summary.banner_type }}' === 'expired' ? 'bg-gradient-to-r from-red-500/80 to-rose-400/80' : ('{{ summary.banner_type }}' === 'warning' ? 'bg-gradient-to-r from-amber-500/80 to-orange-400/80' : 'bg-gradient-to-r from-brand-600/80 to-teal-400/80')">
+    
+    <!-- Animated background glow effect -->
+    <div class="absolute inset-0 bg-white/20 blur-xl opacity-50 animate-pulse"></div>
+
+    <div class="relative h-full w-full rounded-[15px] bg-white/95 backdrop-blur-xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 z-10">
+      
+      <div class="flex items-start gap-4">
+        <!-- Status Icon / Dot -->
+        <div class="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border shadow-inner"
+             :class="'{{ summary.banner_type }}' === 'expired' ? 'bg-red-50 border-red-200 text-red-600' : ('{{ summary.banner_type }}' === 'warning' ? 'bg-amber-50 border-amber-200 text-amber-600' : 'bg-emerald-50 border-emerald-200 text-emerald-600')">
+             {% include "icons/zap.html" with class="w-5 h-5 animate-pulse" %}
         </div>
-        <p class="text-body text-neutral-600 dark:text-neutral-dark-600 mt-1.5">{{ summary.banner_text }}</p>
-      </div>
-      <div class="flex items-center gap-2">
-        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold shadow-sm">
-          {% include "icons/sparkles.html" with class="w-4 h-4 text-emerald-600" %}
-          <span>100% POS Access Guaranteed</span>
+        
+        <div>
+          <div class="flex flex-wrap items-center gap-3">
+            <h3 class="text-sm font-black text-neutral-400 uppercase tracking-widest">Current Status</h3>
+            <div class="flex items-center gap-2">
+              <span class="text-xl font-extrabold text-neutral-900 tracking-tight uppercase">{{ summary.status }}</span>
+              {% if summary.is_expired %}
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-widest uppercase bg-red-100/80 text-red-700 shadow-sm border border-red-200">Expired</span>
+              {% else %}
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-widest uppercase bg-emerald-100/80 text-emerald-700 shadow-sm border border-emerald-200">{{ summary.remaining_days }} Days Remaining</span>
+              {% endif %}
+            </div>
+          </div>
+          <p class="text-sm font-medium text-neutral-500 mt-1 leading-relaxed">{{ summary.banner_text }}</p>
         </div>
       </div>
+      
+      <div class="flex items-center shrink-0">
+        <div class="relative group">
+          <div class="absolute -inset-0.5 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl blur opacity-30 group-hover:opacity-70 transition duration-300"></div>
+          <div class="relative inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-emerald-100 text-emerald-700 text-xs font-black uppercase tracking-wider shadow-sm">
+            {% include "icons/sparkles.html" with class="w-4 h-4 text-emerald-500" %}
+            <span>100% POS Access Guaranteed</span>
+          </div>
+        </div>
+      </div>
+      
     </div>
   </div>
 
   <!-- Interval Tabs Removed for New Architecture -->
 
   <!-- Plan Cards Grid -->
-  <form method="POST" action="{% url 'billing:upgrade' %}" class="space-y-8">
-    {% csrf_token %}
-    <input type="hidden" name="coupon_code" :value="couponCode">
-
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+  <div class="space-y-8">
+    <div class="flex flex-wrap justify-center items-stretch gap-6">
       {% for p in plans %}
-      <label class="card relative cursor-pointer p-6 transition-all flex flex-col justify-between"
-             :class="selectedPlan === '{{ p.code }}' ? 'border-2 border-brand-600 ring-4 ring-brand-600/10 shadow-lg bg-brand-50/10' : 'border border-neutral-200 hover:border-brand-300'">
+      <label class="card relative cursor-pointer p-6 transition-all flex flex-col justify-between w-full max-w-[340px]"
+             :class="selectedPlan === '{{ p.code }}' ? 'border-2 border-brand-600 ring-4 ring-brand-600/10 shadow-lg bg-brand-50/10 scale-[1.02]' : 'border border-neutral-200 hover:border-brand-300 hover:shadow-md'">
         <input type="radio" name="plan_code" value="{{ p.code }}" class="sr-only"
                :checked="selectedPlan === '{{ p.code }}'" @change="selectedPlan = '{{ p.code }}'; couponStatus = ''">
 
@@ -104,10 +205,16 @@
           <!-- Dynamic Pricing Display -->
           <div class="mb-4 min-h-[60px]">
             {% if p.total_amount > 0 %}
-              <div class="flex items-baseline gap-1">
-                <span class="text-3xl font-extrabold text-neutral-900">{% if p.currency == 'INR' %}₹{% elif p.currency == 'USD' %}${% elif p.currency == 'EUR' %}€{% else %}{{ p.currency }} {% endif %}{{ p.total_amount|floatformat:"0" }}</span>
+              <div class="flex items-end justify-between gap-2">
+                <div class="flex items-baseline gap-1">
+                  <span class="text-4xl font-black text-neutral-900 tracking-tight">{% if p.currency == 'INR' %}₹{% elif p.currency == 'USD' %}${% elif p.currency == 'EUR' %}€{% else %}{{ p.currency }} {% endif %}{{ p.total_amount|floatformat:"0" }}</span>
+                </div>
+                <div class="text-[10px] font-bold text-neutral-400 bg-neutral-50 border border-neutral-100 px-2 py-1 rounded-lg mb-1.5 text-right flex flex-col items-end leading-tight shadow-sm">
+                  <span>Base: ₹{{ p.effective_before_tax|floatformat:"0" }}</span>
+                  <span class="text-brand-600">+ GST: ₹{{ p.gst_amount|floatformat:"0" }}</span>
+                </div>
               </div>
-              <p class="text-xs text-neutral-500 mt-1">For {{ p.duration_days }} days (Includes GST)</p>
+              <p class="text-xs font-medium text-neutral-500 mt-2">Billed securely via Razorpay for {{ p.duration_days }} days.</p>
             {% else %}
               <div class="flex items-baseline gap-1">
                 <span class="text-3xl font-extrabold text-emerald-600">Free</span>
@@ -177,13 +284,52 @@
         </div>
 
         <div class="w-full md:w-auto flex flex-col items-end">
-          <button type="submit" class="btn-primary px-8 py-3.5 text-base font-bold shadow-md hover:shadow-lg transition-all">
-            Upgrade / Renew Now
+          <button type="button" @click="checkout()" :disabled="isLoading || !selectedPlan" class="btn-primary px-8 py-3.5 text-base font-bold shadow-md hover:shadow-lg transition-all">
+            <span x-show="!isLoading">Upgrade / Renew Now</span>
+            <span x-show="isLoading" x-cloak>Processing...</span>
           </button>
           <p class="text-micro text-neutral-500 mt-1.5">Zero overlap: Your remaining days will be added to the new validity.</p>
         </div>
       </div>
     </div>
-  </form>
+  </div>
+
+<!-- Error Modal -->
+<div x-show="errorModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-0" x-cloak>
+  <div x-show="errorModalOpen" 
+       x-transition:enter="ease-out duration-300" 
+       x-transition:enter-start="opacity-0" 
+       x-transition:enter-end="opacity-100" 
+       x-transition:leave="ease-in duration-200" 
+       x-transition:leave-start="opacity-100" 
+       x-transition:leave-end="opacity-0" 
+       class="fixed inset-0 bg-neutral-900/50 backdrop-blur-sm transition-opacity" 
+       @click="errorModalOpen = false" aria-hidden="true"></div>
+
+  <div x-show="errorModalOpen" 
+       x-transition:enter="ease-out duration-300" 
+       x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" 
+       x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" 
+       x-transition:leave="ease-in duration-200" 
+       x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" 
+       x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" 
+       class="relative bg-white rounded-2xl shadow-xl overflow-hidden transform transition-all sm:max-w-md w-full border border-neutral-100 p-6 flex flex-col items-center text-center">
+       
+       <div class="mx-auto flex items-center justify-center h-14 w-14 rounded-full bg-red-100 mb-4">
+         {% include "icons/circle-alert.html" with class="w-7 h-7 text-red-600" %}
+       </div>
+       
+       <h3 class="text-xl font-bold text-neutral-900 mb-2">Checkout Error</h3>
+       <p class="text-sm text-neutral-600 mb-6" x-text="errorMessage"></p>
+       
+       <button type="button" @click="errorModalOpen = false" class="w-full btn-primary px-4 py-2.5 bg-neutral-900 text-white rounded-lg hover:bg-neutral-800 transition-colors font-semibold">
+         Understood
+       </button>
+  </div>
 </div>
+
+</div> <!-- Closing div for max-w-6xl mx-auto space-y-8 -->
+
+<!-- Razorpay Checkout Script -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 {% endblock %}

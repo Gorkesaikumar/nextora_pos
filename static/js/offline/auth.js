@@ -75,9 +75,54 @@
      */
     async clearSession() {
       if (!global.NextoraOfflineDB) return;
-      await global.NextoraOfflineDB.user_permissions.clear();
+      
+      console.warn('[OfflineAuth] Executing aggressive tenant data purge.');
+
+      // 1. Wipe all IndexedDB Tables (destroying the sync queue, catalog, and auth)
+      await Promise.all([
+        global.NextoraOfflineDB.user_permissions.clear(),
+        global.NextoraOfflineDB.products.clear(),
+        global.NextoraOfflineDB.categories.clear(),
+        global.NextoraOfflineDB.inventory.clear(),
+        global.NextoraOfflineDB.customers.clear(),
+        global.NextoraOfflineDB.suppliers.clear(),
+        global.NextoraOfflineDB.sales.clear(),
+        global.NextoraOfflineDB.orders.clear(),
+        global.NextoraOfflineDB.cart.clear(),
+        global.NextoraOfflineDB.payments.clear(),
+        global.NextoraOfflineDB.receipts.clear(),
+        global.NextoraOfflineDB.discounts.clear(),
+        global.NextoraOfflineDB.taxes.clear(),
+        global.NextoraOfflineDB.branch_config.clear(),
+        global.NextoraOfflineDB.company_settings.clear(),
+        global.NextoraOfflineDB.printer_config.clear(),
+        global.NextoraOfflineDB.sync_metadata.clear(),
+        global.NextoraOfflineDB.sync_queue.clear(),
+        global.NextoraOfflineDB.audit_log.clear()
+      ]);
+
+      // 2. Wipe Local and Session Storage
+      localStorage.clear();
+      sessionStorage.clear();
+
+      // 3. Command Service Worker to drop HTML/API caches but keep the App Shell
+      if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_TENANT_CACHES' });
+      }
     }
   };
 
   global.NextoraOfflineAuth = NextoraOfflineAuth;
+
+  // 4. Intercept explicit logout links to purge data before navigating away
+  global.addEventListener('click', (e) => {
+    const link = e.target.closest('a');
+    if (link && link.href && link.href.includes('logout')) {
+      e.preventDefault();
+      NextoraOfflineAuth.clearSession().finally(() => {
+        window.location.href = link.href;
+      });
+    }
+  });
+
 })(typeof window !== 'undefined' ? window : this);

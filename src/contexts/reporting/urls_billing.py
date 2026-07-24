@@ -24,12 +24,14 @@ from .views import (
     BillingSettingsView,
 )
 
-from contexts.billing.upgrade_views import SubscriptionUpgradeView, ValidateCouponAPIView
+from contexts.billing.upgrade_views import SubscriptionUpgradeView, ValidateCouponAPIView, VerifyPaymentAPIView, SubscriptionRestrictedView
 
 app_name = "billing"
 
 urlpatterns = [
     path("upgrade/", SubscriptionUpgradeView.as_view(), name="upgrade"),
+    path("restricted/", SubscriptionRestrictedView.as_view(), name="restricted"),
+    path("upgrade/verify-payment/", VerifyPaymentAPIView.as_view(), name="verify_payment"),
     path("upgrade/validate-coupon/", ValidateCouponAPIView.as_view(), name="validate_coupon"),
     path("dashboard/", BillingDashboardView.as_view(), name="dashboard"),
     path("<uuid:tenant_id>/dashboard/", BillingDashboardView.as_view(), name="dashboard_tenant"),

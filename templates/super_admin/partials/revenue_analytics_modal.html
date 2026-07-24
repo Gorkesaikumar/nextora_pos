@@ -1,0 +1,215 @@
+<div x-data="{ open: true }" x-show="open" @keydown.window.escape="open = false; setTimeout(() => $el.remove(), 300)" class="relative z-50" aria-labelledby="modal-title" role="dialog" aria-modal="true" style="display: none;">
+  <!-- Backdrop -->
+  <div x-show="open" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-neutral-900/60 backdrop-blur-sm transition-opacity"></div>
+
+  <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+    <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+      <div x-show="open" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="relative transform overflow-hidden rounded-2xl bg-neutral-50 text-left shadow-2xl transition-all sm:my-8 w-full max-w-5xl border border-neutral-100">
+        
+        <!-- Header -->
+        <div class="bg-white px-6 py-4 border-b border-neutral-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-brand-50 border border-brand-100 flex items-center justify-center font-bold text-lg text-brand-600 shadow-sm">
+              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            </div>
+            <div>
+              <h3 class="text-xl font-bold text-neutral-900" id="modal-title">Revenue Analytics</h3>
+              <p class="text-xs text-neutral-500">{{ tenant.name }} ({{ tenant.slug }})</p>
+            </div>
+          </div>
+          
+          <div class="flex items-center gap-3">
+            <select class="block w-48 rounded-xl border border-neutral-300 bg-white py-2 pl-3 pr-10 text-sm text-neutral-900 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none appearance-none shadow-sm font-medium"
+                    hx-get="{% url 'super_admin:tenant_revenue' tenant.id %}"
+                    hx-target="closest [role='dialog']"
+                    hx-swap="outerHTML"
+                    name="filter">
+              <option value="today" {% if filter == 'today' %}selected{% endif %}>Today</option>
+              <option value="last_7_days" {% if filter == 'last_7_days' %}selected{% endif %}>Last 7 Days</option>
+              <option value="last_30_days" {% if filter == 'last_30_days' %}selected{% endif %}>Last 30 Days</option>
+              <option value="this_month" {% if filter == 'this_month' %}selected{% endif %}>This Month</option>
+              <option value="this_year" {% if filter == 'this_year' %}selected{% endif %}>This Year</option>
+            </select>
+            <button type="button" @click="open = false; setTimeout(() => $el.remove(), 300)" class="text-neutral-400 hover:text-neutral-500 bg-white rounded-full p-2 border border-neutral-200 shadow-sm transition-colors focus:outline-none shrink-0">
+              <span class="sr-only">Close</span>
+              <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" /></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Body -->
+        <div class="p-6">
+          
+          <!-- KPI Cards -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white p-5 rounded-2xl border border-neutral-200 shadow-sm relative overflow-hidden group">
+              <div class="absolute -right-4 -top-4 w-16 h-16 bg-brand-50 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
+              <p class="text-xs font-bold text-neutral-500 uppercase tracking-widest relative z-10">Total Revenue</p>
+              <p class="text-3xl font-black text-neutral-900 mt-2 relative z-10 tracking-tight">₹{{ total_revenue|floatformat:"2" }}</p>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-neutral-200 shadow-sm relative overflow-hidden group">
+              <div class="absolute -right-4 -top-4 w-16 h-16 bg-emerald-50 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
+              <p class="text-xs font-bold text-neutral-500 uppercase tracking-widest relative z-10">Net Revenue</p>
+              <p class="text-3xl font-black text-neutral-900 mt-2 relative z-10 tracking-tight">₹{{ net_revenue|floatformat:"2" }}</p>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-neutral-200 shadow-sm relative overflow-hidden group">
+              <div class="absolute -right-4 -top-4 w-16 h-16 bg-indigo-50 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
+              <p class="text-xs font-bold text-neutral-500 uppercase tracking-widest relative z-10">Avg Order Value</p>
+              <p class="text-3xl font-black text-neutral-900 mt-2 relative z-10 tracking-tight">₹{{ aov|floatformat:"2" }}</p>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-neutral-200 shadow-sm relative overflow-hidden group">
+              <div class="absolute -right-4 -top-4 w-16 h-16 bg-orange-50 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
+              <p class="text-xs font-bold text-neutral-500 uppercase tracking-widest relative z-10">Avg Daily Revenue</p>
+              <p class="text-3xl font-black text-neutral-900 mt-2 relative z-10 tracking-tight">₹{{ avg_daily|floatformat:"2" }}</p>
+            </div>
+          </div>
+
+          <!-- Secondary Metrics Row -->
+          <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+            <div class="bg-white p-4 rounded-xl border border-neutral-200 shadow-sm text-center">
+              <span class="block text-[10px] font-bold text-neutral-400 uppercase tracking-wider">Total Orders</span>
+              <span class="block text-lg font-black text-neutral-900">{{ total_orders_count }}</span>
+            </div>
+            <div class="bg-white p-4 rounded-xl border border-neutral-200 shadow-sm text-center">
+              <span class="block text-[10px] font-bold text-neutral-400 uppercase tracking-wider">Completed</span>
+              <span class="block text-lg font-black text-emerald-600">{{ completed_count }}</span>
+            </div>
+            <div class="bg-white p-4 rounded-xl border border-neutral-200 shadow-sm text-center">
+              <span class="block text-[10px] font-bold text-neutral-400 uppercase tracking-wider">Cancelled</span>
+              <span class="block text-lg font-black text-rose-600">{{ cancelled_count }}</span>
+            </div>
+            <div class="bg-white p-4 rounded-xl border border-neutral-200 shadow-sm text-center">
+              <span class="block text-[10px] font-bold text-neutral-400 uppercase tracking-wider">Tax Collected</span>
+              <span class="block text-lg font-black text-neutral-900">₹{{ tax_collected|floatformat:"0" }}</span>
+            </div>
+            <div class="bg-white p-4 rounded-xl border border-neutral-200 shadow-sm text-center">
+              <span class="block text-[10px] font-bold text-neutral-400 uppercase tracking-wider">Refunds</span>
+              <span class="block text-lg font-black text-neutral-900">₹{{ total_refunds|floatformat:"0" }}</span>
+            </div>
+          </div>
+
+          <!-- Charts Area -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="bg-white p-5 rounded-2xl border border-neutral-200 shadow-sm lg:col-span-2">
+              <h4 class="text-sm font-bold text-neutral-900 mb-4 tracking-tight">Revenue Trend</h4>
+              <div class="relative h-64 w-full">
+                <canvas id="revChart-{{ tenant.id }}"></canvas>
+              </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-neutral-200 shadow-sm lg:col-span-1">
+              <h4 class="text-sm font-bold text-neutral-900 mb-4 tracking-tight">Payment Methods</h4>
+              <div class="relative h-56 w-full flex items-center justify-center">
+                <canvas id="payChart-{{ tenant.id }}"></canvas>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      // Ensure Chart.js is loaded (should be loaded from layout, but safe check)
+      if (typeof Chart !== 'undefined') {
+        const revCtx = document.getElementById('revChart-{{ tenant.id }}');
+        if (revCtx) {
+          new Chart(revCtx, {
+            type: 'line',
+            data: {
+              labels: {{ daily_rev_labels|safe }},
+              datasets: [{
+                label: 'Revenue',
+                data: {{ daily_rev_values|safe }},
+                borderColor: '#4F6EF7',
+                backgroundColor: 'rgba(79, 110, 247, 0.1)',
+                borderWidth: 2,
+                pointBackgroundColor: '#fff',
+                pointBorderColor: '#4F6EF7',
+                pointBorderWidth: 2,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                fill: true,
+                tension: 0.4
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { display: false },
+                tooltip: {
+                  backgroundColor: '#171717',
+                  padding: 12,
+                  titleFont: { size: 13, family: 'Inter' },
+                  bodyFont: { size: 14, weight: 'bold', family: 'Inter' },
+                  callbacks: {
+                    label: function(context) {
+                      return '₹' + context.parsed.y;
+                    }
+                  }
+                }
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  grid: { color: '#f5f5f5', drawBorder: false },
+                  border: { display: false },
+                  ticks: { font: { family: 'Inter' }, color: '#a3a3a3' }
+                },
+                x: {
+                  grid: { display: false, drawBorder: false },
+                  border: { display: false },
+                  ticks: { font: { family: 'Inter' }, color: '#a3a3a3' }
+                }
+              }
+            }
+          });
+        }
+
+        const payCtx = document.getElementById('payChart-{{ tenant.id }}');
+        if (payCtx) {
+          new Chart(payCtx, {
+            type: 'doughnut',
+            data: {
+              labels: {{ pay_labels|safe }},
+              datasets: [{
+                data: {{ pay_values|safe }},
+                backgroundColor: ['#4F6EF7', '#10B981', '#F59E0B', '#6366F1', '#EC4899', '#8B5CF6'],
+                borderWidth: 0,
+                hoverOffset: 4
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              cutout: '75%',
+              plugins: {
+                legend: {
+                  position: 'bottom',
+                  labels: {
+                    usePointStyle: true,
+                    padding: 20,
+                    font: { family: 'Inter', size: 11 },
+                    color: '#525252'
+                  }
+                },
+                tooltip: {
+                  backgroundColor: '#171717',
+                  padding: 12,
+                  bodyFont: { size: 13, family: 'Inter' },
+                }
+              }
+            }
+          });
+        }
+      }
+    })();
+  </script>
+</div>

@@ -59,6 +59,17 @@ class RazorpayGateway(PaymentGateway):
         ).hexdigest()
         return hmac.compare_digest(expected, signature or "")
 
+    def verify_payment_signature(self, order_id: str, payment_id: str, signature: str) -> bool:
+        try:
+            self._client.utility.verify_payment_signature({
+                'razorpay_order_id': order_id,
+                'razorpay_payment_id': payment_id,
+                'razorpay_signature': signature
+            })
+            return True
+        except Exception:
+            return False
+
     def parse_webhook_event(self, body: bytes) -> GatewayEvent:
         data: dict[str, Any] = json.loads(body.decode() or "{}")
         entity = (

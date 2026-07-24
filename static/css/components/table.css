@@ -4,7 +4,9 @@
   background-color: var(--forge-color-surface-raised);
   border: 1px solid var(--forge-color-border-subtle);
   border-radius: var(--forge-radius-card);
-  overflow: hidden;
+  overflow-y: hidden;
+  overflow-x: auto; /* ponytail: ceiling is horizontal scroll on tables. full card-stacking requires rewriting every table template. */
+  -webkit-overflow-scrolling: touch;
 }
 
 .table-toolbar {

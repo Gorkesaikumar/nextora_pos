@@ -5,6 +5,9 @@ from django.template.response import TemplateResponse
 from django.views.generic import RedirectView
 
 from contexts.identity.forms import CustomAuthenticationForm
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import TemplateView
+from contexts.billing.services.license_service import LicenseService
 
 
 class IdentityLoginView(LoginView):
@@ -40,3 +43,19 @@ class IdentityLogoutView(LogoutView):
         from django.contrib import messages
         messages.success(request, "You have been logged out successfully.")
         return response
+
+class ProfileView(LoginRequiredMixin, TemplateView):
+    template_name = "identity/profile.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        from shared.tenancy.context import get_current_tenant
+        from contexts.tenants.models import Tenant
+        tenant_id = get_current_tenant() or getattr(self.request, "tenant_id", None)
+        if tenant_id:
+            try:
+                tenant = Tenant.objects.get(id=tenant_id)
+                context["license_summary"] = LicenseService.get_license_summary(tenant)
+            except Tenant.DoesNotExist:
+                pass
+        return context

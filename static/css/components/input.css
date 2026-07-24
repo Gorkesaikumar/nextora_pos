@@ -65,6 +65,15 @@
 .input--sm, .select--sm { height: 28px; font-size: 0.6875rem; }
 .input--lg, .select--lg { height: 44px; font-size: 0.9375rem; }
 
+/* Touch target optimizations for mobile & tablet */
+@media (max-width: 1024px) {
+  .input:not(.input--sm):not(.input--lg),
+  .input-text:not(.input--sm):not(.input--lg),
+  .select:not(.select--sm):not(.select--lg) {
+    height: 44px;
+  }
+}
+
 /* States. */
 .input[aria-invalid="true"],
 .textarea[aria-invalid="true"],

@@ -40,6 +40,7 @@ class SubscriptionStatus(models.TextChoices):
     PAST_DUE = "past_due"     # unpaid; may still have access during grace
     CANCELED = "canceled"     # will not renew; access until period end
     EXPIRED = "expired"       # access revoked
+    INCOMPLETE = "incomplete" # pending first payment (checkout session active)
 
     @classmethod
     def occupied(cls) -> list[str]:

@@ -40,5 +40,9 @@
     {% block layout_status_rail %}
       {% if show_status_rail %}{% include "_chrome/status_rail.html" %}{% endif %}
     {% endblock %}
+
+    {% if license_summary and license_summary.is_expired and request.path != '/billing/restricted/' and request.path != '/billing/upgrade/' %}
+      {% include "components/subscription_modal.html" %}
+    {% endif %}
   </div>
 {% endblock %}

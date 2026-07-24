@@ -76,8 +76,8 @@
           <td class="px-6 py-4 text-sm text-neutral-600">{{ tenant.get_category_display|default:"Restaurant" }}</td>
           <td class="px-6 py-4 text-sm text-neutral-500">{{ tenant.created_at|date:"Y-m-d" }}</td>
           <td class="px-6 py-4 text-right text-sm font-medium">
-            <a href="#" class="text-brand-600 hover:text-brand-500 mr-3 transition-colors">View</a>
-            <a href="#" class="text-blue-600 hover:text-blue-500 transition-colors">Impersonate</a>
+            <button hx-get="{% url 'super_admin:tenant_details' tenant.id %}" hx-target="body" hx-swap="beforeend" class="text-brand-600 hover:text-brand-500 mr-3 transition-colors focus:outline-none">View</button>
+            <button hx-get="{% url 'super_admin:tenant_revenue' tenant.id %}" hx-target="body" hx-swap="beforeend" class="text-green-600 hover:text-green-500 transition-colors focus:outline-none">Revenue</button>
           </td>
         </tr>
         {% empty %}

@@ -45,6 +45,7 @@ urlpatterns = [
     path("dashboard/", include("contexts.reporting.urls")),
     path("billing/", include("contexts.reporting.urls_billing")),
     path("", include("contexts.marketing.urls")),
+    path("offline/", TemplateView.as_view(template_name="offline.html"), name="offline"),
     path("styleguide/", TemplateView.as_view(template_name="styleguide.html"), name="styleguide"),
     path("platform/", include("contexts.super_admin.urls")),
     

@@ -25,6 +25,8 @@ from contexts.inventory.models.warehouse import Warehouse
 from contexts.inventory.models.adjustment import DamagedStock
 from contexts.inventory.models.batch import Batch
 from contexts.catalog.models import Product, Category
+from contexts.restaurant.models import Restaurant
+from contexts.restaurant.domain.enums import RestaurantStatus
 from contexts.audit.services import record_audit
 from django.core.paginator import Paginator
 
@@ -153,7 +155,12 @@ class DashboardHomeView(TenantPermissionRequiredMixin, LoginRequiredMixin, Templ
         return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
+        from contexts.billing.services.license_service import LicenseService
+        from shared.tenancy.context import get_current_tenant
+        
         context = super().get_context_data(**kwargs)
+        tenant = get_current_tenant()
+        context['license_summary'] = LicenseService.get_license_summary(tenant)
         
         date_str = self.request.GET.get('date')
         if date_str:
@@ -258,9 +265,12 @@ class BillingDashboardView(TenantPermissionRequiredMixin, LoginRequiredMixin, Te
     permission_required = "reports.sales.view"
 
     def get_context_data(self, **kwargs):
+        from contexts.billing.services.license_service import LicenseService
         context = super().get_context_data(**kwargs)
         
         branch_id = self.request.GET.get('branch_id')
+        tenant = get_current_tenant()
+        context['license_summary'] = LicenseService.get_license_summary(tenant)
         
         today = timezone.now().date()
         today_start = timezone.make_aware(datetime.combine(today, time.min))
@@ -897,7 +907,7 @@ class TaxReportView(TenantPermissionRequiredMixin, LoginRequiredMixin, TemplateV
             'start_date': start_date.strftime('%Y-%m-%d'),
             'end_date': end_date.strftime('%Y-%m-%d'),
             'preset': preset,
-            'branches': Branch.objects.filter(is_active=True),
+            'branches': Restaurant.objects.filter(status=RestaurantStatus.ACTIVE),
             'selected_branch': branch_id or '',
             
             'taxable_sales': taxable_sales,
@@ -932,8 +942,8 @@ class InvoiceDetailView(TenantPermissionRequiredMixin, LoginRequiredMixin, Templ
         # Get related branch
         branch = None
         try:
-            branch = Branch.objects.get(id=getattr(order, 'location_id', None))
-        except Branch.DoesNotExist:
+            branch = Restaurant.objects.get(id=getattr(order, 'location_id', None))
+        except Restaurant.DoesNotExist:
             pass
 
         context.update({
@@ -1046,7 +1056,7 @@ class TaxSummaryView(TenantPermissionRequiredMixin, LoginRequiredMixin, Template
             'start_date': start_date.strftime('%Y-%m-%d'),
             'end_date': end_date.strftime('%Y-%m-%d'),
             'preset': preset,
-            'branches': Branch.objects.filter(is_active=True),
+            'branches': Restaurant.objects.filter(status=RestaurantStatus.ACTIVE),
             'selected_branch': branch_id or '',
             'cashiers': cashiers,
             'selected_cashier': cashier_id or '',
@@ -1079,9 +1089,9 @@ class EmailShareModalView(TenantPermissionRequiredMixin, LoginRequiredMixin, Tem
         
         branch_name = "our store"
         try:
-            branch = Branch.objects.get(id=getattr(order, 'location_id', None))
+            branch = Restaurant.objects.get(id=getattr(order, 'location_id', None))
             branch_name = branch.name
-        except Branch.DoesNotExist:
+        except Restaurant.DoesNotExist:
             pass
 
         customer_name = order.customer_name or "Valued Customer"
@@ -1197,7 +1207,7 @@ class InvoiceListView(TenantPermissionRequiredMixin, LoginRequiredMixin, Templat
         if sort in ['issued_at', '-issued_at', 'total', '-total']:
             qs = qs.order_by(sort)
 
-        branches = Branch.objects.filter(is_active=True)
+        branches = Restaurant.objects.filter(status=RestaurantStatus.ACTIVE)
         user_map = {str(u.id): u.full_name or u.email for u in User.objects.all()}
         branch_map = {str(b.id): b.name for b in branches}
         
@@ -1242,7 +1252,7 @@ class PaymentHistoryView(TenantPermissionRequiredMixin, LoginRequiredMixin, Temp
 
     def export_data(self, export_format):
         qs = self.get_queryset()
-        branches = Branch.objects.filter(is_active=True)
+        branches = Restaurant.objects.filter(status=RestaurantStatus.ACTIVE)
         user_map = {str(u.id): u.full_name or u.email for u in User.objects.all()}
         branch_map = {str(b.id): b.name for b in branches}
         
@@ -1309,7 +1319,7 @@ class PaymentHistoryView(TenantPermissionRequiredMixin, LoginRequiredMixin, Temp
         page_number = self.request.GET.get('page')
         page_obj = paginator.get_page(page_number)
         
-        branches = Branch.objects.filter(is_active=True)
+        branches = Restaurant.objects.filter(status=RestaurantStatus.ACTIVE)
         user_map = {str(u.id): u.full_name or u.email for u in User.objects.all()}
         branch_map = {str(b.id): b.name for b in branches}
 
@@ -1349,9 +1359,9 @@ class WhatsAppShareModalView(TenantPermissionRequiredMixin, LoginRequiredMixin, 
         
         branch_name = "our store"
         try:
-            branch = Branch.objects.get(id=getattr(order, 'location_id', None))
+            branch = Restaurant.objects.get(id=getattr(order, 'location_id', None))
             branch_name = branch.name
-        except Branch.DoesNotExist:
+        except Restaurant.DoesNotExist:
             pass
 
         customer_name = order.customer_name or "Valued Customer"

@@ -48,3 +48,7 @@ class FakeGateway(PaymentGateway):
             status=data.get("status"),
             raw=data,
         )
+
+    def verify_payment_signature(self, order_id: str, payment_id: str, signature: str) -> bool:
+        # In the fake gateway, just accept anything or simulate a valid signature for tests
+        return True

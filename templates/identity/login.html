@@ -150,8 +150,12 @@
             <button type="button" @click="showPassword = !showPassword"
                     class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-neutral-400 hover:text-neutral-700 transition-colors"
                     :aria-label="showPassword ? 'Hide password' : 'Show password'">
-              {% include "icons/eye.html" with class="w-4 h-4" %}
-              {% include "icons/eye-off.html" with class="w-4 h-4" %}
+              <span x-show="!showPassword">
+                {% include "icons/eye.html" with class="w-4 h-4" %}
+              </span>
+              <span x-show="showPassword" x-cloak style="display: none;">
+                {% include "icons/eye-off.html" with class="w-4 h-4" %}
+              </span>
             </button>
           </div>
           {% if form.password.errors %}

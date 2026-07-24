@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}You are offline | Nextora POS{% endblock %}
+
+{% block body %}
+<div class="min-h-screen bg-neutral-100 dark:bg-neutral-dark-0 flex flex-col items-center justify-center p-6">
+  <div class="max-w-md w-full bg-white dark:bg-neutral-dark-100 rounded-card shadow-sm border border-neutral-200 dark:border-neutral-dark-200 p-8 text-center">
+    <div class="mx-auto w-16 h-16 bg-semantic-warning-subtle dark:bg-semantic-warning-subtle-dark text-semantic-warning dark:text-semantic-warning-dark rounded-full flex items-center justify-center mb-6">
+      <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-2.83m-1.414 5.658a9 9 0 01-2.167-9.238m7.824 2.163a1 1 0 111.414 1.414M3 3l18 18"></path>
+      </svg>
+    </div>
+    <h1 class="text-heading-1 font-bold text-neutral-900 dark:text-neutral-dark-900 mb-2">You are currently offline</h1>
+    <p class="text-body text-neutral-600 dark:text-neutral-dark-600 mb-8">
+      This page cannot be loaded without an internet connection. However, you can still use the POS terminal to process orders offline.
+    </p>
+    
+    <div class="flex flex-col gap-3">
+      <a href="/pos/" class="w-full flex items-center justify-center bg-brand-default hover:bg-brand-hover text-brand-on-brand font-semibold py-2.5 px-4 rounded-pill transition-colors">
+        Open POS Terminal
+      </a>
+      <button onclick="window.location.reload()" class="w-full flex items-center justify-center bg-white dark:bg-neutral-dark-100 hover:bg-neutral-50 dark:hover:bg-neutral-dark-150 text-neutral-700 dark:text-neutral-dark-700 border border-neutral-200 dark:border-neutral-dark-200 font-semibold py-2.5 px-4 rounded-pill transition-colors">
+        Retry Connection
+      </button>
+    </div>
+  </div>
+</div>
+{% endblock %}

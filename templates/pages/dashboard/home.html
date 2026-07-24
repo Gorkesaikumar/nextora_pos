@@ -22,6 +22,96 @@
      class="px-8 pb-12 space-y-6 relative" 
      x-data="productTour()" x-init="initTour()">
 
+  <!-- Subscription Status Banner -->
+  {% if license_summary.banner_type != 'hidden' %}
+  <section class="rounded-xl border p-5 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 transition-all duration-300
+    {% if license_summary.banner_type == 'danger' %}bg-rose-50 border-rose-200
+    {% elif license_summary.banner_type == 'warning' %}bg-amber-50 border-amber-200
+    {% elif license_summary.banner_type == 'expired' %}bg-rose-50 border-rose-200 opacity-90
+    {% else %}bg-white border-neutral-200{% endif %}">
+    
+    <div class="flex flex-col gap-1">
+      <div class="flex items-center gap-2 mb-2">
+        {% if license_summary.banner_type == 'danger' or license_summary.banner_type == 'expired' %}
+          {% include "icons/triangle-alert.html" with class="w-5 h-5 text-rose-600" %}
+        {% elif license_summary.banner_type == 'warning' %}
+          {% include "icons/triangle-alert.html" with class="w-5 h-5 text-amber-600" %}
+        {% else %}
+          {% include "icons/info.html" with class="w-5 h-5 text-brand-600" %}
+        {% endif %}
+        <h3 class="font-bold text-sm {% if license_summary.banner_type == 'danger' or license_summary.banner_type == 'expired' %}text-rose-900{% elif license_summary.banner_type == 'warning' %}text-amber-900{% else %}text-neutral-900{% endif %}">
+          {{ license_summary.banner_text }}
+        </h3>
+      </div>
+      
+      <div class="flex flex-wrap items-center gap-x-6 gap-y-3 mt-1">
+        <!-- Current Plan -->
+        <div>
+          <p class="text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-0.5">{% if license_summary.status == 'trialing' %}Current Plan (Trial){% else %}Current Plan{% endif %}</p>
+          <div class="flex items-center gap-1.5">
+            {% include "icons/crown.html" with class="w-3.5 h-3.5 text-brand-600" %}
+            <span class="text-sm font-semibold text-neutral-800">{{ license_summary.plan_name|default:"No Plan" }}</span>
+          </div>
+        </div>
+        
+        <!-- Subscription Status -->
+        <div>
+          <p class="text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-0.5">{% if license_summary.status == 'trialing' %}Trial Status{% else %}Status{% endif %}</p>
+          <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold
+            {% if license_summary.status == 'active' %}bg-emerald-100 text-emerald-800
+            {% elif license_summary.status == 'trialing' %}bg-brand-100 text-brand-800
+            {% elif license_summary.status == 'expired' %}bg-rose-100 text-rose-800
+            {% else %}bg-neutral-200 text-neutral-800{% endif %}">
+            {{ license_summary.status|title }}
+          </span>
+        </div>
+
+        {% if license_summary.current_period_start %}
+        <!-- Start Date -->
+        <div>
+          <p class="text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-0.5">{% if license_summary.status == 'trialing' %}Trial Start Date{% else %}Start Date{% endif %}</p>
+          <div class="text-sm font-medium text-neutral-700">
+            {{ license_summary.current_period_start|date:"d M Y" }}
+          </div>
+        </div>
+        {% endif %}
+
+        {% if license_summary.current_period_end %}
+        <!-- Expiry Date -->
+        <div>
+          <p class="text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-0.5">{% if license_summary.status == 'trialing' %}Trial Expiry Date{% else %}Expiry Date{% endif %}</p>
+          <div class="text-sm font-medium {% if license_summary.banner_type == 'danger' or license_summary.banner_type == 'expired' %}text-rose-700 font-bold{% else %}text-neutral-700{% endif %}">
+            {{ license_summary.current_period_end|date:"d M Y" }}
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Remaining Days -->
+        <div>
+          <p class="text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-0.5">{% if license_summary.status == 'trialing' %}Remaining Trial Days{% else %}Remaining Days{% endif %}</p>
+          <div class="flex items-center gap-1.5 text-sm font-medium {% if license_summary.banner_type == 'danger' or license_summary.banner_type == 'expired' %}text-rose-700 font-bold{% else %}text-neutral-700{% endif %}">
+            {% include "icons/clock.html" with class="w-3.5 h-3.5" %}
+            {{ license_summary.remaining_days }} Day(s)
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="shrink-0 mt-4 md:mt-0">
+      <a href="{% url 'billing:upgrade' %}" class="btn-primary flex items-center justify-center gap-2 text-sm px-6 py-2.5 whitespace-nowrap rounded-lg font-medium transition-all duration-300 shadow-md relative overflow-hidden group
+        {% if license_summary.banner_type == 'danger' or license_summary.banner_type == 'expired' %}bg-rose-600 hover:bg-rose-700 text-white hover:shadow-[0_0_20px_rgba(225,29,72,0.6)]
+        {% else %}bg-brand-600 hover:bg-brand-700 text-white hover:shadow-[0_0_20px_rgba(15,118,110,0.6)]{% endif %} hover:-translate-y-0.5">
+        <div class="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-in-out"></div>
+        <span class="relative z-10 flex items-center gap-2">
+          {% include "icons/sparkles.html" with class="w-4 h-4 animate-pulse" %}
+          {% if license_summary.banner_type == 'expired' %}Renew Now{% else %}Upgrade / Renew{% endif %}
+        </span>
+      </a>
+    </div>
+  </section>
+  {% endif %}
+
   <!-- KPI Cards -->
   <section class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4" aria-label="Key metrics">
     <!-- Revenue Today -->
@@ -750,6 +840,7 @@
     // Initial snapshot
     snapshotCounters();
   })();
+</script>
 <script>
   document.addEventListener('tenant:order_changed', (e) => {
     const payload = e.detail?.payload;

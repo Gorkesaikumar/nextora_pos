@@ -1,7 +1,7 @@
 {% comment %} Top Rail — 44px persistent header.
    Slots: breadcrumb/context, quick search, status pills, notifications, theme,
    user menu. Layouts that don't want global search omit it (e.g. POS). {% endcomment %}
-<header class="zone-top-rail top-rail bg-white border-b border-[var(--forge-color-border-subtle)] px-6 flex items-center justify-between" role="banner">
+<header class="zone-top-rail top-rail bg-white border-b border-[var(--forge-color-border-subtle)] px-6 flex items-center justify-between relative z-40" role="banner">
   <div class="top-rail__breadcrumb-slot flex items-center gap-2 text-sm font-medium">
     {% block top_rail_breadcrumb %}
       {% if tenant %}<span class="text-neutral-800">{{ tenant.name }}</span>{% endif %}
@@ -103,7 +103,7 @@
             <div class="text-xs text-[var(--forge-color-text-tertiary)] truncate">{{ request.user.email }}</div>
           {% endif %}
         </div>
-        <a href="#" class="flex items-center gap-2 px-3 py-2 text-sm text-[var(--forge-color-text-secondary)] hover:bg-[var(--forge-color-surface-base)] hover:text-[var(--forge-color-text-primary)] transition-colors" role="menuitem">
+        <a href="{% url 'identity:profile' %}" class="flex items-center gap-2 px-3 py-2 text-sm text-[var(--forge-color-text-secondary)] hover:bg-[var(--forge-color-surface-base)] hover:text-[var(--forge-color-text-primary)] transition-colors" role="menuitem">
           {% include "icons/user.html" with class="w-4 h-4 text-[var(--forge-color-icon-secondary)]" %}
           Profile
         </a>
@@ -112,7 +112,7 @@
           Settings
         </a>
         <div class="my-1 border-t border-[var(--forge-color-border-subtle)]"></div>
-        <form method="post" action="{% url 'identity:logout' %}" class="block">
+        <form method="post" action="{% url 'identity:logout' %}" class="block" onsubmit="if(navigator.serviceWorker && navigator.serviceWorker.controller) { navigator.serviceWorker.controller.postMessage({type: 'CLEAR_CACHES'}); }">
           {% csrf_token %}
           <button type="submit"
                   class="w-full flex items-center gap-2 px-3 py-2 text-sm text-[var(--forge-color-danger-text)] hover:bg-[var(--forge-color-danger-subtle)] transition-colors text-left"

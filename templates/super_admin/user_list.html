@@ -1,19 +1,14 @@
 {% extends "super_admin/layouts/platform.html" %}
+{% load tz %}
 
-{% block platform_title %}Users{% endblock %}
-{% block header_title %}Users{% endblock %}
-{% block header_subtitle %}Manage all platform and tenant users{% endblock %}
-
-{% block header_actions %}
-<a href="#" class="inline-flex items-center gap-2 px-4 py-2 bg-brand-600 text-white font-semibold rounded-lg shadow-sm hover:bg-brand-500 transition-all text-sm">
-  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" /></svg>
-  Add User
-</a>
-{% endblock %}
+{% block platform_title %}Users & Staff{% endblock %}
+{% block header_title %}Users & Staff{% endblock %}
+{% block header_subtitle %}Monitor all platform and tenant users{% endblock %}
 
 {% block content %}
 <div class="bg-white rounded-xl border border-neutral-200 overflow-hidden shadow-sm">
-  
+
+  <!-- Filters -->
   <div class="p-4 border-b border-neutral-200 flex flex-col sm:flex-row gap-4 bg-white">
     <form method="GET" action="{% url 'super_admin:user_list' %}" class="flex-1 flex gap-4">
       <div class="relative flex-1 max-w-md group">
@@ -29,7 +24,7 @@
           <option value="inactive" {% if current_status == 'inactive' %}selected{% endif %}>Inactive</option>
         </select>
         <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-            <svg class="h-4 w-4 text-neutral-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>
+          <svg class="h-4 w-4 text-neutral-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>
         </div>
       </div>
       <button type="submit" class="hidden">Filter</button>
@@ -41,42 +36,107 @@
       <thead>
         <tr class="bg-neutral-50/50 border-b border-neutral-200">
           <th class="px-6 py-4 text-[10px] font-bold text-neutral-500 uppercase tracking-widest">User</th>
+          <th class="px-6 py-4 text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Role</th>
           <th class="px-6 py-4 text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Status</th>
-          <th class="px-6 py-4 text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Joined</th>
-          <th class="px-6 py-4 text-[10px] font-bold text-neutral-500 uppercase tracking-widest text-right">Actions</th>
+          <th class="px-6 py-4 text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Onboarded</th>
+          <th class="px-6 py-4 text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Subscription Expiry</th>
         </tr>
       </thead>
       <tbody class="divide-y divide-neutral-100">
         {% for user in users %}
         <tr class="hover:bg-neutral-50 transition-colors group bg-white">
+
+          <!-- User Info -->
           <td class="px-6 py-4">
-            <div class="flex items-center">
-              <div class="h-10 w-10 flex-shrink-0">
-                <div class="h-10 w-10 rounded-full bg-gradient-to-tr from-brand-500 to-brand-400 text-white font-bold flex items-center justify-center text-sm shadow-sm border border-brand-200">
-                  {{ user.short_name|make_list|first|upper }}
-                </div>
+            <div class="flex items-center gap-3">
+              <div class="h-9 w-9 rounded-full bg-gradient-to-tr from-brand-500 to-brand-400 text-white font-bold flex items-center justify-center text-sm shadow-sm border border-brand-200 flex-shrink-0">
+                {{ user.short_name|make_list|first|upper }}
               </div>
-              <div class="ml-4">
-                <div class="text-sm font-semibold text-neutral-900 group-hover:text-brand-600 transition-colors">{{ user.full_name }} {% if user.is_superuser %}<span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-brand-50 text-brand-700 border border-brand-200 shadow-sm">Super Admin</span>{% endif %}</div>
-                <div class="text-[11px] text-neutral-500">{{ user.email }}</div>
+              <div>
+                <div class="text-sm font-semibold text-neutral-900 group-hover:text-brand-600 transition-colors flex items-center gap-2 flex-wrap">
+                  {{ user.full_name|default:user.email }}
+                  {% if user.is_superuser %}<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-brand-50 text-brand-700 border border-brand-200">Super Admin</span>{% endif %}
+                </div>
+                <div class="text-[11px] text-neutral-500 mt-0.5">{{ user.email }}</div>
               </div>
             </div>
           </td>
+
+          <!-- Role Info -->
           <td class="px-6 py-4">
-            {% if user.is_active %}
-              <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-green-50 text-green-700 border border-green-100">Active</span>
+            {% if user.is_superuser %}
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-brand-50 text-brand-700 border border-brand-200">Platform Admin</span>
+            {% elif user.primary_membership %}
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-neutral-100 text-neutral-700 border border-neutral-200">{{ user.primary_membership.role.name }}</span>
+              {% if user.primary_membership.tenant %}
+              <div class="text-[10px] text-neutral-400 mt-0.5 truncate max-w-[120px]">{{ user.primary_membership.tenant.name }}</div>
+              {% endif %}
             {% else %}
-              <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-neutral-100 text-neutral-600 border border-neutral-200">Inactive</span>
+              <span class="text-xs text-neutral-400">—</span>
             {% endif %}
           </td>
-          <td class="px-6 py-4 text-sm text-neutral-500">{{ user.date_joined|date:"Y-m-d" }}</td>
-          <td class="px-6 py-4 text-right text-sm font-medium">
-            <a href="#" class="text-brand-600 hover:text-brand-500 transition-colors">Edit</a>
+
+          <!-- Account Status -->
+          <td class="px-6 py-4">
+            {% if user.is_active %}
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-green-50 text-green-700 border border-green-100">
+                <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>Active
+              </span>
+            {% else %}
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-neutral-100 text-neutral-600 border border-neutral-200">
+                <span class="w-1.5 h-1.5 rounded-full bg-neutral-400"></span>Inactive
+              </span>
+            {% endif %}
+          </td>
+
+          <!-- Onboarding Date -->
+          <td class="px-6 py-4">
+            <span class="text-sm text-neutral-700 font-medium">{{ user.created_at|date:"M j, Y" }}</span>
+            <div class="text-[10px] text-neutral-400 mt-0.5">{{ user.created_at|timesince }} ago</div>
+          </td>
+
+          <!-- Subscription Expiry -->
+          <td class="px-6 py-4">
+            {% if user.is_superuser %}
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-purple-50 text-purple-700 border border-purple-200">Unlimited</span>
+            {% elif user.sub_info %}
+              {% if user.sub_info.status == 'active' %}
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-green-50 text-green-700 border border-green-100">
+                  <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>Active
+                </span>
+                <div class="text-[10px] text-neutral-400 mt-0.5">Until {{ user.sub_info.current_period_end|date:"M j, Y" }}</div>
+              {% elif user.sub_info.status == 'trialing' %}
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-100">
+                  <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>Trial
+                </span>
+                <div class="text-[10px] text-neutral-400 mt-0.5">
+                  Ends {% if user.sub_info.trial_end %}{{ user.sub_info.trial_end|date:"M j, Y" }}{% else %}{{ user.sub_info.current_period_end|date:"M j, Y" }}{% endif %}
+                </div>
+              {% elif user.sub_info.status == 'past_due' %}
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-orange-50 text-orange-700 border border-orange-100">
+                  <span class="w-1.5 h-1.5 rounded-full bg-orange-500"></span>Expiring Soon
+                </span>
+                <div class="text-[10px] text-neutral-400 mt-0.5">
+                  {% if user.sub_info.grace_until %}Grace until {{ user.sub_info.grace_until|date:"M j, Y" }}{% endif %}
+                </div>
+              {% elif user.sub_info.status == 'canceled' or user.sub_info.status == 'expired' %}
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-red-50 text-red-700 border border-red-100">
+                  <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>Expired
+                </span>
+                <div class="text-[10px] text-neutral-400 mt-0.5">{{ user.sub_info.current_period_end|date:"M j, Y" }}</div>
+              {% else %}
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-neutral-100 text-neutral-600 border border-neutral-200">{{ user.sub_info.status|title }}</span>
+              {% endif %}
+            {% else %}
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-neutral-50 text-neutral-500 border border-neutral-200">
+                {% if user.primary_membership %}No plan{% else %}No tenant{% endif %}
+              </span>
+            {% endif %}
           </td>
         </tr>
         {% empty %}
         <tr>
-          <td colspan="4" class="px-6 py-16 text-center bg-white">
+          <td colspan="5" class="px-6 py-16 text-center bg-white">
             <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-neutral-50 mb-4 border border-neutral-100">
               <svg class="w-6 h-6 text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
             </div>
@@ -88,7 +148,7 @@
       </tbody>
     </table>
   </div>
-  
+
   {% if is_paginated %}
   <div class="px-6 py-4 border-t border-neutral-200 bg-white flex items-center justify-between">
     <div class="text-xs text-neutral-500">
@@ -96,10 +156,10 @@
     </div>
     <div class="flex gap-2">
       {% if page_obj.has_previous %}
-      <a href="?q={{ current_q }}&status={{ current_status }}&page={{ page_obj.previous_page_number }}" class="px-3 py-1.5 border border-neutral-200 rounded-lg text-xs bg-white text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 transition-all shadow-sm">Previous</a>
+      <a href="?q={{ current_q }}&status={{ current_status }}&page={{ page_obj.previous_page_number }}" class="px-3 py-1.5 border border-neutral-200 rounded-lg text-xs bg-white text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 transition-all shadow-sm">← Previous</a>
       {% endif %}
       {% if page_obj.has_next %}
-      <a href="?q={{ current_q }}&status={{ current_status }}&page={{ page_obj.next_page_number }}" class="px-3 py-1.5 border border-neutral-200 rounded-lg text-xs bg-white text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 transition-all shadow-sm">Next</a>
+      <a href="?q={{ current_q }}&status={{ current_status }}&page={{ page_obj.next_page_number }}" class="px-3 py-1.5 border border-neutral-200 rounded-lg text-xs bg-white text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 transition-all shadow-sm">Next →</a>
       {% endif %}
     </div>
   </div>

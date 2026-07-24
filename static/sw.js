@@ -3,19 +3,26 @@
  * Supports 72-Hour Offline-First POS Operation & Background Sync
  */
 
-const CACHE_VERSION = 'nextora-pos-v1-20260708';
+const CACHE_VERSION = 'nextora-pos-v2.1-20260724';
 const CORE_STATIC_CACHE = `static-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `runtime-${CACHE_VERSION}`;
+const OFFLINE_FALLBACK_URL = '/offline/';
 
 // Application shell assets required for offline rendering
 const CORE_ASSETS = [
-  '/static/manifest.json',
+  '/',
+  '/pos/',
+  '/offline/',
+  '/static/css/tailwind.css',
   '/static/css/main.css',
+  '/static/css/tokens.css',
+  '/static/manifest.json',
   '/static/js/vendor/dexie.min.js',
   '/static/js/offline/db.js',
   '/static/js/offline/auth.js',
   '/static/js/offline/sync.js',
   '/static/js/offline/pos-offline.js',
+  '/offline/', // Offline fallback page
 ];
 
 self.addEventListener('install', (event) => {
@@ -54,8 +61,8 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Exempt WebSocket & Auth API routes from service worker interception
-  if (url.pathname.startsWith('/ws/') || url.pathname.includes('/auth/logout')) {
+  // Exempt WebSocket, Auth, and specific sensitive API routes from SW interception
+  if (url.pathname.startsWith('/ws/') || url.pathname.includes('/auth/logout') || url.pathname.includes('/api/sensitive/')) {
     return;
   }
 
@@ -100,16 +107,41 @@ self.addEventListener('fetch', (event) => {
       if (cachedResponse) {
         return cachedResponse;
       }
-      // If HTML navigation fails offline, serve the cached POS shell or dashboard
+      // If HTML navigation fails offline, serve the cached POS shell, dashboard, or offline fallback
       if (request.headers.get('accept')?.includes('text/html')) {
-        return caches.match('/pos/') || caches.match('/');
+        return caches.match('/pos/') || caches.match('/') || caches.match(OFFLINE_FALLBACK_URL);
       }
-      return new Response(JSON.stringify({ detail: 'Offline mode active.' }), {
+      return new Response(JSON.stringify({ detail: 'Offline mode active. This resource is not cached.' }), {
         status: 503,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
       });
     })
   );
+});
+
+// Service Worker messaging interface
+self.addEventListener('message', (event) => {
+  if (!event.data) return;
+  
+  if (event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+  
+  if (event.data.type === 'CLEAR_CACHES') {
+    event.waitUntil(
+      caches.keys().then((cacheNames) => {
+        return Promise.all(
+          cacheNames.map((cacheName) => caches.delete(cacheName))
+        );
+      })
+    );
+  }
+
+  if (event.data.type === 'CLEAR_TENANT_CACHES') {
+    event.waitUntil(
+      caches.delete(RUNTIME_CACHE)
+    );
+  }
 });
 
 // Background Sync API integration

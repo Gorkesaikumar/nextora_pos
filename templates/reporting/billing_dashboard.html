@@ -36,6 +36,23 @@
 
 <div class="px-8 pb-8" hx-get="{% if tenant_id %}{% url 'billing:dashboard_tenant' tenant_id %}{% else %}{% url 'billing:dashboard' %}{% endif %}?branch_id={{ selected_branch }}" hx-trigger="every 15s" hx-swap="outerHTML" id="billing-dashboard-container">
   
+  {% if license_summary.status == 'trialing' %}
+  <!-- Trial Upgrade Banner -->
+  <div class="mb-6 p-4 rounded-xl border border-brand-200 bg-brand-50 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm">
+    <div class="flex items-start gap-3">
+      <div class="p-2 bg-brand-100 text-brand-600 rounded-lg">
+        {% include "icons/sparkles.html" with class="w-5 h-5" %}
+      </div>
+      <div>
+        <h4 class="text-sm font-bold text-neutral-900">You are on a Free Trial ({{ license_summary.remaining_days }} days remaining)</h4>
+        <p class="text-xs text-neutral-600 mt-0.5">Upgrade now to ensure uninterrupted access to Nextora POS. Your remaining trial days will be added to your new subscription.</p>
+      </div>
+    </div>
+    <a href="{% url 'billing:upgrade' %}" class="btn-primary whitespace-nowrap text-sm px-5 py-2 shadow-sm shrink-0">
+      Upgrade Plan Now
+    </a>
+  </div>
+  {% endif %}
   <!-- KPI Grid -->
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-8">
     

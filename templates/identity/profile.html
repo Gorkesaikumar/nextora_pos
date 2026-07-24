@@ -1,0 +1,142 @@
+{% extends "layouts/dashboard.html" %}
+
+{% block title %}My Profile · Nextora{% endblock %}
+{% block page_title %}My Profile{% endblock %}
+{% block page_subtitle %}Manage your account details and subscription preferences.{% endblock %}
+
+{% block workspace %}
+<div class="px-8 pb-12 max-w-5xl space-y-6">
+
+  <!-- Personal Information Section -->
+  <section class="bg-white rounded-xl border border-neutral-200 shadow-sm overflow-hidden">
+    <div class="px-6 py-5 border-b border-neutral-100 flex items-center gap-3">
+      <div class="w-10 h-10 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center font-bold text-lg">
+        {{ user.full_name|default:user.email|make_list|first|upper }}
+      </div>
+      <div>
+        <h2 class="text-base font-bold text-neutral-900">Personal Information</h2>
+        <p class="text-sm text-neutral-500">Your basic account details</p>
+      </div>
+    </div>
+    <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div>
+        <label class="block text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-1.5">Full Name</label>
+        <div class="text-sm font-medium text-neutral-900 bg-neutral-50 px-3 py-2 rounded-lg border border-neutral-200">{{ user.full_name|default:"Not Provided" }}</div>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-1.5">Email Address</label>
+        <div class="text-sm font-medium text-neutral-900 bg-neutral-50 px-3 py-2 rounded-lg border border-neutral-200">{{ user.email }}</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Subscription Details Section -->
+  {% if license_summary %}
+  <section class="bg-white rounded-xl border border-neutral-200 shadow-sm overflow-hidden">
+    <div class="px-6 py-5 border-b border-neutral-100 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center">
+          {% include "icons/credit-card.html" with class="w-5 h-5" %}
+        </div>
+        <div>
+          <h2 class="text-base font-bold text-neutral-900">Subscription Details</h2>
+          <p class="text-sm text-neutral-500">Manage your active plan and billing</p>
+        </div>
+      </div>
+      <!-- Dynamic Badge -->
+      <div>
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide
+          {% if license_summary.status == 'active' %}bg-emerald-100 text-emerald-800
+          {% elif license_summary.status == 'trialing' %}bg-brand-100 text-brand-800
+          {% elif license_summary.status == 'expired' %}bg-rose-100 text-rose-800
+          {% else %}bg-neutral-100 text-neutral-800{% endif %}">
+          {% if license_summary.status == 'active' and license_summary.remaining_days <= 7 %}
+            Expiring Soon
+          {% else %}
+            {{ license_summary.status }}
+          {% endif %}
+        </span>
+      </div>
+    </div>
+
+    <div class="p-6">
+      <!-- Grid Details -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Plan Name & Type -->
+        <div>
+          <label class="block text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-1.5">Current Plan</label>
+          <div class="flex items-center gap-2 text-sm font-bold text-neutral-900">
+            {% include "icons/crown.html" with class="w-4 h-4 text-brand-600" %}
+            {{ license_summary.plan_name }}
+          </div>
+          <p class="text-xs text-neutral-500 mt-1 capitalize">{{ license_summary.interval }} Billing</p>
+        </div>
+
+        <!-- Start Date -->
+        <div>
+          <label class="block text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-1.5">Start Date</label>
+          <div class="text-sm font-medium text-neutral-900">
+            {{ license_summary.current_period_start|date:"d M Y"|default:"-" }}
+          </div>
+        </div>
+
+        <!-- Expiry Date -->
+        <div>
+          <label class="block text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-1.5">Next Renewal / Expiry</label>
+          <div class="text-sm font-medium {% if license_summary.is_expired %}text-rose-600 font-bold{% else %}text-neutral-900{% endif %}">
+            {{ license_summary.current_period_end|date:"d M Y"|default:"-" }}
+          </div>
+          {% if license_summary.remaining_days > 0 %}
+          <p class="text-xs text-brand-600 font-medium mt-1">{{ license_summary.remaining_days }} Days Remaining</p>
+          {% endif %}
+        </div>
+
+        <!-- Transaction / Payment Status -->
+        <div>
+          <label class="block text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-1.5">Last Transaction ID</label>
+          <div class="text-sm font-mono text-neutral-700 bg-neutral-50 px-2 py-1 rounded inline-block truncate max-w-[150px]" title="{{ license_summary.provider_subscription_id }}">
+            {{ license_summary.provider_subscription_id|default:"N/A" }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Trial Info (If Applicable) -->
+      {% if license_summary.status == 'trialing' %}
+      <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-center justify-between mb-6">
+        <div class="flex items-center gap-3 text-amber-900">
+          {% include "icons/clock.html" with class="w-5 h-5" %}
+          <div>
+            <p class="text-sm font-bold">You are currently on a Free Trial.</p>
+            <p class="text-xs mt-0.5">Your trial expires on {{ license_summary.trial_end|date:"d M Y" }}. Upgrade now to keep access.</p>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Call to Action -->
+      <div class="flex items-center gap-3 pt-6 border-t border-neutral-100">
+        <a href="{% url 'billing:upgrade' %}" class="btn-primary flex items-center gap-2 text-sm px-6 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-lg font-medium transition-colors shadow-sm">
+          {% include "icons/sparkles.html" with class="w-4 h-4" %}
+          {% if license_summary.is_expired %}Renew Subscription{% else %}Upgrade / Change Plan{% endif %}
+        </a>
+        <a href="#" class="btn-secondary text-sm px-6 py-2.5 text-neutral-700 bg-white border border-neutral-300 hover:bg-neutral-50 rounded-lg font-medium transition-colors">
+          View Billing History
+        </a>
+      </div>
+    </div>
+  </section>
+  {% else %}
+  <section class="bg-white rounded-xl border border-neutral-200 shadow-sm p-12 text-center flex flex-col items-center justify-center">
+    <div class="w-16 h-16 bg-neutral-100 rounded-full flex items-center justify-center mb-4 text-neutral-400">
+      {% include "icons/package-x.html" with class="w-8 h-8" %}
+    </div>
+    <h3 class="text-lg font-bold text-neutral-900 mb-2">No Active Subscription</h3>
+    <p class="text-sm text-neutral-500 mb-6 max-w-md mx-auto">You do not have an active subscription linked to this profile. Upgrade your workspace to unlock premium features.</p>
+    <a href="{% url 'billing:upgrade' %}" class="btn-primary inline-flex items-center gap-2 text-sm px-6 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-lg font-medium transition-colors shadow-sm">
+      View Pricing Plans
+    </a>
+  </section>
+  {% endif %}
+
+</div>
+{% endblock %}

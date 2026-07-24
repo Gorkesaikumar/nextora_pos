@@ -2,12 +2,14 @@
   "name": "Nextora POS — Enterprise SaaS Point of Sale",
   "short_name": "Nextora POS",
   "description": "Production-grade multi-tenant SaaS Point-of-Sale platform with 72-hour offline operation support.",
+  "id": "/",
   "start_url": "/dashboard/",
   "scope": "/",
   "display": "standalone",
-  "orientation": "any",
-  "background_color": "#0F172A",
-  "theme_color": "#0F172A",
+  "orientation": "portrait-primary",
+  "background_color": "#1A1A1C",
+  "theme_color": "#1A1A1C",
+  "categories": ["business", "finance", "productivity"],
   "icons": [
     {
       "src": "/static/img/icon-192.png",
