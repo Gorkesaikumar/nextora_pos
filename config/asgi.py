@@ -19,13 +19,14 @@ from channels.security.websocket import AllowedHostsOriginValidator  # noqa: E40
 
 from contexts.ordering.routing import websocket_urlpatterns  # noqa: E402
 
+from shared.api.websocket import TokenAuthMiddleware  # noqa: E402
+
 application = ProtocolTypeRouter(
     {
         "http": django_asgi_app,
         # AuthMiddlewareStack populates scope["user"]/["session"] from the
-        # session cookie; AllowedHostsOriginValidator blocks cross-origin sockets.
-        "websocket": AllowedHostsOriginValidator(
-            AuthMiddlewareStack(URLRouter(websocket_urlpatterns))
-        ),
+        # session cookie; TokenAuthMiddleware populates from query param ?token=
+        # AllowedHostsOriginValidator blocks cross-origin sockets.
+        "websocket": TokenAuthMiddleware(AuthMiddlewareStack(URLRouter(websocket_urlpatterns))),
     }
 )

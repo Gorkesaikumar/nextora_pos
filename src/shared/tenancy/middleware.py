@@ -26,6 +26,8 @@ logger = logging.getLogger("nextora.tenancy")
 
 _EXEMPT_PREFIXES = (
     "/healthz/", "/admin/", "/static/", "/media/", "/__debug__/", "/webhooks/",
+    "/api/v1/health/", "/api/v1/schema/", "/api/v1/auth/", "/api/v1/tenants/",
+    "/api/v1/features/",
 )
 _INACTIVE_STATUSES = {"suspended", "churned"}
 
@@ -37,6 +39,19 @@ class TenantResolutionMiddleware:
 
     def __call__(self, request: HttpRequest) -> HttpResponse:
         if request.path.startswith(_EXEMPT_PREFIXES):
+            # If X-Tenant-ID header is explicitly provided on an exempt prefix, resolve it
+            resolved = self._resolve_from_header(request)
+            if resolved:
+                set_current_tenant(resolved.tenant_id)
+                set_log_tenant(str(resolved.tenant_id))
+                set_db_tenant(resolved.tenant_id, local=self.local_guc)
+                request.tenant_id = resolved.tenant_id  # type: ignore[attr-defined]
+                try:
+                    return self.get_response(request)
+                finally:
+                    clear_current_tenant()
+                    clear_db_tenant(local=self.local_guc)
+                    set_log_tenant("-")
             return self.get_response(request)
 
         resolved = resolve_from_host(request.get_host())

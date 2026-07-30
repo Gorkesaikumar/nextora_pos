@@ -11,6 +11,11 @@ from django.urls import include, path
 from django.conf.urls.static import static
 
 from shared.api.health import liveness, readiness
+from drf_spectacular.views import (
+    SpectacularAPIView,
+    SpectacularRedocView,
+    SpectacularSwaggerView,
+)
 
 from django.views.generic import TemplateView
 
@@ -24,6 +29,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     # --- API v1 -----------------------------------------------------------
     path("api/v1/auth/", include("contexts.identity.api.urls")),
+    path("api/v1/tenants/", include("contexts.tenants.api.urls")),
     path("api/v1/catalog/", include("contexts.catalog.api.urls")),
     path("api/v1/features/", include("contexts.features.api.urls")),
     path("api/v1/notifications/", include("contexts.notifications.api.urls")),
@@ -34,6 +40,12 @@ urlpatterns = [
     path("api/v1/inventory/", include("contexts.inventory.api.urls")),
     path("api/v1/restaurant/", include("contexts.restaurant.api.urls")),
     path("api/v1/ordering/", include("contexts.ordering.api.urls")),
+    path("api/v1/reporting/", include("contexts.reporting.api.urls")),
+    path("api/v1/dashboard/", include("contexts.reporting.api.urls")),
+    path("api/v1/", include("shared.api.urls")),
+    path("api/v1/schema/", SpectacularAPIView.as_view(), name="schema"),
+    path("api/v1/schema/swagger-ui/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
+    path("api/v1/schema/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
     # path("", include("interface.web.urls")),
     path("auth/", include("contexts.identity.urls")),
     path("auth/", include("contexts.tenants.urls")),

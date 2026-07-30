@@ -24,10 +24,7 @@ from ..models import (
 class WarehouseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Warehouse
-        fields = [
-            "id", "name", "code", "address", "branch_id",
-            "is_active", "is_default",
-        ]
+        fields = ["id", "name", "code", "address", "is_active", "is_default"]
         read_only_fields = ["id"]
 
 
@@ -52,6 +49,12 @@ class InventoryItemSerializer(serializers.ModelSerializer):
     quantity_available = serializers.DecimalField(
         max_digits=14, decimal_places=3, read_only=True
     )
+    opening_quantity = serializers.DecimalField(
+        max_digits=14, decimal_places=3, write_only=True, required=False, min_value=0
+    )
+    unit_cost = serializers.DecimalField(
+        max_digits=14, decimal_places=4, write_only=True, required=False, min_value=0
+    )
 
     class Meta:
         model = InventoryItem
@@ -60,6 +63,7 @@ class InventoryItemSerializer(serializers.ModelSerializer):
             "quantity_on_hand", "quantity_reserved", "quantity_on_order",
             "quantity_available", "minimum_stock", "reorder_point",
             "reorder_quantity", "average_cost", "is_active",
+            "opening_quantity", "unit_cost",
         ]
         read_only_fields = [
             "id", "quantity_on_hand", "quantity_reserved",

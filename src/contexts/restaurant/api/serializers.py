@@ -1,7 +1,6 @@
 from rest_framework import serializers
 
-from ..domain.enums import GSTRegistrationType
-
+from ..domain.enums import GSTRegistrationType, TableShape
 from ..models import (
     BusinessHours,
     CashCounter,
@@ -81,6 +80,22 @@ class MergeTablesInputSerializer(serializers.Serializer):
     )
 
 
+class MoveTableInputSerializer(serializers.Serializer):
+    target_table_id = serializers.UUIDField(required=True)
+
+
+class TablePositionSerializer(serializers.Serializer):
+    table_id = serializers.UUIDField(required=True)
+    position_x = serializers.IntegerField(min_value=0, required=True)
+    position_y = serializers.IntegerField(min_value=0, required=True)
+    rotation = serializers.IntegerField(min_value=0, max_value=359, required=False, default=0)
+    shape = serializers.ChoiceField(choices=TableShape.choices, required=False)
+
+
+class FloorLayoutBatchUpdateSerializer(serializers.Serializer):
+    tables = TablePositionSerializer(many=True, required=True)
+
+
 class BusinessHoursInputSerializer(serializers.Serializer):
     day_of_week = serializers.IntegerField(min_value=1, max_value=7)
     open_time = serializers.TimeField()
@@ -94,3 +109,4 @@ class GSTProfileInputSerializer(serializers.Serializer):
     registration_type = serializers.ChoiceField(
         choices=GSTRegistrationType.choices, default=GSTRegistrationType.REGULAR
     )
+

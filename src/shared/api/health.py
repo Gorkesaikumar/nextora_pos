@@ -8,14 +8,17 @@
 
 Both are unauthenticated and tenant-agnostic — they are infrastructure probes.
 """
+from django.conf import settings
 from django.core.cache import cache
 from django.db import connections
 from django.db.utils import OperationalError
 from django.http import HttpRequest, JsonResponse
 from redis import Redis
 from redis.exceptions import RedisError
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
 
-from django.conf import settings
+from shared.api.views import BaseAPIView
 
 
 def liveness(request: HttpRequest) -> JsonResponse:
@@ -57,3 +60,28 @@ def readiness(request: HttpRequest) -> JsonResponse:
         {"status": "ready" if healthy else "degraded", "checks": checks},
         status=200 if healthy else 503,
     )
+
+
+class RESTHealthCheckView(BaseAPIView):
+    """REST-compliant health check probe returning the standard JSON envelope.
+
+    Routes to /api/v1/health/.
+    """
+
+    permission_classes = [AllowAny]
+
+    def get(self, request, *args, **kwargs) -> Response:
+        checks = {
+            "database": _check_database(),
+            "cache": _check_cache(),
+            "broker": _check_redis(),
+        }
+        healthy = all(checks.values())
+        status_str = "ready" if healthy else "degraded"
+
+        response = Response(
+            data={"status": status_str, "checks": checks},
+            status=200 if healthy else 503,
+        )
+        response.custom_message = "System is healthy" if healthy else "System is degraded"
+        return response

@@ -2,6 +2,7 @@
 from rest_framework.routers import DefaultRouter
 
 from .views import (
+    BusinessHoursViewSet,
     CashCounterViewSet,
     DiningTableViewSet,
     HolidayViewSet,
@@ -17,5 +18,7 @@ router.register("stations", KitchenStationViewSet, basename="kitchen-station")
 router.register("printers", PrinterViewSet, basename="printer")
 router.register("counters", CashCounterViewSet, basename="cash-counter")
 router.register("holidays", HolidayViewSet, basename="holiday")
+router.register("hours", BusinessHoursViewSet, basename="business-hours")
 
 urlpatterns = router.urls
+

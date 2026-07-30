@@ -9,7 +9,7 @@ from contexts.employees.models import LeaveRequest, LeaveBalance, LeaveStatus
 
 def get_leave_balance(employee_id: UUID, year: int) -> dict:
     balances = LeaveBalance.objects.filter(employee_id=employee_id, year=year)
-    return {lb.leave_type: {"total": lb.total_days, "used": lb.used_days, "balance": lb.total_days - lb.used_days} for lb in balances}
+    return {lb.leave_type: {"allocated": lb.allocated, "used": lb.used, "remaining": lb.remaining} for lb in balances}
 
 
 def process_leave_request(request_id: UUID, reviewer_id: UUID, is_approved: bool, reason: str = "") -> LeaveRequest:
@@ -19,7 +19,7 @@ def process_leave_request(request_id: UUID, reviewer_id: UUID, is_approved: bool
     with transaction.atomic():
         leave = LeaveRequest.objects.select_for_update().get(id=request_id)
         
-        if leave.status != LeaveStatus.PENDING:
+        if leave.status not in (LeaveStatus.PENDING_MANAGER, LeaveStatus.PENDING_OWNER):
             return leave
             
         leave.status = status
@@ -35,9 +35,9 @@ def process_leave_request(request_id: UUID, reviewer_id: UUID, is_approved: bool
                 employee_id=leave.employee_id,
                 year=leave.start_date.year,
                 leave_type=leave.leave_type,
-                defaults={'total_days': 15, 'used_days': 0}
+                defaults={'allocated': 15.0, 'used': 0.0}
             )
-            balance.used_days += days
-            balance.save(update_fields=["used_days"])
+            balance.used += days
+            balance.save(update_fields=["used"])
 
     return leave

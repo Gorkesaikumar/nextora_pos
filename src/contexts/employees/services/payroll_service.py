@@ -60,7 +60,7 @@ def run_payroll(tenant_id: UUID, period_start: datetime.date, period_end: dateti
                 PayoutComponent.objects.create(
                     payout=payout,
                     name="Base Salary",
-                    component_type="earning",
+                    type="earning",
                     amount=base
                 )
                 
@@ -68,7 +68,7 @@ def run_payroll(tenant_id: UUID, period_start: datetime.date, period_end: dateti
                     PayoutComponent.objects.create(
                         payout=payout,
                         name="Unpaid Absences",
-                        component_type="deduction",
+                        type="deduction",
                         amount=deduction
                     )
                 

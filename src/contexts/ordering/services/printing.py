@@ -244,14 +244,21 @@ def execute_print_job(job: PrintJob) -> bool:
         if not printer_name:
             raise ConnectionError("No printer configured. Please select a printer in Printer Settings.")
 
-        # Build receipt payload from stored order/invoice data
         invoice = job.invoice
         if not invoice:
             invoice = getattr(job.order, "invoice", None)
         if not invoice:
             invoice = job.order.invoice if hasattr(job.order, "invoice") else None
 
-        if invoice:
+        if job.job_type == PrintJobType.KOT_TICKET:
+            # Fallback: send the stored ESC/POS content as raw bytes
+            client = PrintServiceClient()
+            import base64
+            result = client._post("/print/raw", payload={
+                "printer_name": printer_name,
+                "raw_bytes_base64": base64.b64encode(bytes(job.content_escpos)).decode("ascii"),
+            })
+        elif invoice:
             copy_t = "customer" if job.job_type == PrintJobType.CUSTOMER_RECEIPT else "restaurant"
             payload_dict = build_receipt_payload(
                 order=job.order,
@@ -276,17 +283,10 @@ def execute_print_job(job: PrintJob) -> bool:
             # Fallback: send the stored ESC/POS content as raw bytes
             client = PrintServiceClient()
             import base64
-            raw_result = client._post("/print/raw", payload={
+            result = client._post("/print/raw", payload={
                 "printer_name": printer_name,
                 "raw_bytes_base64": base64.b64encode(bytes(job.content_escpos)).decode("ascii"),
             })
-            success = raw_result.success
-            if success:
-                job.status = PrintJobStatus.PRINTED
-                job.printed_at = timezone.now()
-                job.error_message = ""
-                job.save(update_fields=["status", "printed_at", "error_message", "updated_at"])
-            return success
 
         if result.success:
             job.status = PrintJobStatus.PRINTED

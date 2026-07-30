@@ -1,63 +1,126 @@
-from django.utils import timezone
-from rest_framework import permissions, status, viewsets
+"""API Views for Notifications."""
+from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from drf_spectacular.utils import extend_schema
 
-from ..models import InAppNotification, Notification, NotificationStatus
-from .serializers import InAppNotificationSerializer
+from shared.api.views import BaseAPIView, BaseModelViewSet
+from shared.tenancy.context import get_current_tenant
+from contexts.notifications.models import (
+    Notification,
+    NotificationTemplate,
+    InAppNotification,
+    NotificationStatus
+)
+from contexts.notifications.services import create_notification
+from contexts.notifications.tasks import send_notification_task
+
+from .serializers import (
+    NotificationSerializer,
+    NotificationTemplateSerializer,
+    InAppNotificationSerializer,
+    SendNotificationSerializer,
+    SendReceiptSerializer
+)
 
 
-class InAppInboxViewSet(viewsets.ReadOnlyModelViewSet):
-    """API viewset for users to list and interact with their In-App notifications inbox."""
-
-    serializer_class = InAppNotificationSerializer
-    permission_classes = [permissions.IsAuthenticated]
+class NotificationTemplateViewSet(BaseModelViewSet):
+    """Manage Notification Templates for Email, SMS, WhatsApp, Push."""
+    serializer_class = NotificationTemplateSerializer
 
     def get_queryset(self):
-        # Tenantaware managers automatically filter by current resolved tenant
-        return InAppNotification.objects.filter(user_id=self.request.user.id).order_by(
-            "-created_at"
+        return NotificationTemplate.objects.filter(tenant_id=get_current_tenant())
+
+
+class NotificationViewSet(BaseModelViewSet):
+    """View Notification History and handle retries."""
+    serializer_class = NotificationSerializer
+    http_method_names = ["get", "post", "head", "options"]
+
+    def get_queryset(self):
+        return Notification.objects.filter(tenant_id=get_current_tenant())
+
+    @extend_schema(responses={200: dict})
+    @action(detail=True, methods=["post"])
+    def retry(self, request, pk=None):
+        """Manually trigger a retry for a failed or pending notification."""
+        notification = self.get_object()
+        if notification.status in [NotificationStatus.SENT, NotificationStatus.DELIVERED]:
+            return Response({"detail": "Notification already sent."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Trigger Celery task asynchronously
+        send_notification_task.delay(str(notification.id))
+        return Response({"detail": "Notification queued for retry."}, status=status.HTTP_200_OK)
+
+
+class InAppNotificationViewSet(BaseModelViewSet):
+    """Manage In-App Push Notifications for the current user."""
+    serializer_class = InAppNotificationSerializer
+    http_method_names = ["get", "patch", "head", "options"]
+
+    def get_queryset(self):
+        return InAppNotification.objects.filter(
+            tenant_id=get_current_tenant(),
+            user_id=self.request.user.id
         )
 
-    @action(detail=True, methods=["post"], url_path="read")
-    def mark_as_read(self, request, pk=None):
+    @extend_schema(request=None, responses={200: dict})
+    @action(detail=True, methods=["patch"])
+    def read(self, request, pk=None):
+        """Mark an in-app notification as read."""
+        from django.utils import timezone
         notification = self.get_object()
         if not notification.is_read:
             notification.is_read = True
             notification.read_at = timezone.now()
             notification.save(update_fields=["is_read", "read_at"])
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response({"detail": "Marked as read"}, status=status.HTTP_200_OK)
 
 
-class TwilioWebhookView(APIView):
-    """Receives Twilio delivery status callbacks and updates Notification tracking status.
+class DispatchNotificationView(BaseAPIView):
+    """Directly send a notification using Email, SMS, WhatsApp or Push."""
+    @extend_schema(request=SendNotificationSerializer, responses=NotificationSerializer)
+    def post(self, request, *args, **kwargs) -> Response:
+        serializer = SendNotificationSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
 
-    Bypasses RLS filtering using all_objects manager, as callbacks are
-    tenant-agnostic.
-    """
+        notification = create_notification(
+            tenant_id=get_current_tenant(),
+            channel=data["channel"],
+            recipient=data["recipient"],
+            template_name=data.get("template_name"),
+            context_data=data.get("context_data", {}),
+            scheduled_for=data.get("scheduled_for"),
+            language=data.get("language", "en"),
+        )
+        resp_serializer = NotificationSerializer(notification)
+        return Response(resp_serializer.data, status=status.HTTP_201_CREATED)
 
-    permission_classes = [permissions.AllowAny]
 
-    def post(self, request, *args, **kwargs):
-        message_sid = request.data.get("MessageSid") or request.data.get("SmsSid")
-        message_status = request.data.get("MessageStatus") or request.data.get("SmsStatus")
+class SendReceiptView(BaseAPIView):
+    """Send an Order Receipt via Email, SMS or WhatsApp with PDF attachment."""
+    @extend_schema(request=SendReceiptSerializer, responses={202: dict})
+    def post(self, request, *args, **kwargs) -> Response:
+        serializer = SendReceiptSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
 
-        if not message_sid or not message_status:
-            return Response("Missing payload fields", status=status.HTTP_400_BAD_REQUEST)
-
-        status_map = {
-            "delivered": NotificationStatus.DELIVERED,
-            "failed": NotificationStatus.FAILED,
-            "undelivered": NotificationStatus.FAILED,
-            "sent": NotificationStatus.SENT,
+        # Provide a special context instruction for the Celery task to attach the PDF
+        context_data = {
+            "order_id": str(data["order_id"]),
+            "_attachment_instruction": {
+                "type": "invoice_pdf",
+                "order_id": str(data["order_id"])
+            }
         }
 
-        mapped_status = status_map.get(message_status.lower())
-        if mapped_status:
-            # We use all_objects since Twilio calls are cross-tenant/tenant-agnostic
-            Notification.all_objects.filter(external_id=message_sid).update(
-                status=mapped_status, updated_at=timezone.now()
-            )
-
-        return Response({"status": "ok"}, status=status.HTTP_200_OK)
+        create_notification(
+            tenant_id=get_current_tenant(),
+            channel=data["channel"],
+            recipient=data["recipient"],
+            template_name="order.receipt",
+            context_data=context_data,
+        )
+        return Response({"detail": "Receipt dispatch queued successfully."}, status=status.HTTP_202_ACCEPTED)

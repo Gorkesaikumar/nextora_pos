@@ -55,19 +55,9 @@ def create_restaurant(
 
 @transaction.atomic
 def activate_restaurant(restaurant_id: uuid.UUID) -> Restaurant:
-    """
-    Activate a restaurant. Requires at least one OPEN branch.
-    """
+    """Activate a restaurant."""
     restaurant = Restaurant.objects.select_for_update().get(id=restaurant_id)
     _validate_transition(restaurant.status, RestaurantStatus.ACTIVE)
-
-    open_branches = restaurant.branches.filter(
-        status=BranchStatus.OPEN, is_deleted=False
-    ).count()
-    if open_branches == 0:
-        raise ActivationPrerequisiteFailed(
-            "Cannot activate restaurant without at least one OPEN branch."
-        )
 
     restaurant.status = RestaurantStatus.ACTIVE
     restaurant.save(update_fields=["status", "updated_at"])
@@ -76,14 +66,9 @@ def activate_restaurant(restaurant_id: uuid.UUID) -> Restaurant:
 
 @transaction.atomic
 def suspend_restaurant(restaurant_id: uuid.UUID) -> Restaurant:
-    """Suspend a restaurant. All branches are temporarily closed."""
+    """Suspend a restaurant."""
     restaurant = Restaurant.objects.select_for_update().get(id=restaurant_id)
     _validate_transition(restaurant.status, RestaurantStatus.SUSPENDED)
-
-    # Cascade: temporarily close all open branches.
-    restaurant.branches.filter(
-        status=BranchStatus.OPEN, is_deleted=False
-    ).update(status=BranchStatus.TEMPORARILY_CLOSED)
 
     restaurant.status = RestaurantStatus.SUSPENDED
     restaurant.save(update_fields=["status", "updated_at"])
@@ -106,16 +91,6 @@ def close_restaurant(restaurant_id: uuid.UUID) -> Restaurant:
     """Permanently close a restaurant. Terminal state."""
     restaurant = Restaurant.objects.select_for_update().get(id=restaurant_id)
     _validate_transition(restaurant.status, RestaurantStatus.CLOSED)
-
-    # Ensure no open branches remain.
-    active_branches = restaurant.branches.exclude(
-        status=BranchStatus.PERMANENTLY_CLOSED
-    ).filter(is_deleted=False).count()
-    if active_branches > 0:
-        raise ActivationPrerequisiteFailed(
-            f"Cannot close restaurant: {active_branches} branch(es) are still active. "
-            "Close all branches first."
-        )
 
     restaurant.status = RestaurantStatus.CLOSED
     restaurant.save(update_fields=["status", "updated_at"])

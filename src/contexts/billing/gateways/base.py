@@ -41,5 +41,9 @@ class PaymentGateway(ABC):
         """Verify the webhook HMAC signature."""
 
     @abstractmethod
+    def verify_payment_signature(self, order_id: str, payment_id: str, signature: str) -> bool:
+        """Verify the razorpay payment signature on checkout success."""
+
+    @abstractmethod
     def parse_webhook_event(self, body: bytes) -> GatewayEvent:
         """Normalise a raw webhook body into a GatewayEvent."""

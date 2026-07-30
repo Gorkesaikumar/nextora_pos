@@ -55,3 +55,61 @@ class PasswordResetRequestSerializer(serializers.Serializer):
 class PasswordResetConfirmSerializer(serializers.Serializer):
     token = serializers.CharField(max_length=128)
     new_password = serializers.CharField(min_length=12)
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+    old_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(min_length=8, required=True)
+    confirm_password = serializers.CharField(min_length=8, required=True)
+
+    def validate(self, attrs):
+        if attrs['new_password'] != attrs['confirm_password']:
+            raise serializers.ValidationError({"confirm_password": "Password fields didn't match."})
+        return attrs
+
+
+from shared.api.serializers import BaseModelSerializer
+from contexts.identity.models import Membership, Role, Permission
+
+
+class UserMembershipSerializer(BaseModelSerializer):
+    tenant_name = serializers.CharField(source="tenant.name", read_only=True, default=None)
+    tenant_slug = serializers.CharField(source="tenant.slug", read_only=True, default=None)
+    role_name = serializers.CharField(source="role.name", read_only=True)
+    role_code = serializers.CharField(source="role.code", read_only=True)
+    role_scope = serializers.CharField(source="role.scope", read_only=True)
+
+    class Meta:
+        model = Membership
+        fields = [
+            "id",
+            "tenant",
+            "tenant_name",
+            "tenant_slug",
+            "role",
+            "role_name",
+            "role_code",
+            "role_scope",
+        ]
+
+
+class PermissionSerializer(BaseModelSerializer):
+    class Meta:
+        model = Permission
+        fields = ["id", "code", "name", "description", "module"]
+
+
+class RoleSerializer(BaseModelSerializer):
+    permissions = PermissionSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Role
+        fields = [
+            "id",
+            "code",
+            "name",
+            "description",
+            "scope",
+            "is_system",
+            "permissions",
+        ]

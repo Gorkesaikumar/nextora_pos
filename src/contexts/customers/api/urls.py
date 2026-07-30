@@ -1,12 +1,10 @@
-from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from .views import CouponViewSet, CustomerViewSet
+from .views import CouponViewSet, CustomerViewSet, LoyaltyProgramViewSet
 
 router = DefaultRouter()
-router.register("profiles", CustomerViewSet, basename="profiles")
-router.register("coupons", CouponViewSet, basename="coupons")
+router.register("profiles", CustomerViewSet, basename="customer")
+router.register("coupons", CouponViewSet, basename="coupon")
+router.register("loyalty", LoyaltyProgramViewSet, basename="loyalty-program")
 
-urlpatterns = [
-    path("", include(router.urls)),
-]
+urlpatterns = router.urls

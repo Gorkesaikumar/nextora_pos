@@ -15,7 +15,7 @@ class DiningTableForm(forms.ModelForm):
         waiter_choices = [('', '--- Unassigned ---')]
         waiters = EmployeeProfile.objects.filter(status=EmployeeStatus.ACTIVE)
         for w in waiters:
-            name = w.user.full_name or w.user.email
+            name = w.full_name or w.email or f"Employee #{w.employee_code}"
             waiter_choices.append((str(w.id), name))
         self.fields['assigned_waiter_id'].choices = waiter_choices
         
@@ -27,6 +27,13 @@ class DiningTableForm(forms.ModelForm):
         if not val:
             return None
         return val
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        instance.assigned_waiter_id = self.cleaned_data.get('assigned_waiter_id')
+        if commit:
+            instance.save()
+        return instance
     
     class Meta:
         model = DiningTable

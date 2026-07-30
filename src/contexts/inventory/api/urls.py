@@ -8,6 +8,8 @@ from .views import (
     InventoryItemViewSet,
     PurchaseOrderViewSet,
     StockAdjustmentViewSet,
+    StockLedgerViewSet,
+    StockMovementViewSet,
     StockTransferViewSet,
     SupplierViewSet,
     WarehouseViewSet,
@@ -23,5 +25,7 @@ router.register("transfers", StockTransferViewSet, basename="stock-transfer")
 router.register("adjustments", StockAdjustmentViewSet, basename="stock-adjustment")
 router.register("damaged", DamagedStockViewSet, basename="damaged-stock")
 router.register("alerts", InventoryAlertViewSet, basename="inventory-alert")
+router.register("movements", StockMovementViewSet, basename="stock-movement")
+router.register("ledger", StockLedgerViewSet, basename="stock-ledger")
 
 urlpatterns = router.urls

@@ -142,31 +142,27 @@ class TableCreateView(LoginRequiredMixin, CreateView):
             return HttpResponse(status=204, headers={'HX-Trigger': 'tableListChanged'})
         return response
 
-class TableUpdateView(LoginRequiredMixin, UpdateView):
-    model = DiningTable
-    form_class = DiningTableForm
-    template_name = "restaurant/partials/table_form_modal.html"
-    success_url = reverse_lazy('restaurant:table_list')
 
-    def form_valid(self, form):
-        response = super().form_valid(form)
-        if self.request.htmx:
-            from django.http import HttpResponse
-            return HttpResponse(status=204, headers={'HX-Trigger': 'tableListChanged'})
-        return response
 
 class TableDeleteView(LoginRequiredMixin, DeleteView):
     model = DiningTable
     success_url = reverse_lazy('restaurant:table_list')
 
-    def delete(self, request, *args, **kwargs):
-        # Soft delete logic
+    def form_valid(self, form):
         self.object = self.get_object()
+        
+        if self.object.status == 'occupied':
+            from django.http import HttpResponseBadRequest
+            return HttpResponseBadRequest("Cannot delete an occupied table.")
+            
+        # Soft delete logic
         self.object.is_deleted = True
         self.object.save()
-        if request.htmx:
+        
+        if self.request.htmx:
             from django.http import HttpResponse
             return HttpResponse(status=204, headers={'HX-Trigger': 'tableListChanged'})
+            
         from django.http import HttpResponseRedirect
         return HttpResponseRedirect(self.get_success_url())
 

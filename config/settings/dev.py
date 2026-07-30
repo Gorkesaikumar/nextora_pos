@@ -7,7 +7,7 @@ must never leak into dev (and vice versa).
 from .base import *  # noqa: F403
 
 DEBUG = True
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "0.0.0.0"]  # noqa: S104  (dev only)
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "0.0.0.0", "10.0.2.2"]  # noqa: S104  (dev only)
 
 INSTALLED_APPS += [  # noqa: F405
     "debug_toolbar",

@@ -202,21 +202,21 @@ else:
         "default": {
             "BACKEND": "channels_redis.core.RedisChannelLayer",
             "CONFIG": {
-                "hosts": [env("CHANNELS_REDIS_URL", default="redis://redis:6379/4")],
+                "hosts": [env("CHANNELS_REDIS_URL", default="redis://127.0.0.1:6379/4")],
             },
         },
     }
 
 # --- Celery ---------------------------------------------------------------
-CELERY_BROKER_URL = env("CELERY_BROKER_URL", default="redis://redis:6379/1")
+CELERY_BROKER_URL = env("CELERY_BROKER_URL", default="redis://127.0.0.1:6379/1")
 CELERY_RESULT_BACKEND = "django-db"  # auditable task results in Postgres
 CELERY_CACHE_BACKEND = "default"
 CELERY_TASK_ACKS_LATE = True          # redeliver if a worker dies mid-task
 CELERY_TASK_REJECT_ON_WORKER_LOST = True
 CELERY_WORKER_PREFETCH_MULTIPLIER = 1  # fair dispatch for long tasks
 CELERY_TASK_TIME_LIMIT = 300
-CELERY_TASK_SOFT_TIME_LIMIT = 270
 CELERY_TIMEZONE = "UTC"
+CELERY_TASK_SOFT_TIME_LIMIT = 270
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 # Queue isolation: critical money paths never wait behind bulk reports.
 CELERY_TASK_DEFAULT_QUEUE = "default"
@@ -292,10 +292,21 @@ REST_FRAMEWORK = {
     ],
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
+        "shared.api.permissions.BasePermission",
     ],
+    "DEFAULT_RENDERER_CLASSES": [
+        "shared.api.renderers.StandardJSONRenderer",
+        "rest_framework.renderers.BrowsableAPIRenderer",
+    ],
+    "EXCEPTION_HANDLER": "shared.api.exceptions.global_exception_handler",
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
-    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
+    "DEFAULT_PAGINATION_CLASS": "shared.api.pagination.StandardPagination",
     "PAGE_SIZE": 50,
+    "DEFAULT_FILTER_BACKENDS": [
+        "shared.api.filters.SimpleFilterBackend",
+        "shared.api.filters.SearchFilter",
+        "shared.api.filters.OrderingFilter",
+    ],
     # Default throttles; per-tenant/per-view overrides layer on top.
     "DEFAULT_THROTTLE_CLASSES": [
         "rest_framework.throttling.AnonRateThrottle",

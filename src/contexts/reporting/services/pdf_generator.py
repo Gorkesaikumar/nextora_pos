@@ -6,7 +6,6 @@ from django.shortcuts import get_object_or_404
 from xhtml2pdf import pisa
 
 from contexts.ordering.models import Order
-from contexts.tenants.models import Branch
 
 logger = logging.getLogger(__name__)
 
@@ -19,11 +18,7 @@ def generate_invoice_pdf(order_id: str) -> tuple[str, bytes]:
         order = get_object_or_404(Order.objects.select_related('invoice').prefetch_related('items'), id=order_id)
         
         branch = None
-        if getattr(order, 'location_id', None):
-            try:
-                branch = Branch.objects.get(id=getattr(order, 'location_id', None))
-            except Branch.DoesNotExist:
-                pass
+        # Branch feature not implemented yet
                 
         # Prepare context for the PDF template
         context = {

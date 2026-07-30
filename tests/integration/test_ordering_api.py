@@ -36,7 +36,6 @@ def _make_cashier_user(active_tenant, seeded, location_id):
         tenant=active_tenant,
         user=user,
         role=role,
-        location_id=location_id,
         is_active=True
     )
     return user
@@ -121,7 +120,7 @@ def test_order_void(active_tenant, seeded):
     location_id = uuid.uuid4()
     user = _make_cashier_user(active_tenant, seeded, location_id)
 
-    order = create_order(location_id=location_id, order_type="takeaway")
+    order = create_order(order_type="takeaway")
 
     client = APIClient()
     client.force_authenticate(user=user)

@@ -9,8 +9,8 @@ class PlanSerializer(serializers.ModelSerializer):
     class Meta:
         model = Plan
         fields = [
-            "id", "name", "code", "description", "price", "billing_interval",
-            "trial_days", "features", "is_active",
+            "id", "name", "code", "description", "sale_price", "original_price",
+            "duration_type", "trial_days", "features", "is_active",
         ]
 
 
@@ -20,9 +20,9 @@ class SubscriptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subscription
         fields = [
-            "id", "plan", "status", "trial_start", "trial_end",
-            "current_period_start", "current_period_end", "cancel_at_period_end",
-            "canceled_at", "ended_at",
+            "id", "plan", "status", "trial_end",
+            "current_period_start", "current_period_end", "auto_renew",
+            "canceled_at",
         ]
 
 

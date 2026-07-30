@@ -173,10 +173,10 @@ class DashboardHomeView(TenantPermissionRequiredMixin, LoginRequiredMixin, Templ
             display_date = target_date.strftime('%d %b %Y')
         
         all_orders_today = Order.objects.filter(opened_at__gte=target_start, opened_at__lte=target_end)
-        settled_orders = all_orders_today.filter(status=OrderStatus.SETTLED)
+        active_orders = all_orders_today.exclude(status=OrderStatus.VOID)
         
-        revenue_today_raw = settled_orders.aggregate(total=Sum('total'))['total'] or Decimal("0")
-        order_count = settled_orders.count()
+        revenue_today_raw = active_orders.aggregate(total=Sum('total'))['total'] or Decimal("0")
+        order_count = active_orders.count()
         avg_ticket_raw = (revenue_today_raw / order_count) if order_count > 0 else Decimal("0")
         open_kots = KOT.objects.filter(status__in=[KOTStatus.NEW, KOTStatus.PREPARING]).count()
         
@@ -186,14 +186,14 @@ class DashboardHomeView(TenantPermissionRequiredMixin, LoginRequiredMixin, Templ
         cancelled_count = all_orders_today.filter(status=OrderStatus.VOID).count()
         
         refunds_today_raw = all_orders_today.filter(status=OrderStatus.VOID).aggregate(total=Sum('total'))['total'] or Decimal("0")
-        tables_turned = settled_orders.filter(type=OrderType.DINE_IN).count()
+        tables_turned = active_orders.filter(type=OrderType.DINE_IN).count()
         
         top_items = list(OrderItem.objects.filter(order__opened_at__gte=target_start, order__opened_at__lte=target_end)
                      .values('name_snapshot')
                      .annotate(qty_sold=Sum('qty'), revenue=Sum('line_total'))
                      .order_by('-qty_sold')[:5])
                      
-        top_branches_raw = list(settled_orders.values('tenant_id')
+        top_branches_raw = list(active_orders.values('tenant_id')
                             .annotate(revenue=Sum('total'), order_count=Count('id'))
                             .order_by('-revenue')[:5])
                             
@@ -205,14 +205,10 @@ class DashboardHomeView(TenantPermissionRequiredMixin, LoginRequiredMixin, Templ
                 'orders': b['order_count']
             })
         
-        recent_orders = Order.objects.filter(
-            status=OrderStatus.SETTLED,
-            opened_at__gte=target_start,
-            opened_at__lte=target_end
-        ).order_by('-updated_at')[:5]
+        recent_orders = active_orders.order_by('-updated_at')[:5]
         
         fourteen_days_ago = target_start - timedelta(days=13)
-        daily_revenue = (Order.objects.filter(status=OrderStatus.SETTLED, opened_at__gte=fourteen_days_ago, opened_at__lte=target_end)
+        daily_revenue = (Order.objects.exclude(status=OrderStatus.VOID).filter(opened_at__gte=fourteen_days_ago, opened_at__lte=target_end)
                          .annotate(date=TruncDate('opened_at'))
                          .values('date')
                          .annotate(revenue=Sum('total'))
@@ -897,7 +893,7 @@ class TaxReportView(TenantPermissionRequiredMixin, LoginRequiredMixin, TemplateV
             'start_date': start_date.strftime('%Y-%m-%d'),
             'end_date': end_date.strftime('%Y-%m-%d'),
             'preset': preset,
-            'branches': Branch.objects.filter(is_active=True),
+            'branches': [],
             'selected_branch': branch_id or '',
             
             'taxable_sales': taxable_sales,
@@ -931,10 +927,7 @@ class InvoiceDetailView(TenantPermissionRequiredMixin, LoginRequiredMixin, Templ
         
         # Get related branch
         branch = None
-        try:
-            branch = Branch.objects.get(id=getattr(order, 'location_id', None))
-        except Branch.DoesNotExist:
-            pass
+        # Branch feature not implemented yet
 
         context.update({
             'order': order,
@@ -1046,7 +1039,7 @@ class TaxSummaryView(TenantPermissionRequiredMixin, LoginRequiredMixin, Template
             'start_date': start_date.strftime('%Y-%m-%d'),
             'end_date': end_date.strftime('%Y-%m-%d'),
             'preset': preset,
-            'branches': Branch.objects.filter(is_active=True),
+            'branches': [],
             'selected_branch': branch_id or '',
             'cashiers': cashiers,
             'selected_cashier': cashier_id or '',
@@ -1078,11 +1071,7 @@ class EmailShareModalView(TenantPermissionRequiredMixin, LoginRequiredMixin, Tem
         order = get_object_or_404(Order.objects.select_related('invoice'), id=order_id)
         
         branch_name = "our store"
-        try:
-            branch = Branch.objects.get(id=getattr(order, 'location_id', None))
-            branch_name = branch.name
-        except Branch.DoesNotExist:
-            pass
+        # Branch feature not implemented yet
 
         customer_name = order.customer_name or "Valued Customer"
         invoice_num = order.invoice.number if hasattr(order, 'invoice') else order.order_number
@@ -1197,7 +1186,7 @@ class InvoiceListView(TenantPermissionRequiredMixin, LoginRequiredMixin, Templat
         if sort in ['issued_at', '-issued_at', 'total', '-total']:
             qs = qs.order_by(sort)
 
-        branches = Branch.objects.filter(is_active=True)
+        branches = []
         user_map = {str(u.id): u.full_name or u.email for u in User.objects.all()}
         branch_map = {str(b.id): b.name for b in branches}
         
@@ -1206,7 +1195,7 @@ class InvoiceListView(TenantPermissionRequiredMixin, LoginRequiredMixin, Templat
         page_obj = paginator.get_page(page_number)
         
         for inv in page_obj:
-            inv.branch_name = branch_map.get(str(inv.location_id), "Unknown")
+            inv.branch_name = "Main Branch"
             inv.cashier_name = user_map.get(str(inv.order.created_by), "System")
             payments = inv.order.payments.all()
             if payments:
@@ -1242,7 +1231,7 @@ class PaymentHistoryView(TenantPermissionRequiredMixin, LoginRequiredMixin, Temp
 
     def export_data(self, export_format):
         qs = self.get_queryset()
-        branches = Branch.objects.filter(is_active=True)
+        branches = []
         user_map = {str(u.id): u.full_name or u.email for u in User.objects.all()}
         branch_map = {str(b.id): b.name for b in branches}
         
@@ -1250,7 +1239,7 @@ class PaymentHistoryView(TenantPermissionRequiredMixin, LoginRequiredMixin, Temp
         header = ['Transaction ID', 'Date & Time', 'Invoice #', 'Order #', 'Customer', 'Amount', 'Payment Method', 'Status', 'Cashier', 'Branch']
         rows = []
         for p in qs:
-            branch_name = branch_map.get(str(p.getattr(order, 'location_id', None)), "Unknown")
+            branch_name = "Main Branch"
             cashier_name = user_map.get(str(p.created_by), "System")
             invoice_num = p.order.invoice.number if hasattr(p.order, 'invoice') else "N/A"
             rows.append([
@@ -1309,12 +1298,12 @@ class PaymentHistoryView(TenantPermissionRequiredMixin, LoginRequiredMixin, Temp
         page_number = self.request.GET.get('page')
         page_obj = paginator.get_page(page_number)
         
-        branches = Branch.objects.filter(is_active=True)
+        branches = []
         user_map = {str(u.id): u.full_name or u.email for u in User.objects.all()}
         branch_map = {str(b.id): b.name for b in branches}
 
         for p in page_obj:
-            p.branch_name = branch_map.get(str(p.getattr(order, 'location_id', None)), "Unknown")
+            p.branch_name = "Main Branch"
             p.cashier_name = user_map.get(str(p.created_by), "System")
         
         # Get total collected today
@@ -1348,11 +1337,7 @@ class WhatsAppShareModalView(TenantPermissionRequiredMixin, LoginRequiredMixin, 
         order = get_object_or_404(Order.objects.select_related('invoice'), id=order_id)
         
         branch_name = "our store"
-        try:
-            branch = Branch.objects.get(id=getattr(order, 'location_id', None))
-            branch_name = branch.name
-        except Branch.DoesNotExist:
-            pass
+        # Branch feature not implemented yet
 
         customer_name = order.customer_name or "Valued Customer"
         invoice_num = order.invoice.number if hasattr(order, 'invoice') else order.order_number

@@ -47,6 +47,9 @@ PERMISSIONS: tuple[PermissionDef, ...] = (
     # Catalog
     PermissionDef("catalog.view", "View catalog", "catalog"),
     PermissionDef("catalog.manage", "Manage catalog", "catalog"),
+    # Customers
+    PermissionDef("customers.view", "View customers", "customers"),
+    PermissionDef("customers.manage", "Manage customers", "customers"),
     # Inventory
     PermissionDef("inventory.view", "View inventory", "inventory"),
     PermissionDef("inventory.adjust", "Adjust stock", "inventory"),
